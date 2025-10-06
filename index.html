@@ -680,7 +680,21 @@
             setMinDate();
             updateTables();
             
-            showNotification('مرحباً بك في نظام Wajha Orders! 🏡', 'success');
+            // فحص نوع التشغيل
+            const isLocalFile = window.location.protocol === 'file:';
+            const isHTTPS = window.location.protocol === 'https:';
+            
+            console.log('معلومات التشغيل:');
+            console.log('- البروتوكول:', window.location.protocol);
+            console.log('- ملف محلي:', isLocalFile);
+            console.log('- HTTPS:', isHTTPS);
+            console.log('- الرابط الكامل:', window.location.href);
+            
+            if (isLocalFile) {
+                showNotification('تم تشغيل النظام محلياً - سيتم استخدام JSONP لقراءة Google Sheets 📁', 'warning');
+            } else {
+                showNotification('مرحباً بك في نظام Wajha Orders! 🏡', 'success');
+            }
         });
 
         // تحميل البيانات المحلية
@@ -1475,162 +1489,266 @@
             showNotification('جاري تحميل البيانات من Google Sheets...', 'warning');
             
             try {
-                // محاولة قراءة بيانات المعاينات من الشيت الأول
-                const inspectionsUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEETS_ID}/gviz/tq?tqx=out:csv&gid=0`;
+                // فحص إذا كان التطبيق يعمل محلياً
+                const isLocalFile = window.location.protocol === 'file:';
                 
-                console.log('محاولة الاتصال بـ:', inspectionsUrl);
-                
-                // استخدام طريقة مختلفة للوصول للبيانات
-                let response;
-                let csvData;
-                
-                try {
-                    // المحاولة الأولى: استخدام fetch عادي
-                    response = await fetch(inspectionsUrl, {
-                        method: 'GET',
-                        mode: 'cors',
-                        headers: {
-                            'Accept': 'text/csv,text/plain,*/*'
-                        }
-                    });
-                    
-                    if (response.ok) {
-                        csvData = await response.text();
-                    } else {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                    }
-                } catch (fetchError) {
-                    console.log('فشل في fetch، محاولة طريقة بديلة...');
-                    
-                    // المحاولة الثانية: استخدام رابط مختلف
-                    const alternativeUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEETS_ID}/export?format=csv&gid=0`;
-                    console.log('محاولة الرابط البديل:', alternativeUrl);
-                    
-                    try {
-                        response = await fetch(alternativeUrl, {
-                            method: 'GET',
-                            mode: 'cors'
-                        });
-                        
-                        if (response.ok) {
-                            csvData = await response.text();
-                        } else {
-                            throw new Error(`فشل في الرابط البديل: ${response.status}`);
-                        }
-                    } catch (altError) {
-                        console.log('فشل في الرابط البديل أيضاً');
-                        
-                        // المحاولة الثالثة: استخدام JSONP
-                        try {
-                            csvData = await loadViaJSONP();
-                        } catch (jsonpError) {
-                            throw new Error('فشل في جميع طرق الاتصال. تأكد من أن الشيت مشارك للعامة للقراءة');
-                        }
-                    }
+                if (isLocalFile) {
+                    // إذا كان يعمل محلياً، استخدم طريقة JSONP فقط
+                    console.log('تم اكتشاف تشغيل محلي، استخدام JSONP...');
+                    await loadInspectionsViaJSONP();
+                } else {
+                    // إذا كان يعمل على خادم، جرب الطرق المختلفة
+                    await loadInspectionsFromServer();
                 }
-                
-                console.log('البيانات المستلمة:', csvData ? csvData.substring(0, 500) : 'لا توجد بيانات');
-                
-                if (!csvData || csvData.trim() === '' || csvData.includes('<!DOCTYPE html>')) {
-                    throw new Error('لا توجد بيانات صالحة في الشيت أو الشيت غير مشارك للعامة');
-                }
-                
-                // تحويل CSV إلى JSON
-                const parsedInspections = parseCSVToInspections(csvData);
-                const parsedCustomers = extractCustomersFromInspections(parsedInspections);
-                
-                // دمج البيانات مع البيانات المحلية
-                let newCustomersCount = 0;
-                let newInspectionsCount = 0;
-                
-                // إضافة العملاء الجدد
-                Object.keys(parsedCustomers).forEach(customerId => {
-                    if (!customers[customerId]) {
-                        customers[customerId] = parsedCustomers[customerId];
-                        newCustomersCount++;
-                    }
-                });
-                
-                // إضافة المعاينات الجديدة
-                parsedInspections.forEach(newInsp => {
-                    if (!inspections.some(existingInsp => existingInsp.id === newInsp.id)) {
-                        inspections.push(newInsp);
-                        newInspectionsCount++;
-                    }
-                });
-                
-                // حفظ البيانات محلياً
-                saveLocalData();
-                updateTables();
-                
-                showNotification(`تم تحميل ${newCustomersCount} عميل جديد و ${newInspectionsCount} معاينة جديدة من Google Sheets! ✅`, 'success');
                 
             } catch (error) {
                 console.error('خطأ في قراءة البيانات:', error);
-                
-                // إظهار رسالة مفصلة حسب نوع الخطأ
-                let errorMessage = 'فشل في قراءة البيانات من Google Sheets';
-                
-                if (error.message.includes('Failed to fetch')) {
-                    errorMessage = 'مشكلة في الاتصال - تأكد من الاتصال بالإنترنت وأن الشيت مشارك للعامة';
-                } else if (error.message.includes('CORS')) {
-                    errorMessage = 'مشكلة في أذونات الوصول - تأكد من أن الشيت مشارك للعامة للقراءة';
-                } else {
-                    errorMessage = error.message;
-                }
-                
-                showNotification(errorMessage, 'error');
-                
-                // اقتراح حلول
-                setTimeout(() => {
-                    showNotification('💡 نصيحة: تأكد من أن Google Sheet مشارك للعامة (Anyone with the link can view)', 'warning');
-                }, 2000);
+                handleLoadError(error);
             }
         }
 
-        // تحميل البيانات باستخدام JSONP كطريقة بديلة
-        function loadViaJSONP() {
+        // تحميل شيت المعاينات من الخادم
+        async function loadInspectionsFromServer() {
+            // تحميل شيت المعاينات فقط (gid=0)
+            const inspectionsUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEETS_ID}/gviz/tq?tqx=out:csv&gid=0`;
+            
+            console.log('محاولة الاتصال بشيت المعاينات:', inspectionsUrl);
+            
+            let inspectionsCsvData;
+            
+            try {
+                // تحميل المعاينات
+                const inspectionsResponse = await fetch(inspectionsUrl, {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: { 'Accept': 'text/csv,text/plain,*/*' }
+                });
+                
+                if (inspectionsResponse.ok) {
+                    inspectionsCsvData = await inspectionsResponse.text();
+                } else {
+                    throw new Error(`فشل في تحميل المعاينات: ${inspectionsResponse.status}`);
+                }
+                
+            } catch (fetchError) {
+                console.log('فشل في fetch، محاولة JSONP...');
+                await loadInspectionsViaJSONP();
+                return;
+            }
+            
+            await processInspectionsData(inspectionsCsvData);
+        }
+
+        // تحميل شيت المعاينات باستخدام JSONP
+        async function loadInspectionsViaJSONP() {
+            try {
+                console.log('تحميل شيت المعاينات...');
+                const inspectionsCsvData = await loadSheetViaJSONP(0); // gid=0 للمعاينات
+                
+                await processInspectionsData(inspectionsCsvData);
+                
+            } catch (error) {
+                console.error('خطأ في تحميل البيانات:', error);
+                throw error;
+            }
+        }
+
+        // معالجة بيانات شيت المعاينات
+        async function processInspectionsData(inspectionsCsvData) {
+            console.log('=== تشخيص البيانات المستلمة ===');
+            console.log('بيانات المعاينات المستلمة:', inspectionsCsvData ? inspectionsCsvData.substring(0, 300) : 'لا توجد بيانات');
+            
+            if (!inspectionsCsvData || inspectionsCsvData.trim() === '' || inspectionsCsvData.includes('<!DOCTYPE html>')) {
+                throw new Error('لا توجد بيانات صالحة في شيت المعاينات أو الشيت غير مشارك للعامة');
+            }
+            
+            // طباعة الأسطر الأولى من CSV للتشخيص
+            const csvLines = inspectionsCsvData.split('\n');
+            console.log('=== تحليل CSV المعاينات ===');
+            console.log('عدد الأسطر الكلي:', csvLines.length);
+            console.log('السطر الأول (الهيدر):', csvLines[0]);
+            if (csvLines.length > 1) {
+                console.log('السطر الثاني (أول بيانات):', csvLines[1]);
+            }
+            if (csvLines.length > 2) {
+                console.log('السطر الثالث:', csvLines[2]);
+            }
+            
+            // تحويل CSV إلى JSON
+            const parsedInspections = parseCSVToInspections(inspectionsCsvData);
+            console.log('تم تحليل', parsedInspections.length, 'معاينة من الشيت');
+            
+            // استخراج العملاء من المعاينات
+            const parsedCustomers = extractCustomersFromInspections(parsedInspections);
+            console.log('تم استخراج', Object.keys(parsedCustomers).length, 'عميل من المعاينات');
+            
+            // دمج البيانات مع البيانات المحلية
+            let newCustomersCount = 0;
+            let newInspectionsCount = 0;
+            let updatedInspectionsCount = 0;
+            
+            // إضافة/تحديث العملاء
+            Object.keys(parsedCustomers).forEach(customerId => {
+                if (!customers[customerId]) {
+                    customers[customerId] = parsedCustomers[customerId];
+                    newCustomersCount++;
+                } else {
+                    // تحديث بيانات العميل الموجود
+                    customers[customerId] = { ...customers[customerId], ...parsedCustomers[customerId] };
+                }
+            });
+            
+            // إضافة/تحديث المعاينات
+            parsedInspections.forEach(newInsp => {
+                const existingIndex = inspections.findIndex(existingInsp => existingInsp.id === newInsp.id);
+                if (existingIndex === -1) {
+                    inspections.push(newInsp);
+                    newInspectionsCount++;
+                } else {
+                    // تحديث المعاينة الموجودة
+                    inspections[existingIndex] = { ...inspections[existingIndex], ...newInsp };
+                    updatedInspectionsCount++;
+                }
+            });
+            
+            // تحديث عداد المعاينات
+            const maxInspectionNumber = Math.max(
+                inspectionCounter,
+                ...inspections.map(insp => {
+                    const match = insp.id.match(/INS-(\d+)/);
+                    return match ? parseInt(match[1]) : 0;
+                })
+            );
+            inspectionCounter = maxInspectionNumber;
+            
+            // حفظ البيانات محلياً
+            saveLocalData();
+            updateTables();
+            
+            const message = `تم تحميل البيانات بنجاح! 
+📊 ${newCustomersCount} عميل جديد
+📋 ${newInspectionsCount} معاينة جديدة
+🔄 ${updatedInspectionsCount} معاينة محدثة`;
+            
+            showNotification(message, 'success');
+        }
+
+        // معالجة أخطاء التحميل
+        function handleLoadError(error) {
+            let errorMessage = 'فشل في قراءة البيانات من Google Sheets';
+            
+            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                errorMessage = 'مشكلة في الاتصال - تأكد من الاتصال بالإنترنت وأن الشيت مشارك للعامة';
+            } else if (error.message.includes('CORS')) {
+                errorMessage = 'مشكلة في أذونات الوصول - تأكد من أن الشيت مشارك للعامة للقراءة';
+            } else if (error.message.includes('timeout') || error.message.includes('انتهت مهلة')) {
+                errorMessage = 'انتهت مهلة الاتصال - تأكد من سرعة الإنترنت وحاول مرة أخرى';
+            } else {
+                errorMessage = error.message;
+            }
+            
+            showNotification(errorMessage, 'error');
+            
+            // اقتراح حلول
+            setTimeout(() => {
+                const isLocalFile = window.location.protocol === 'file:';
+                if (isLocalFile) {
+                    showNotification('💡 للملفات المحلية: تأكد من الاتصال بالإنترنت وأن الشيت مشارك للعامة', 'warning');
+                } else {
+                    showNotification('💡 نصيحة: تأكد من أن Google Sheet مشارك للعامة (Anyone with the link can view)', 'warning');
+                }
+            }, 2000);
+        }
+
+        // تحميل شيت محدد باستخدام JSONP
+        function loadSheetViaJSONP(gid = 0) {
             return new Promise((resolve, reject) => {
                 const script = document.createElement('script');
-                const callbackName = 'jsonpCallback_' + Date.now();
+                const callbackName = 'jsonpCallback_' + gid + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                 
-                window[callbackName] = function(data) {
-                    document.head.removeChild(script);
-                    delete window[callbackName];
-                    
-                    // تحويل البيانات إلى CSV
-                    if (data && data.table && data.table.rows) {
-                        let csv = '';
-                        data.table.rows.forEach(row => {
-                            const rowData = row.c.map(cell => cell ? (cell.v || '') : '');
-                            csv += rowData.map(field => `"${field}"`).join(',') + '\n';
-                        });
-                        resolve(csv);
-                    } else {
-                        reject(new Error('لا توجد بيانات في الاستجابة'));
-                    }
-                };
+                console.log(`إنشاء JSONP callback للشيت ${gid}:`, callbackName);
                 
-                script.onerror = function() {
-                    document.head.removeChild(script);
-                    delete window[callbackName];
-                    reject(new Error('فشل في تحميل البيانات عبر JSONP'));
-                };
-                
-                const jsonpUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEETS_ID}/gviz/tq?tqx=out:json&tq=SELECT%20*&gid=0&headers=1&callback=${callbackName}`;
-                script.src = jsonpUrl;
-                document.head.appendChild(script);
-                
-                // timeout بعد 10 ثواني
-                setTimeout(() => {
+                // تنظيف الموارد
+                const cleanup = () => {
                     if (document.head.contains(script)) {
                         document.head.removeChild(script);
-                        delete window[callbackName];
-                        reject(new Error('انتهت مهلة الاتصال'));
                     }
-                }, 10000);
+                    if (window[callbackName]) {
+                        delete window[callbackName];
+                    }
+                };
+                
+                window[callbackName] = function(data) {
+                    console.log(`تم استلام بيانات JSONP للشيت ${gid}:`, data);
+                    cleanup();
+                    
+                    try {
+                        // تحويل البيانات إلى CSV
+                        if (data && data.table && data.table.rows && data.table.rows.length > 0) {
+                            let csv = '';
+                            
+                            // إضافة الهيدر إذا كان موجوداً
+                            if (data.table.cols && data.table.cols.length > 0) {
+                                const headers = data.table.cols.map(col => col.label || col.id || '');
+                                csv += headers.map(header => `"${header}"`).join(',') + '\n';
+                            }
+                            
+                            // إضافة البيانات
+                            data.table.rows.forEach(row => {
+                                if (row.c && row.c.length > 0) {
+                                    const rowData = row.c.map(cell => {
+                                        if (!cell) return '';
+                                        if (cell.v !== null && cell.v !== undefined) {
+                                            return String(cell.v).replace(/"/g, '""'); // escape quotes
+                                        }
+                                        return '';
+                                    });
+                                    csv += rowData.map(field => `"${field}"`).join(',') + '\n';
+                                }
+                            });
+                            
+                            console.log(`تم تحويل بيانات الشيت ${gid} إلى CSV، الطول:`, csv.length);
+                            resolve(csv);
+                        } else {
+                            console.log(`لا توجد بيانات في الشيت ${gid} أو البيانات فارغة`);
+                            reject(new Error(`لا توجد بيانات في الشيت ${gid} أو الشيت فارغ`));
+                        }
+                    } catch (error) {
+                        console.error(`خطأ في معالجة بيانات JSONP للشيت ${gid}:`, error);
+                        reject(new Error('خطأ في معالجة البيانات: ' + error.message));
+                    }
+                };
+                
+                script.onerror = function(error) {
+                    console.error(`خطأ في تحميل script JSONP للشيت ${gid}:`, error);
+                    cleanup();
+                    reject(new Error('فشل في تحميل البيانات - تأكد من الاتصال بالإنترنت'));
+                };
+                
+                script.onload = function() {
+                    console.log(`تم تحميل script JSONP للشيت ${gid} بنجاح`);
+                };
+                
+                // إنشاء رابط JSONP محسن
+                const jsonpUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEETS_ID}/gviz/tq?tqx=out:json&tq=SELECT%20*&gid=${gid}&headers=1&callback=${callbackName}&_=${Date.now()}`;
+                console.log(`رابط JSONP للشيت ${gid}:`, jsonpUrl);
+                
+                script.src = jsonpUrl;
+                script.async = true;
+                document.head.appendChild(script);
+                
+                // timeout محسن بعد 15 ثانية
+                setTimeout(() => {
+                    if (window[callbackName]) {
+                        console.log(`انتهت مهلة الاتصال JSONP للشيت ${gid}`);
+                        cleanup();
+                        reject(new Error('انتهت مهلة الاتصال - تأكد من سرعة الإنترنت وحاول مرة أخرى'));
+                    }
+                }, 15000);
             });
         }
+
+
 
 
 
@@ -1640,55 +1758,87 @@
             const inspections = [];
             
             if (lines.length < 2) {
-                console.log('لا توجد بيانات كافية في CSV');
+                console.log('لا توجد بيانات كافية في CSV المعاينات');
                 return inspections;
             }
             
-            console.log('عدد الأسطر:', lines.length);
-            console.log('الهيدر:', lines[0]);
+            console.log('عدد أسطر المعاينات:', lines.length);
+            console.log('هيدر المعاينات:', lines[0]);
+            
+            // تحليل الهيدر لمعرفة ترتيب الأعمدة
+            const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
+            console.log('أعمدة الهيدر:', headers);
+            
+            // الترتيب الجديد المحدد:
+            // inspection_id, customer_id, customer_name, area, service_type, property_type, 
+            // inspection_date, inspection_time, status, approval, total_amount, final_amount, 
+            // rating, additional_notes, inspector_notes, created_at
             
             // تخطي الهيدر
             for (let i = 1; i < lines.length; i++) {
                 const values = parseCSVLine(lines[i]);
-                console.log(`السطر ${i}:`, values);
+                console.log(`معاينة ${i}:`, values);
                 
                 if (values.length >= 3 && values[0] && values[0].trim() !== '') {
+                    // إنشاء كائن المعاينة بناءً على الترتيب الجديد المحدد
                     const inspection = {
-                        id: values[0] || `INS-${Date.now()}-${i}`,
-                        customerId: values[1] || `CUST-${Date.now()}-${i}`,
-                        customerName: values[2] || '',
-                        customerPhone: values[3] || '',
-                        area: values[4] || '',
-                        serviceType: values[5] || '',
-                        propertyType: values[6] || '',
-                        inspectionDate: values[7] || '',
-                        inspectionTime: values[8] || 'صباحاً (8-12)',
-                        status: values[9] || 'معلق',
-                        approval: values[10] || 'في الانتظار',
-                        totalAmount: parseFloat(values[11]) || 0,
-                        finalAmount: parseFloat(values[12]) || 0,
-                        rating: parseInt(values[13]) || 0,
-                        additionalNotes: values[14] || '',
-                        inspectorNotes: values[15] || '',
-                        createdAt: values[16] || new Date().toISOString(),
-                        // حقول إضافية
-                        block: values[17] || '',
-                        avenue: values[18] || '',
-                        street: values[19] || '',
-                        houseNumber: values[20] || '',
-                        rejectionReason: values[21] || '',
-                        rejectionDetails: values[22] || '',
-                        discountPercent: parseFloat(values[23]) || 0,
-                        serviceDate: values[24] || '',
-                        paymentStatus: values[25] || 'في الانتظار',
-                        ratingNotes: values[26] || ''
+                        id: values[0] || `INS-${Date.now()}-${i}`,                    // inspection_id
+                        customerId: values[1] || `CUST-${Date.now()}-${i}`,          // customer_id
+                        customerName: values[2] || '',                               // customer_name
+                        area: values[3] || '',                                       // area
+                        serviceType: values[4] || '',                                // service_type
+                        propertyType: values[5] || '',                               // property_type
+                        inspectionDate: values[6] || '',                             // inspection_date
+                        inspectionTime: values[7] || 'صباحاً (8-12)',                // inspection_time
+                        status: values[8] || 'معلق',                                 // status
+                        approval: values[9] || 'في الانتظار',                        // approval
+                        totalAmount: parseFloat(values[10]) || 0,                    // total_amount
+                        finalAmount: parseFloat(values[11]) || 0,                    // final_amount
+                        rating: parseInt(values[12]) || 0,                           // rating
+                        additionalNotes: values[13] || '',                           // additional_notes
+                        inspectorNotes: values[14] || '',                            // inspector_notes
+                        createdAt: values[15] || new Date().toISOString(),           // created_at
+                        // حقول إضافية (ستكون فارغة من الشيت ولكن مطلوبة للنظام)
+                        customerPhone: '',
+                        block: '',
+                        avenue: '',
+                        street: '',
+                        houseNumber: '',
+                        rejectionReason: '',
+                        rejectionDetails: '',
+                        discountPercent: 0,
+                        serviceDate: '',
+                        paymentStatus: 'في الانتظار',
+                        ratingNotes: ''
                     };
+                    
+                    // طباعة تشخيصية للحقول المهمة
+                    console.log(`المعاينة ${inspection.id}:`);
+                    console.log('- نوع الخدمة (العمود 5):', inspection.serviceType);
+                    console.log('- تاريخ المعاينة (العمود 7):', inspection.inspectionDate);
+                    console.log('- المنطقة (العمود 4):', inspection.area);
+                    console.log('- اسم العميل (العمود 3):', inspection.customerName);
+                    console.log('- الموافقة (العمود 10):', inspection.approval);
+                    console.log('- التقييم (العمود 13):', inspection.rating);
                     
                     inspections.push(inspection);
                 }
             }
             
             console.log('تم تحليل', inspections.length, 'معاينة');
+            
+            // طباعة عينة من البيانات المحللة
+            if (inspections.length > 0) {
+                console.log('=== عينة من المعاينة الأولى ===');
+                console.log('ID:', inspections[0].id);
+                console.log('نوع الخدمة:', inspections[0].serviceType);
+                console.log('تاريخ المعاينة:', inspections[0].inspectionDate);
+                console.log('المنطقة:', inspections[0].area);
+                console.log('اسم العميل:', inspections[0].customerName);
+                console.log('الموافقة:', inspections[0].approval);
+                console.log('التقييم:', inspections[0].rating);
+            }
+            
             return inspections;
         }
 
@@ -1701,9 +1851,11 @@
                     customers[inspection.customerId] = {
                         id: inspection.customerId,
                         name: inspection.customerName || '',
-                        phone: inspection.customerPhone || '',
+                        phone: inspection.customerPhone || '', // سيكون فارغاً من الشيت
                         createdAt: inspection.createdAt || new Date().toISOString()
                     };
+                    
+                    console.log(`تم استخراج عميل: ${inspection.customerId} - ${inspection.customerName}`);
                 }
             });
             
@@ -2086,5 +2238,5 @@
             }, 4000);
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98a4346e0401c68b',t:'MTc1OTc0MzcwNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98a4555297ddc68b',t:'MTc1OTc0NTA1Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
