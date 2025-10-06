@@ -3,69 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إدارة طلبات وجها</title>
+    <title>Wajha Orders - نظام إدارة طلبات المعاينة</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body {
             box-sizing: border-box;
         }
+        
         .fade-in {
             animation: fadeIn 0.5s ease-in;
         }
+        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .slide-in {
-            animation: slideIn 0.3s ease-out;
+        
+        .slide-in-right {
+            animation: slideInRight 0.3s ease-out;
         }
-        @keyframes slideIn {
-            from { transform: translateX(-100%); }
-            to { transform: translateX(0); }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
+        
         .bounce-in {
             animation: bounceIn 0.6s ease-out;
         }
+        
         @keyframes bounceIn {
             0% { transform: scale(0.3); opacity: 0; }
             50% { transform: scale(1.05); }
             70% { transform: scale(0.9); }
             100% { transform: scale(1); opacity: 1; }
         }
-        .pulse-success {
-            animation: pulseSuccess 0.6s ease-in-out;
+        
+        .gradient-orange-red {
+            background: linear-gradient(135deg, #f97316 0%, #dc2626 100%);
         }
-        @keyframes pulseSuccess {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); background-color: #10b981; }
-            100% { transform: scale(1); }
+        
+        .gradient-green-blue {
+            background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
         }
-        .shake {
-            animation: shake 0.5s ease-in-out;
+        
+        .star-rating {
+            display: inline-flex;
+            direction: ltr;
         }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+        
+        .star {
+            font-size: 24px;
+            color: #d1d5db;
+            cursor: pointer;
+            transition: color 0.2s;
         }
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        
+        .star.active {
+            color: #fbbf24;
         }
-        .card-hover {
+        
+        .star:hover {
+            color: #fbbf24;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+            max-width: 400px;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            background-color: #10b981;
+        }
+        
+        .notification.warning {
+            background-color: #f59e0b;
+        }
+        
+        .notification.error {
+            background-color: #ef4444;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .tab-button {
             transition: all 0.3s ease;
         }
-        .card-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        
+        .tab-button.active {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
-        .status-pending { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
-        .status-completed { background: linear-gradient(135deg, #10b981, #059669); }
-        .status-approved { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-        .status-rejected { background: linear-gradient(135deg, #ef4444, #dc2626); }
-        .status-waiting { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        
+        .approval-approved {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        
+        .approval-rejected {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+        
+        .approval-waiting {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+        
         .loading-spinner {
             border: 3px solid #f3f4f6;
             border-top: 3px solid #3b82f6;
@@ -74,97 +139,64 @@
             height: 20px;
             animation: spin 1s linear infinite;
         }
+        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .connection-status {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        .status-connected {
-            background: #10b981;
-            color: white;
-        }
-        .status-connecting {
-            background: #f59e0b;
-            color: white;
-        }
-        .status-error {
-            background: #ef4444;
-            color: white;
-        }
-        .status-local {
-            background: #6b7280;
-            color: white;
-        }
     </style>
 </head>
 <body class="bg-gray-50 font-sans">
-    <!-- حالة الاتصال -->
-    <div id="connectionStatus" class="connection-status status-connecting">
-        🔄 جاري فحص الاتصال...
-    </div>
-
-    <!-- الهيدر -->
-    <header class="gradient-bg text-white shadow-lg">
+    <!-- الهيدر الرئيسي -->
+    <header class="bg-white shadow-lg border-b-4 border-blue-500">
         <div class="container mx-auto px-6 py-4">
             <div class="flex items-center justify-between">
+                <!-- العنوان والشعار -->
                 <div class="flex items-center space-x-4 space-x-reverse">
-                    <div class="bg-white bg-opacity-20 p-3 rounded-full">
-                        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
-                        </svg>
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <span class="text-3xl">🏡</span>
                     </div>
                     <div>
-                        <h1 class="text-2xl font-bold">نظام إدارة طلبات وجها</h1>
-                        <p class="text-blue-100">إدارة شاملة للعملاء والمعاينات</p>
+                        <h1 class="text-3xl font-bold text-gray-800">Wajha Orders</h1>
+                        <div class="flex items-center space-x-2 space-x-reverse mt-1">
+                            <span class="bg-purple-500 text-white px-3 py-1 rounded-full text-sm font-semibold">الإصدار 16</span>
+                        </div>
                     </div>
                 </div>
+                
+                <!-- الأزرار الوظيفية -->
                 <div class="flex items-center space-x-4 space-x-reverse">
-                    <button onclick="syncWithGoogleSheets()" class="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition-all duration-300 flex items-center space-x-2 space-x-reverse">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                        </svg>
-                        <span>تحديث من Sheets</span>
+                    <button onclick="openGoogleSheets()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-all duration-300 flex items-center space-x-2 space-x-reverse">
+                        <span>📊</span>
+                        <span>فتح Google Sheets</span>
                     </button>
-                    <button onclick="exportAllDataToCSV()" class="bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition-all duration-300 flex items-center space-x-2 space-x-reverse">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                        <span>تصدير CSV</span>
+                    
+                    <button onclick="loadFromGoogleSheets()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-all duration-300 flex items-center space-x-2 space-x-reverse">
+                        <span>📥</span>
+                        <span>قراءة البيانات</span>
                     </button>
-                    <div class="text-right">
-                        <div class="text-sm opacity-90">إجمالي العملاء</div>
-                        <div id="totalCustomers" class="text-xl font-bold">0</div>
-                    </div>
+                    
+                    <button id="exportBtn" onclick="exportData()" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-all duration-300 flex items-center space-x-2 space-x-reverse hidden">
+                        <span>📤</span>
+                        <span>تصدير كـ CSV</span>
+                    </button>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- التنقل -->
+    <!-- التبويبات الرئيسية -->
     <nav class="bg-white shadow-md sticky top-0 z-40">
         <div class="container mx-auto px-6">
-            <div class="flex space-x-8 space-x-reverse">
-                <button onclick="showSection('dashboard')" class="nav-btn px-6 py-4 text-blue-600 border-b-2 border-blue-600 font-semibold">
-                    لوحة التحكم
+            <div class="flex space-x-0 space-x-reverse">
+                <button onclick="showTab('new-order')" class="tab-button active px-8 py-4 font-semibold rounded-t-lg">
+                    طلب معاينة جديد
                 </button>
-                <button onclick="showSection('customers')" class="nav-btn px-6 py-4 text-gray-600 hover:text-blue-600 transition-colors">
-                    العملاء
+                <button onclick="showTab('pending-orders')" class="tab-button px-8 py-4 font-semibold rounded-t-lg text-gray-600 hover:text-blue-600">
+                    الطلبات المعلقة
                 </button>
-                <button onclick="showSection('inspections')" class="nav-btn px-6 py-4 text-gray-600 hover:text-blue-600 transition-colors">
-                    المعاينات
-                </button>
-                <button onclick="showSection('reports')" class="nav-btn px-6 py-4 text-gray-600 hover:text-blue-600 transition-colors">
-                    التقارير
+                <button onclick="showTab('completed-orders')" class="tab-button px-8 py-4 font-semibold rounded-t-lg text-gray-600 hover:text-blue-600">
+                    الطلبات المكتملة
                 </button>
             </div>
         </div>
@@ -172,641 +204,490 @@
 
     <!-- المحتوى الرئيسي -->
     <main class="container mx-auto px-6 py-8">
-        <!-- لوحة التحكم -->
-        <section id="dashboard" class="section-content">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <!-- بطاقة إجمالي العملاء -->
-                <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-600 text-sm">إجمالي العملاء</p>
-                            <p id="dashTotalCustomers" class="text-3xl font-bold text-blue-600">0</p>
-                        </div>
-                        <div class="bg-blue-100 p-3 rounded-full">
-                            <svg class="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- بطاقة المعاينات المعلقة -->
-                <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-600 text-sm">معاينات معلقة</p>
-                            <p id="dashPendingInspections" class="text-3xl font-bold text-yellow-600">0</p>
-                        </div>
-                        <div class="bg-yellow-100 p-3 rounded-full">
-                            <svg class="w-8 h-8 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- بطاقة المعاينات المكتملة -->
-                <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-600 text-sm">معاينات مكتملة</p>
-                            <p id="dashCompletedInspections" class="text-3xl font-bold text-green-600">0</p>
-                        </div>
-                        <div class="bg-green-100 p-3 rounded-full">
-                            <svg class="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- بطاقة إجمالي الإيرادات -->
-                <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-gray-600 text-sm">إجمالي الإيرادات</p>
-                            <p id="dashTotalRevenue" class="text-3xl font-bold text-purple-600">0 د.ك</p>
-                        </div>
-                        <div class="bg-purple-100 p-3 rounded-full">
-                            <svg class="w-8 h-8 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"/>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- الرسوم البيانية -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="bg-white rounded-xl shadow-lg p-6">
-                    <h3 class="text-lg font-semibold mb-4">توزيع حالات المعاينات</h3>
-                    <canvas id="statusChart" width="400" height="200"></canvas>
-                </div>
-                <div class="bg-white rounded-xl shadow-lg p-6">
-                    <h3 class="text-lg font-semibold mb-4">المعاينات الشهرية</h3>
-                    <canvas id="monthlyChart" width="400" height="200"></canvas>
-                </div>
-            </div>
-        </section>
-
-        <!-- قسم العملاء -->
-        <section id="customers" class="section-content hidden">
+        <!-- تبويب طلب معاينة جديد -->
+        <div id="new-order" class="tab-content active">
+            <!-- قسم البحث عن العميل -->
             <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-800">إدارة العملاء</h2>
-                    <button onclick="showAddCustomerModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-all duration-300 flex items-center space-x-2 space-x-reverse">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                        </svg>
-                        <span>إضافة عميل جديد</span>
-                    </button>
-                </div>
-
-                <!-- شريط البحث -->
-                <div class="mb-6">
-                    <div class="relative">
-                        <input type="text" id="customerSearch" placeholder="البحث عن عميل..." class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <svg class="absolute left-3 top-3.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- جدول العملاء -->
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">رقم العميل</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الاسم</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">رقم الهاتف</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تاريخ التسجيل</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">عدد المعاينات</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="customersTableBody" class="bg-white divide-y divide-gray-200">
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- قسم المعاينات -->
-        <section id="inspections" class="section-content hidden">
-            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-800">إدارة المعاينات</h2>
-                    <button onclick="showAddInspectionModal()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-all duration-300 flex items-center space-x-2 space-x-reverse">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                        </svg>
-                        <span>إضافة معاينة جديدة</span>
-                    </button>
-                </div>
-
-                <!-- فلاتر البحث -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <input type="text" id="inspectionSearch" placeholder="البحث..." class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                    <select id="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                        <option value="">جميع الحالات</option>
-                        <option value="معلق">معلق</option>
-                        <option value="مكتمل">مكتمل</option>
-                    </select>
-                    <select id="approvalFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                        <option value="">جميع الموافقات</option>
-                        <option value="موافق">موافق</option>
-                        <option value="غير موافق">غير موافق</option>
-                        <option value="في الانتظار">في الانتظار</option>
-                    </select>
-                    <input type="date" id="dateFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                </div>
-
-                <!-- جدول المعاينات -->
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">رقم المعاينة</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">العميل</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المنطقة</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">نوع الخدمة</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التاريخ</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الموافقة</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المبلغ النهائي</th>
-                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="inspectionsTableBody" class="bg-white divide-y divide-gray-200">
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <!-- قسم التقارير -->
-        <section id="reports" class="section-content hidden">
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-2xl font-bold text-gray-800 mb-6">التقارير والإحصائيات</h2>
+                <h2 class="text-xl font-bold text-gray-800 mb-4">البحث عن العميل</h2>
                 
-                <!-- أزرار التصدير -->
-                <div class="flex flex-wrap gap-4 mb-8">
-                    <button onclick="exportCustomersReport()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-all duration-300">
-                        تقرير العملاء (PDF)
-                    </button>
-                    <button onclick="exportInspectionsReport()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-all duration-300">
-                        تقرير المعاينات (PDF)
-                    </button>
-                    <button onclick="exportFinancialReport()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-all duration-300">
-                        التقرير المالي (PDF)
-                    </button>
-                    <button onclick="exportAllDataToCSV()" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg transition-all duration-300">
-                        تصدير CSV للـ Sheets
-                    </button>
-                    <button onclick="exportData()" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-all duration-300">
-                        نسخة احتياطية (JSON)
+                <div class="flex items-center space-x-4 space-x-reverse mb-4">
+                    <input type="text" id="customerSearch" placeholder="ابحث برقم العميل أو اسم العميل..." 
+                           class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <button onclick="searchCustomer()" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg transition-all duration-300">
+                        بحث
                     </button>
                 </div>
+                
+                <div id="createNewOrderBtn" class="hidden mb-4">
+                    <button onclick="showNewCustomerForm()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg transition-all duration-300">
+                        إنشاء طلب معاينة جديد
+                    </button>
+                </div>
+                
+                <p class="text-gray-600 text-sm">💡 نصيحة: يمكنك البحث برقم العميل أو اسم العميل</p>
+            </div>
 
-                <!-- إحصائيات مفصلة -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-xl">
-                        <h3 class="text-lg font-semibold mb-2">معدل الموافقة</h3>
-                        <p id="approvalRate" class="text-3xl font-bold">0%</p>
+            <!-- قسم تاريخ العميل -->
+            <div id="customerHistory" class="bg-white rounded-xl shadow-lg p-6 mb-6 hidden">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">تاريخ العميل</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">رقم المعاينة</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المنطقة</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">نوع الخدمة</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">تاريخ المعاينة</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الموافقة</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customerHistoryBody" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- نموذج العميل الجديد -->
+            <div id="newCustomerForm" class="bg-white rounded-xl shadow-lg p-6 hidden">
+                <h3 class="text-xl font-bold text-gray-800 mb-6">إنشاء طلب معاينة جديد</h3>
+                
+                <form id="inspectionForm">
+                    <!-- معلومات العميل الأساسية -->
+                    <div class="mb-8">
+                        <h4 class="text-lg font-semibold text-gray-700 mb-4">معلومات العميل الأساسية</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2">رقم العميل</label>
+                                <input type="text" id="customerId" readonly class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2">الاسم <span class="text-red-500">*</span></label>
+                                <input type="text" id="customerName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2">رقم الجوال <span class="text-red-500">*</span></label>
+                                <input type="tel" id="customerPhone" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
                     </div>
-                    <div class="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-xl">
-                        <h3 class="text-lg font-semibold mb-2">متوسط قيمة المعاينة</h3>
-                        <p id="avgInspectionValue" class="text-3xl font-bold">0 د.ك</p>
+
+                    <!-- معلومات العنوان -->
+                    <div class="mb-8">
+                        <h4 class="text-lg font-semibold text-gray-700 mb-4">معلومات العنوان</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2">المنطقة <span class="text-red-500">*</span></label>
+                                <select id="customerArea" required onchange="updateAddressPreview()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    <option value="">اختر المنطقة</option>
+                                    <option value="الكويت">الكويت</option>
+                                    <option value="حولي">حولي</option>
+                                    <option value="الفروانية">الفروانية</option>
+                                    <option value="مبارك الكبير">مبارك الكبير</option>
+                                    <option value="الأحمدي">الأحمدي</option>
+                                    <option value="الجهراء">الجهراء</option>
+                                    <option value="السالمية">السالمية</option>
+                                    <option value="الجابرية">الجابرية</option>
+                                    <option value="بيان">بيان</option>
+                                    <option value="مشرف">مشرف</option>
+                                    <option value="الرميثية">الرميثية</option>
+                                    <option value="الشعب">الشعب</option>
+                                    <option value="الدعية">الدعية</option>
+                                    <option value="الدسمة">الدسمة</option>
+                                    <option value="الشرق">الشرق</option>
+                                    <option value="المرقاب">المرقاب</option>
+                                    <option value="الصوابر">الصوابر</option>
+                                    <option value="الفيحاء">الفيحاء</option>
+                                    <option value="العديلية">العديلية</option>
+                                    <option value="قرطبة">قرطبة</option>
+                                    <option value="اليرموك">اليرموك</option>
+                                    <option value="الخالدية">الخالدية</option>
+                                    <option value="النزهة">النزهة</option>
+                                    <option value="الروضة">الروضة</option>
+                                    <option value="العدان">العدان</option>
+                                    <option value="المهبولة">المهبولة</option>
+                                    <option value="الفنطاس">الفنطاس</option>
+                                    <option value="أبو حليفة">أبو حليفة</option>
+                                    <option value="الفحيحيل">الفحيحيل</option>
+                                    <option value="المنقف">المنقف</option>
+                                    <option value="الأحمدي">الأحمدي</option>
+                                    <option value="الرقة">الرقة</option>
+                                    <option value="الصباحية">الصباحية</option>
+                                    <option value="الخيران">الخيران</option>
+                                    <option value="الوفرة">الوفرة</option>
+                                    <option value="الزور">الزور</option>
+                                    <option value="كبد">كبد</option>
+                                    <option value="الجليب">الجليب</option>
+                                    <option value="الري">الري</option>
+                                    <option value="الضجيج">الضجيج</option>
+                                    <option value="الرابية">الرابية</option>
+                                    <option value="إشبيلية">إشبيلية</option>
+                                    <option value="الأندلس">الأندلس</option>
+                                    <option value="الفردوس">الفردوس</option>
+                                    <option value="جليب الشيوخ">جليب الشيوخ</option>
+                                    <option value="الرحاب">الرحاب</option>
+                                    <option value="العارضية">العارضية</option>
+                                    <option value="الضاحية">الضاحية</option>
+                                    <option value="الشدادية">الشدادية</option>
+                                    <option value="الصليبية">الصليبية</option>
+                                    <option value="النعيم">النعيم</option>
+                                    <option value="الواحة">الواحة</option>
+                                    <option value="تيماء">تيماء</option>
+                                    <option value="الصليبيخات">الصليبيخات</option>
+                                    <option value="الدوحة">الدوحة</option>
+                                    <option value="القيروان">القيروان</option>
+                                    <option value="القادسية">القادسية</option>
+                                    <option value="السرة">السرة</option>
+                                    <option value="الزهراء">الزهراء</option>
+                                    <option value="الشامية">الشامية</option>
+                                    <option value="الشويخ">الشويخ</option>
+                                    <option value="الصالحية">الصالحية</option>
+                                    <option value="غرناطة">غرناطة</option>
+                                    <option value="الفيصلية">الفيصلية</option>
+                                    <option value="النهضة">النهضة</option>
+                                    <option value="الوطية">الوطية</option>
+                                    <option value="العمرية">العمرية</option>
+                                    <option value="الجابرية">الجابرية</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2">القطعة</label>
+                                <input type="text" id="customerBlock" onchange="updateAddressPreview()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2">الجادة</label>
+                                <input type="text" id="customerAvenue" onchange="updateAddressPreview()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2">الشارع</label>
+                                <input type="text" id="customerStreet" onchange="updateAddressPreview()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2">رقم المنزل</label>
+                                <input type="text" id="customerHouseNumber" onchange="updateAddressPreview()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        
+                        <!-- مراجعة العنوان -->
+                        <div id="addressPreview" class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg hidden">
+                            <h5 class="font-semibold text-blue-800 mb-2">مراجعة العنوان:</h5>
+                            <p id="fullAddress" class="text-blue-700"></p>
+                        </div>
                     </div>
-                    <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-xl">
-                        <h3 class="text-lg font-semibold mb-2">متوسط التقييم</h3>
-                        <p id="avgRating" class="text-3xl font-bold">0/5</p>
+
+                    <!-- تفاصيل الخدمة المطلوبة -->
+                    <div class="mb-8">
+                        <h4 class="text-lg font-semibold text-gray-700 mb-4">تفاصيل الخدمة المطلوبة</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2">نوع الخدمة <span class="text-red-500">*</span></label>
+                                <select id="serviceType" required onchange="toggleOtherService()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    <option value="">اختر نوع الخدمة</option>
+                                    <option value="تنظيف عام">تنظيف عام</option>
+                                    <option value="تنظيف عميق">تنظيف عميق</option>
+                                    <option value="تنظيف بعد الدهان">تنظيف بعد الدهان</option>
+                                    <option value="تنظيف المطبخ">تنظيف المطبخ</option>
+                                    <option value="تنظيف الحمامات">تنظيف الحمامات</option>
+                                    <option value="تنظيف النوافذ">تنظيف النوافذ</option>
+                                    <option value="تنظيف السجاد والموكيت">تنظيف السجاد والموكيت</option>
+                                    <option value="تنظيف الأثاث">تنظيف الأثاث</option>
+                                    <option value="أخرى">أخرى</option>
+                                </select>
+                            </div>
+                            <div id="otherServiceDiv" class="hidden">
+                                <label class="block text-gray-700 text-sm font-bold mb-2">تحديد نوع الخدمة الأخرى</label>
+                                <input type="text" id="otherService" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2">نوع السكن <span class="text-red-500">*</span></label>
+                                <select id="propertyType" required onchange="toggleOtherProperty()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    <option value="">اختر نوع السكن</option>
+                                    <option value="شقة">شقة</option>
+                                    <option value="فيلا">فيلا</option>
+                                    <option value="دوبلكس">دوبلكس</option>
+                                    <option value="استوديو">استوديو</option>
+                                    <option value="بيت شعبي">بيت شعبي</option>
+                                    <option value="أخرى">أخرى</option>
+                                </select>
+                            </div>
+                            <div id="otherPropertyDiv" class="hidden">
+                                <label class="block text-gray-700 text-sm font-bold mb-2">تحديد نوع السكن الآخر</label>
+                                <input type="text" id="otherProperty" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2">تاريخ المعاينة المفضل <span class="text-red-500">*</span></label>
+                                <input type="date" id="inspectionDate" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2">وقت المعاينة المفضل</label>
+                                <select id="inspectionTime" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    <option value="صباحاً (8-12)">صباحاً (8-12)</option>
+                                    <option value="ظهراً (12-4)">ظهراً (12-4)</option>
+                                    <option value="مساءً (4-8)">مساءً (4-8)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">ملاحظات إضافية</label>
+                            <textarea id="additionalNotes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- موافقة العميل على الخدمة -->
+                    <div class="mb-8">
+                        <h4 class="text-lg font-semibold text-gray-700 mb-4">موافقة العميل على الخدمة</h4>
+                        <div class="flex space-x-6 space-x-reverse">
+                            <label class="flex items-center">
+                                <input type="radio" name="approval" value="موافق" onchange="toggleApprovalSections()" class="ml-2">
+                                <span class="px-3 py-1 bg-green-500 text-white rounded-full text-sm">موافق</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="approval" value="غير موافق" onchange="toggleApprovalSections()" class="ml-2">
+                                <span class="px-3 py-1 bg-red-500 text-white rounded-full text-sm">غير موافق</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="approval" value="في الانتظار" checked onchange="toggleApprovalSections()" class="ml-2">
+                                <span class="px-3 py-1 bg-blue-500 text-white rounded-full text-sm">في الانتظار</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- أسباب الإلغاء -->
+                    <div id="rejectionReasons" class="mb-8 hidden">
+                        <h4 class="text-lg font-semibold text-gray-700 mb-4">أسباب الإلغاء</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2">سبب الإلغاء</label>
+                                <select id="rejectionReason" onchange="toggleOtherRejectionReason()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    <option value="">اختر سبب الإلغاء</option>
+                                    <option value="السعر مرتفع">السعر مرتفع</option>
+                                    <option value="تغيير في الخطط">تغيير في الخطط</option>
+                                    <option value="وجد خدمة أخرى">وجد خدمة أخرى</option>
+                                    <option value="عدم توفر الوقت">عدم توفر الوقت</option>
+                                    <option value="عدم الحاجة للخدمة">عدم الحاجة للخدمة</option>
+                                    <option value="مشكلة في التواصل">مشكلة في التواصل</option>
+                                    <option value="أخرى">أخرى</option>
+                                </select>
+                            </div>
+                            <div id="otherRejectionDiv" class="hidden">
+                                <label class="block text-gray-700 text-sm font-bold mb-2">تحديد السبب الآخر</label>
+                                <input type="text" id="otherRejectionReason" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">تفاصيل إضافية حول سبب الإلغاء</label>
+                            <textarea id="rejectionDetails" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="اكتب تفاصيل إضافية حول سبب الإلغاء..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- معلومات الدفع -->
+                    <div id="paymentInfo" class="mb-8 hidden">
+                        <h4 class="text-lg font-semibold text-gray-700 mb-4">معلومات الدفع</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2">المبلغ الكلي (د.ك)</label>
+                                <input type="number" id="totalAmount" step="0.001" onchange="calculateDiscount()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2">نسبة الخصم (%)</label>
+                                <input type="number" id="discountPercent" step="0.1" onchange="calculateDiscount()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2">المبلغ بعد الخصم (د.ك)</label>
+                                <input type="number" id="finalAmount" step="0.001" readonly class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 text-sm font-bold mb-2">تاريخ تنفيذ الخدمة</label>
+                                <input type="date" id="serviceDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">حالة الدفع</label>
+                            <select id="paymentStatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                <option value="في الانتظار">في الانتظار</option>
+                                <option value="مدفوع">مدفوع</option>
+                                <option value="مدفوع جزئياً">مدفوع جزئياً</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- تقييم رضا العميل -->
+                    <div id="customerRating" class="mb-8 hidden">
+                        <h4 class="text-lg font-semibold text-gray-700 mb-4">تقييم رضا العميل</h4>
+                        <div class="mb-4">
+                            <div class="star-rating" id="starRating">
+                                <span class="star" data-rating="1">★</span>
+                                <span class="star" data-rating="2">★</span>
+                                <span class="star" data-rating="3">★</span>
+                                <span class="star" data-rating="4">★</span>
+                                <span class="star" data-rating="5">★</span>
+                            </div>
+                            <p id="ratingText" class="text-gray-600 mt-2">اختر التقييم</p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">ملاحظة حول سبب التقييم</label>
+                            <textarea id="ratingNotes" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- ملاحظات إضافية -->
+                    <div class="mb-8">
+                        <h4 class="text-lg font-semibold text-gray-700 mb-4">ملاحظات إضافية</h4>
+                        <textarea id="inspectorNotes" rows="3" placeholder="ملاحظات إضافية من المفتش..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+
+                    <!-- أزرار الحفظ -->
+                    <div class="flex justify-end space-x-4 space-x-reverse">
+                        <button type="button" onclick="resetForm()" class="px-6 py-3 text-gray-600 hover:text-gray-800 transition-colors">
+                            إعادة تعيين
+                        </button>
+                        <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg transition-all duration-300 flex items-center space-x-2 space-x-reverse">
+                            <span>حفظ الطلب</span>
+                            <div id="saveSpinner" class="loading-spinner hidden"></div>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- نموذج العميل الموجود -->
+            <div id="existingCustomerForm" class="bg-white rounded-xl shadow-lg p-6 hidden">
+                <h3 class="text-xl font-bold text-gray-800 mb-6">إضافة طلب معاينة لعميل موجود</h3>
+                
+                <!-- معلومات العميل الموجود -->
+                <div id="existingCustomerInfo" class="mb-6 p-4 bg-gray-100 rounded-lg">
+                    <!-- سيتم ملؤها ديناميكياً -->
+                </div>
+                
+                <!-- باقي النموذج مطابق للعميل الجديد (بدون معلومات العميل الأساسية) -->
+                <!-- يمكن نسخ الأقسام من النموذج السابق -->
+            </div>
+        </div>
+
+        <!-- تبويب الطلبات المعلقة -->
+        <div id="pending-orders" class="tab-content">
+            <div class="gradient-orange-red rounded-xl shadow-lg p-6 text-white">
+                <h2 class="text-2xl font-bold mb-6">الطلبات المعلقة</h2>
+                
+                <div class="bg-white bg-opacity-10 rounded-lg overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead class="bg-black bg-opacity-20">
+                                <tr>
+                                    <th class="px-6 py-3 text-right text-sm font-medium text-white uppercase">رقم المعاينة</th>
+                                    <th class="px-6 py-3 text-right text-sm font-medium text-white uppercase">اسم العميل</th>
+                                    <th class="px-6 py-3 text-right text-sm font-medium text-white uppercase">المنطقة</th>
+                                    <th class="px-6 py-3 text-right text-sm font-medium text-white uppercase">نوع الخدمة</th>
+                                    <th class="px-6 py-3 text-right text-sm font-medium text-white uppercase">تاريخ المعاينة</th>
+                                    <th class="px-6 py-3 text-right text-sm font-medium text-white uppercase">الموافقة</th>
+                                    <th class="px-6 py-3 text-right text-sm font-medium text-white uppercase">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pendingOrdersBody" class="divide-y divide-white divide-opacity-20">
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
+
+        <!-- تبويب الطلبات المكتملة -->
+        <div id="completed-orders" class="tab-content">
+            <div class="gradient-green-blue rounded-xl shadow-lg p-6 text-white">
+                <h2 class="text-2xl font-bold mb-6">الطلبات المكتملة</h2>
+                
+                <div class="bg-white bg-opacity-10 rounded-lg overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead class="bg-black bg-opacity-20">
+                                <tr>
+                                    <th class="px-6 py-3 text-right text-sm font-medium text-white uppercase">رقم المعاينة</th>
+                                    <th class="px-6 py-3 text-right text-sm font-medium text-white uppercase">اسم العميل</th>
+                                    <th class="px-6 py-3 text-right text-sm font-medium text-white uppercase">المنطقة</th>
+                                    <th class="px-6 py-3 text-right text-sm font-medium text-white uppercase">نوع الخدمة</th>
+                                    <th class="px-6 py-3 text-right text-sm font-medium text-white uppercase">تاريخ المعاينة</th>
+                                    <th class="px-6 py-3 text-right text-sm font-medium text-white uppercase">الموافقة</th>
+                                    <th class="px-6 py-3 text-right text-sm font-medium text-white uppercase">التقييم</th>
+                                    <th class="px-6 py-3 text-right text-sm font-medium text-white uppercase">الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="completedOrdersBody" class="divide-y divide-white divide-opacity-20">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
-    <!-- مودال إضافة عميل -->
-    <div id="addCustomerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-white rounded-xl p-8 max-w-md w-full mx-4 bounce-in">
-            <h3 class="text-xl font-bold mb-6">إضافة عميل جديد</h3>
-            <form id="addCustomerForm">
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">الاسم</label>
-                    <input type="text" id="customerName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div class="mb-6">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">رقم الهاتف</label>
-                    <input type="tel" id="customerPhone" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div class="flex justify-end space-x-4 space-x-reverse">
-                    <button type="button" onclick="hideAddCustomerModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">
-                        إلغاء
-                    </button>
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-all duration-300">
-                        <span class="flex items-center space-x-2 space-x-reverse">
-                            <span>إضافة</span>
-                            <div id="addCustomerSpinner" class="loading-spinner hidden"></div>
-                        </span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- مودال إضافة معاينة -->
-    <div id="addInspectionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-white rounded-xl p-8 max-w-2xl w-full mx-4 max-h-screen overflow-y-auto bounce-in">
-            <h3 class="text-xl font-bold mb-6">إضافة معاينة جديدة</h3>
-            <form id="addInspectionForm">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">العميل</label>
-                        <select id="inspectionCustomer" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                            <option value="">اختر العميل</option>
-                        </select>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">المنطقة</label>
-                        <select id="inspectionArea" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                            <option value="">اختر المنطقة</option>
-                            <option value="الكويت">الكويت</option>
-                            <option value="حولي">حولي</option>
-                            <option value="الفروانية">الفروانية</option>
-                            <option value="مبارك الكبير">مبارك الكبير</option>
-                            <option value="الأحمدي">الأحمدي</option>
-                            <option value="الجهراء">الجهراء</option>
-                        </select>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">نوع الخدمة</label>
-                        <select id="inspectionServiceType" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                            <option value="">اختر نوع الخدمة</option>
-                            <option value="فحص منزل">فحص منزل</option>
-                            <option value="فحص شقة">فحص شقة</option>
-                            <option value="فحص فيلا">فحص فيلا</option>
-                            <option value="فحص مكتب">فحص مكتب</option>
-                            <option value="فحص محل تجاري">فحص محل تجاري</option>
-                        </select>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">نوع العقار</label>
-                        <select id="inspectionPropertyType" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                            <option value="">اختر نوع العقار</option>
-                            <option value="شقة">شقة</option>
-                            <option value="فيلا">فيلا</option>
-                            <option value="بيت">بيت</option>
-                            <option value="مكتب">مكتب</option>
-                            <option value="محل">محل</option>
-                            <option value="مستودع">مستودع</option>
-                        </select>
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">تاريخ المعاينة</label>
-                        <input type="date" id="inspectionDate" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">وقت المعاينة</label>
-                        <input type="time" id="inspectionTime" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">المبلغ الإجمالي</label>
-                        <input type="number" id="inspectionTotalAmount" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                    </div>
-                    <div class="mb-4">
-                        <label class="block text-gray-700 text-sm font-bold mb-2">المبلغ النهائي</label>
-                        <input type="number" id="inspectionFinalAmount" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
-                    </div>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">ملاحظات إضافية</label>
-                    <textarea id="inspectionNotes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"></textarea>
-                </div>
-                <div class="flex justify-end space-x-4 space-x-reverse">
-                    <button type="button" onclick="hideAddInspectionModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">
-                        إلغاء
-                    </button>
-                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-all duration-300">
-                        <span class="flex items-center space-x-2 space-x-reverse">
-                            <span>إضافة</span>
-                            <div id="addInspectionSpinner" class="loading-spinner hidden"></div>
-                        </span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- مودال تفاصيل المعاينة -->
-    <div id="inspectionDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-white rounded-xl p-8 max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
+    <!-- النافذة المنبثقة لتفاصيل المعاينة -->
+    <div id="inspectionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-8 max-w-4xl w-full mx-4 max-h-screen overflow-y-auto bounce-in">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold">تفاصيل المعاينة</h3>
-                <button onclick="hideInspectionDetailsModal()" class="text-gray-500 hover:text-gray-700">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
+                <h3 class="text-2xl font-bold text-gray-800">تفاصيل المعاينة</h3>
+                <button onclick="closeInspectionModal()" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
             </div>
-            <div id="inspectionDetailsContent">
+            
+            <div id="inspectionDetails">
                 <!-- سيتم ملء المحتوى ديناميكياً -->
             </div>
         </div>
     </div>
 
+    <!-- النافذة المنبثقة لتعديل المعاينة -->
+    <div id="editInspectionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-8 max-w-4xl w-full mx-4 max-h-screen overflow-y-auto bounce-in">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-800">تعديل المعاينة</h3>
+                <button onclick="closeEditInspectionModal()" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+            </div>
+            
+            <form id="editInspectionForm">
+                <div id="editInspectionContent">
+                    <!-- سيتم ملء المحتوى ديناميكياً -->
+                </div>
+                
+                <div class="flex justify-end space-x-4 space-x-reverse mt-6">
+                    <button type="button" onclick="closeEditInspectionModal()" class="px-6 py-3 text-gray-600 hover:text-gray-800 transition-colors">
+                        إلغاء
+                    </button>
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg transition-all duration-300">
+                        حفظ التعديلات
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
-        // إعدادات Google Sheets - قراءة مباشرة عبر CSV
-        const SPREADSHEET_ID = '14kbGPoC4ld3tkDAuVWGO36FjNtRvY0xKBXc_y0vUkZI';
-        
-        // متغيرات البيانات
-        let customers = [];
+        // متغيرات النظام
+        let customers = {};
         let inspections = [];
-        let isConnected = false;
-        let autoSaveEnabled = true;
-        let environmentType = 'unknown';
+        let inspectionCounter = 1000;
+        let currentRating = 0;
+        let isExistingCustomer = false;
+        let currentCustomerId = null;
 
-        // فحص البيئة
-        function detectEnvironment() {
-            const isInIframe = window !== window.top;
-            const isLocalFile = window.location.protocol === 'file:';
-            const isHTTPS = window.location.protocol === 'https:';
-            const isCanvaEnvironment = window.location.hostname.includes('canva');
+        // Google Sheets Configuration
+        const GOOGLE_SHEETS_URL = 'https://docs.google.com/spreadsheets/d/14kbGPoC4ld3tkDAuVWGO36FjNtRvY0xKBXc_y0vUkZI/edit';
+        const GOOGLE_SHEETS_ID = '14kbGPoC4ld3tkDAuVWGO36FjNtRvY0xKBXc_y0vUkZI';
+
+        // تهيئة النظام
+        document.addEventListener('DOMContentLoaded', function() {
+            loadLocalData();
+            generateCustomerId();
+            setupEventListeners();
+            setMinDate();
+            updateTables();
             
-            if (isCanvaEnvironment) {
-                environmentType = 'canva';
-            } else if (isInIframe) {
-                environmentType = 'iframe';
-            } else if (isLocalFile) {
-                environmentType = 'local';
-            } else if (isHTTPS) {
-                environmentType = 'web';
-            } else {
-                environmentType = 'http';
-            }
-            
-            console.log('البيئة المكتشفة:', environmentType);
-            return environmentType;
-        }
-
-        // قراءة البيانات من Google Sheets باستخدام CSV Export المباشر
-        async function readFromGoogleSheets(sheetName) {
-            try {
-                // التحقق من إمكانية الاتصال
-                if (environmentType === 'local' || environmentType === 'iframe') {
-                    throw new Error('البيئة لا تدعم الاتصال الخارجي');
-                }
-
-                // استخدام رابط CSV المباشر من Google Sheets (يعمل للقراءة فقط)
-                const csvUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${sheetName}`;
-                
-                const response = await fetch(csvUrl, {
-                    method: 'GET',
-                    mode: 'cors',
-                    headers: {
-                        'Accept': 'text/csv,text/plain,*/*'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: فشل في الاتصال`);
-                }
-                
-                const csvText = await response.text();
-                
-                // التحقق من وجود بيانات صحيحة
-                if (!csvText || csvText.trim() === '' || csvText.includes('<!DOCTYPE html>') || csvText.includes('<html>')) {
-                    console.log(`الشيت ${sheetName} فارغ أو غير متاح`);
-                    return [];
-                }
-                
-                return parseCSV(csvText);
-                
-            } catch (error) {
-                console.error(`خطأ في قراءة ${sheetName}:`, error);
-                throw error;
-            }
-        }
-
-        // تحليل CSV
-        function parseCSV(csvText) {
-            const lines = csvText.split('\n');
-            const result = [];
-            
-            for (let line of lines) {
-                if (line.trim()) {
-                    // تحليل بسيط للـ CSV مع التعامل مع الفواصل داخل النصوص
-                    const row = [];
-                    let current = '';
-                    let inQuotes = false;
-                    
-                    for (let i = 0; i < line.length; i++) {
-                        const char = line[i];
-                        
-                        if (char === '"') {
-                            inQuotes = !inQuotes;
-                        } else if (char === ',' && !inQuotes) {
-                            row.push(current.trim().replace(/^"|"$/g, ''));
-                            current = '';
-                        } else {
-                            current += char;
-                        }
-                    }
-                    
-                    row.push(current.trim().replace(/^"|"$/g, ''));
-                    result.push(row);
-                }
-            }
-            
-            return result;
-        }
-
-        // تصدير البيانات كـ CSV للنسخ اليدوي إلى Google Sheets
-        function exportToCSV(data, filename) {
-            let csvContent = '';
-            
-            if (filename.includes('customers')) {
-                // هيدر العملاء
-                csvContent = 'customer_id,name,phone,created_at\n';
-                data.forEach(customer => {
-                    csvContent += `"${customer.id}","${customer.name}","${customer.phone}","${customer.createdAt}"\n`;
-                });
-            } else if (filename.includes('inspections')) {
-                // هيدر المعاينات
-                csvContent = 'inspection_id,customer_id,customer_name,area,service_type,property_type,inspection_date,inspection_time,status,approval,total_amount,final_amount,rating,additional_notes,inspector_notes,created_at\n';
-                data.forEach(inspection => {
-                    csvContent += `"${inspection.id}","${inspection.customerId}","${inspection.customerName}","${inspection.area}","${inspection.serviceType}","${inspection.propertyType}","${inspection.date}","${inspection.time}","${inspection.status}","${inspection.approval}","${inspection.totalAmount}","${inspection.finalAmount}","${inspection.rating}","${inspection.additionalNotes}","${inspection.inspectorNotes}","${inspection.createdAt}"\n`;
-                });
-            }
-            
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', filename);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        // تحميل البيانات من Google Sheets (قراءة فقط)
-        async function loadDataFromGoogleSheets() {
-            try {
-                updateConnectionStatus('connecting');
-                
-                // التحقق من البيئة
-                if (environmentType === 'local' || environmentType === 'iframe') {
-                    console.log('البيئة محدودة - سيعمل النظام محلياً فقط');
-                    throw new Error('بيئة محدودة');
-                }
-                
-                // محاولة تحميل العملاء
-                try {
-                    const customersData = await readFromGoogleSheets('Customers');
-                    if (customersData && customersData.length > 1) { // تجاهل الهيدر
-                        const loadedCustomers = customersData.slice(1).map(row => ({
-                            id: row[0] || '',
-                            name: row[1] || '',
-                            phone: row[2] || '',
-                            createdAt: row[3] || new Date().toISOString()
-                        })).filter(customer => customer.id && customer.name); // تصفية الصفوف الفارغة
-                        
-                        if (loadedCustomers.length > 0) {
-                            customers = loadedCustomers;
-                            console.log(`تم تحميل ${customers.length} عميل من Google Sheets`);
-                        }
-                    }
-                } catch (error) {
-                    console.log('لم يتم العثور على شيت العملاء أو هو فارغ');
-                }
-
-                // محاولة تحميل المعاينات
-                try {
-                    const inspectionsData = await readFromGoogleSheets('Inspections');
-                    if (inspectionsData && inspectionsData.length > 1) { // تجاهل الهيدر
-                        const loadedInspections = inspectionsData.slice(1).map(row => ({
-                            id: row[0] || '',
-                            customerId: row[1] || '',
-                            customerName: row[2] || '',
-                            area: row[3] || '',
-                            serviceType: row[4] || '',
-                            propertyType: row[5] || '',
-                            date: row[6] || '',
-                            time: row[7] || '',
-                            status: row[8] || 'معلق',
-                            approval: row[9] || 'في الانتظار',
-                            totalAmount: parseFloat(row[10]) || 0,
-                            finalAmount: parseFloat(row[11]) || 0,
-                            rating: parseInt(row[12]) || 0,
-                            additionalNotes: row[13] || '',
-                            inspectorNotes: row[14] || '',
-                            createdAt: row[15] || new Date().toISOString()
-                        })).filter(inspection => inspection.id && inspection.customerName); // تصفية الصفوف الفارغة
-                        
-                        if (loadedInspections.length > 0) {
-                            inspections = loadedInspections;
-                            console.log(`تم تحميل ${inspections.length} معاينة من Google Sheets`);
-                        }
-                    }
-                } catch (error) {
-                    console.log('لم يتم العثور على شيت المعاينات أو هو فارغ');
-                }
-
-                isConnected = true;
-                updateConnectionStatus('connected');
-                updateUI();
-                
-            } catch (error) {
-                console.error('خطأ في تحميل البيانات:', error);
-                updateConnectionStatus('error');
-                // تحميل البيانات المحلية كبديل
-                loadLocalData();
-                updateUI();
-            }
-        }
-
-        // تحديث حالة الاتصال
-        function updateConnectionStatus(status) {
-            const statusElement = document.getElementById('connectionStatus');
-            
-            switch (status) {
-                case 'connecting':
-                    if (environmentType === 'local' || environmentType === 'iframe') {
-                        statusElement.textContent = '💾 يعمل محلياً (بيئة محدودة)';
-                        statusElement.className = 'connection-status status-local';
-                    } else {
-                        statusElement.textContent = '🔄 جاري الاتصال بـ Google Sheets...';
-                        statusElement.className = 'connection-status status-connecting';
-                    }
-                    break;
-                case 'connected':
-                    statusElement.textContent = '📖 متصل للقراءة من Google Sheets';
-                    statusElement.className = 'connection-status status-connected';
-                    break;
-                case 'error':
-                    if (environmentType === 'local' || environmentType === 'iframe') {
-                        statusElement.textContent = '💾 يعمل محلياً (بيئة محدودة)';
-                        statusElement.className = 'connection-status status-local';
-                    } else {
-                        statusElement.textContent = '💾 يعمل محلياً فقط';
-                        statusElement.className = 'connection-status status-error';
-                    }
-                    break;
-            }
-        }
-
-        // مزامنة البيانات (قراءة فقط من Google Sheets)
-        async function syncWithGoogleSheets() {
-            if (environmentType === 'local' || environmentType === 'iframe') {
-                showNotification('الاتصال بـ Google Sheets غير متاح في هذه البيئة', 'error');
-                return;
-            }
-            
-            showNotification('جاري تحديث البيانات من Google Sheets...', 'info');
-            await loadDataFromGoogleSheets();
-            
-            if (isConnected) {
-                showNotification('تم تحديث البيانات بنجاح', 'success');
-            } else {
-                showNotification('فشل في الاتصال - يعمل النظام محلياً', 'error');
-            }
-        }
-
-        // تحديث البيانات وحفظها محلياً
-        function updateData() {
-            // حفظ محلياً دائماً
-            localStorage.setItem('customers', JSON.stringify(customers));
-            localStorage.setItem('inspections', JSON.stringify(inspections));
-            
-            // تحديث الواجهة
-            updateUI();
-            
-            // إظهار تنبيه للتصدير اليدوي
-            if (autoSaveEnabled && (customers.length > 0 || inspections.length > 0)) {
-                showAutoExportReminder();
-            }
-        }
-
-        // تذكير بالتصدير التلقائي
-        function showAutoExportReminder() {
-            // إظهار التذكير كل 10 إضافات
-            const totalRecords = customers.length + inspections.length;
-            if (totalRecords % 10 === 0 && totalRecords > 0) {
-                setTimeout(() => {
-                    if (confirm('هل تريد تصدير البيانات الحديثة إلى ملفات CSV لنسخها إلى Google Sheets؟')) {
-                        exportAllDataToCSV();
-                    }
-                }, 1000);
-            }
-        }
+            showNotification('مرحباً بك في نظام Wajha Orders! 🏡', 'success');
+        });
 
         // تحميل البيانات المحلية
         function loadLocalData() {
             const savedCustomers = localStorage.getItem('customers');
             const savedInspections = localStorage.getItem('inspections');
+            const savedCounter = localStorage.getItem('inspectionCounter');
             
             if (savedCustomers) {
                 customers = JSON.parse(savedCustomers);
@@ -815,255 +696,533 @@
             if (savedInspections) {
                 inspections = JSON.parse(savedInspections);
             }
-        }
-
-        // تهيئة التطبيق
-        async function initApp() {
-            // فحص البيئة أولاً
-            detectEnvironment();
             
-            // محاولة الاتصال بـ Google Sheets
-            await loadDataFromGoogleSheets();
-            
-            // إذا فشل الاتصال، تحميل البيانات المحلية
-            if (!isConnected) {
-                loadLocalData();
-                updateUI();
+            if (savedCounter) {
+                inspectionCounter = parseInt(savedCounter);
             }
         }
 
-        // إظهار القسم المحدد
-        function showSection(sectionName) {
-            // إخفاء جميع الأقسام
-            document.querySelectorAll('.section-content').forEach(section => {
-                section.classList.add('hidden');
-            });
-            
-            // إظهار القسم المحدد
-            document.getElementById(sectionName).classList.remove('hidden');
-            
-            // تحديث أزرار التنقل
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600', 'font-semibold');
-                btn.classList.add('text-gray-600');
-            });
-            
-            event.target.classList.remove('text-gray-600');
-            event.target.classList.add('text-blue-600', 'border-b-2', 'border-blue-600', 'font-semibold');
-            
-            // تحديث المحتوى حسب القسم
-            if (sectionName === 'dashboard') {
-                updateDashboard();
-            } else if (sectionName === 'customers') {
-                updateCustomersTable();
-            } else if (sectionName === 'inspections') {
-                updateInspectionsTable();
-            } else if (sectionName === 'reports') {
-                updateReports();
-            }
+        // حفظ البيانات محلياً
+        function saveLocalData() {
+            localStorage.setItem('customers', JSON.stringify(customers));
+            localStorage.setItem('inspections', JSON.stringify(inspections));
+            localStorage.setItem('inspectionCounter', inspectionCounter.toString());
         }
 
-        // تحديث لوحة التحكم
-        function updateDashboard() {
-            const totalCustomers = customers.length;
-            const pendingInspections = inspections.filter(i => i.status === 'معلق').length;
-            const completedInspections = inspections.filter(i => i.status === 'مكتمل').length;
-            const totalRevenue = inspections.reduce((sum, i) => sum + (parseFloat(i.finalAmount) || 0), 0);
+        // إعداد مستمعي الأحداث
+        function setupEventListeners() {
+            // نظام التقييم بالنجوم
+            document.querySelectorAll('.star').forEach(star => {
+                star.addEventListener('click', function() {
+                    const rating = parseInt(this.dataset.rating);
+                    setRating(rating);
+                });
+                
+                star.addEventListener('mouseover', function() {
+                    const rating = parseInt(this.dataset.rating);
+                    highlightStars(rating);
+                });
+            });
+            
+            document.getElementById('starRating').addEventListener('mouseleave', function() {
+                highlightStars(currentRating);
+            });
 
-            document.getElementById('dashTotalCustomers').textContent = totalCustomers;
-            document.getElementById('dashPendingInspections').textContent = pendingInspections;
-            document.getElementById('dashCompletedInspections').textContent = completedInspections;
-            document.getElementById('dashTotalRevenue').textContent = totalRevenue.toFixed(2) + ' د.ك';
+            // نموذج الإرسال
+            document.getElementById('inspectionForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveInspection();
+            });
 
-            updateCharts();
-        }
-
-        // تحديث الرسوم البيانية
-        function updateCharts() {
-            // رسم بياني لحالات المعاينات
-            const statusCounts = {
-                'معلق': inspections.filter(i => i.status === 'معلق').length,
-                'مكتمل': inspections.filter(i => i.status === 'مكتمل').length
-            };
-
-            const statusCtx = document.getElementById('statusChart').getContext('2d');
-            new Chart(statusCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(statusCounts),
-                    datasets: [{
-                        data: Object.values(statusCounts),
-                        backgroundColor: ['#f59e0b', '#10b981'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
+            // البحث عن العميل
+            document.getElementById('customerSearch').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchCustomer();
                 }
             });
 
-            // رسم بياني للمعاينات الشهرية
-            const monthlyData = {};
-            inspections.forEach(inspection => {
-                const month = new Date(inspection.date).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long' });
-                monthlyData[month] = (monthlyData[month] || 0) + 1;
-            });
-
-            const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
-            new Chart(monthlyCtx, {
-                type: 'line',
-                data: {
-                    labels: Object.keys(monthlyData),
-                    datasets: [{
-                        label: 'عدد المعاينات',
-                        data: Object.values(monthlyData),
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
+            // اختصار Ctrl+Q لإظهار/إخفاء زر التصدير
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'q') {
+                    e.preventDefault();
+                    const exportBtn = document.getElementById('exportBtn');
+                    exportBtn.classList.toggle('hidden');
+                    if (!exportBtn.classList.contains('hidden')) {
+                        showNotification('تم إظهار زر التصدير! 📤', 'success');
                     }
                 }
             });
         }
 
-        // إظهار مودال إضافة عميل
-        function showAddCustomerModal() {
-            document.getElementById('addCustomerModal').classList.remove('hidden');
-            document.getElementById('addCustomerModal').classList.add('flex');
+        // تعيين الحد الأدنى للتاريخ (اليوم)
+        function setMinDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('inspectionDate').min = today;
+            if (document.getElementById('serviceDate')) {
+                document.getElementById('serviceDate').min = today;
+            }
         }
 
-        // إخفاء مودال إضافة عميل
-        function hideAddCustomerModal() {
-            document.getElementById('addCustomerModal').classList.add('hidden');
-            document.getElementById('addCustomerModal').classList.remove('flex');
-            document.getElementById('addCustomerForm').reset();
-        }
-
-        // إضافة عميل جديد
-        async function addCustomer(event) {
-            event.preventDefault();
-            
-            const spinner = document.getElementById('addCustomerSpinner');
-            spinner.classList.remove('hidden');
-            
-            const name = document.getElementById('customerName').value;
-            const phone = document.getElementById('customerPhone').value;
-            
-            const newCustomer = {
-                id: 'CUST-' + Date.now(),
-                name: name,
-                phone: phone,
-                createdAt: new Date().toISOString()
-            };
-            
-            customers.push(newCustomer);
-            await updateData();
-            
-            hideAddCustomerModal();
-            showNotification('تم إضافة العميل بنجاح', 'success');
-            
-            spinner.classList.add('hidden');
-        }
-
-        // إظهار مودال إضافة معاينة
-        function showAddInspectionModal() {
-            // تحديث قائمة العملاء
-            const customerSelect = document.getElementById('inspectionCustomer');
-            customerSelect.innerHTML = '<option value="">اختر العميل</option>';
-            
-            customers.forEach(customer => {
-                const option = document.createElement('option');
-                option.value = customer.id;
-                option.textContent = `${customer.name} - ${customer.phone}`;
-                customerSelect.appendChild(option);
+        // إظهار التبويب
+        function showTab(tabName) {
+            // إخفاء جميع التبويبات
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
             });
             
-            document.getElementById('addInspectionModal').classList.remove('hidden');
-            document.getElementById('addInspectionModal').classList.add('flex');
+            // إزالة الفئة النشطة من جميع الأزرار
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.add('text-gray-600', 'hover:text-blue-600');
+            });
+            
+            // إظهار التبويب المحدد
+            document.getElementById(tabName).classList.add('active');
+            
+            // تفعيل الزر المحدد
+            event.target.classList.add('active');
+            event.target.classList.remove('text-gray-600', 'hover:text-blue-600');
+            
+            // تحديث الجداول حسب التبويب
+            if (tabName === 'pending-orders') {
+                updatePendingOrdersTable();
+            } else if (tabName === 'completed-orders') {
+                updateCompletedOrdersTable();
+            }
         }
 
-        // إخفاء مودال إضافة معاينة
-        function hideAddInspectionModal() {
-            document.getElementById('addInspectionModal').classList.add('hidden');
-            document.getElementById('addInspectionModal').classList.remove('flex');
-            document.getElementById('addInspectionForm').reset();
+        // البحث عن العميل
+        function searchCustomer() {
+            const searchTerm = document.getElementById('customerSearch').value.trim();
+            
+            if (!searchTerm) {
+                showNotification('يرجى إدخال رقم العميل أو اسم العميل للبحث', 'warning');
+                return;
+            }
+            
+            // البحث في العملاء الموجودين
+            const foundCustomer = Object.values(customers).find(customer => 
+                customer.id.includes(searchTerm) || 
+                customer.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            
+            if (foundCustomer) {
+                // عميل موجود
+                showExistingCustomerHistory(foundCustomer);
+                document.getElementById('createNewOrderBtn').classList.remove('hidden');
+                isExistingCustomer = true;
+                currentCustomerId = foundCustomer.id;
+            } else {
+                // عميل جديد
+                document.getElementById('customerHistory').classList.add('hidden');
+                document.getElementById('createNewOrderBtn').classList.remove('hidden');
+                isExistingCustomer = false;
+                currentCustomerId = null;
+                
+                // ملء حقل البحث في النموذج إذا كان اسماً
+                if (isNaN(searchTerm)) {
+                    document.getElementById('customerName').value = searchTerm;
+                }
+            }
         }
 
-        // إضافة معاينة جديدة
-        async function addInspection(event) {
-            event.preventDefault();
+        // إظهار تاريخ العميل الموجود
+        function showExistingCustomerHistory(customer) {
+            const customerInspections = inspections.filter(inspection => 
+                inspection.customerId === customer.id
+            );
             
-            const spinner = document.getElementById('addInspectionSpinner');
-            spinner.classList.remove('hidden');
+            const historyBody = document.getElementById('customerHistoryBody');
+            historyBody.innerHTML = '';
             
-            const customerId = document.getElementById('inspectionCustomer').value;
-            const customer = customers.find(c => c.id === customerId);
-            
-            const newInspection = {
-                id: 'INS-' + Date.now(),
-                customerId: customerId,
-                customerName: customer.name,
-                area: document.getElementById('inspectionArea').value,
-                serviceType: document.getElementById('inspectionServiceType').value,
-                propertyType: document.getElementById('inspectionPropertyType').value,
-                date: document.getElementById('inspectionDate').value,
-                time: document.getElementById('inspectionTime').value,
-                status: 'معلق',
-                approval: 'في الانتظار',
-                totalAmount: parseFloat(document.getElementById('inspectionTotalAmount').value) || 0,
-                finalAmount: parseFloat(document.getElementById('inspectionFinalAmount').value) || 0,
-                rating: 0,
-                additionalNotes: document.getElementById('inspectionNotes').value,
-                inspectorNotes: '',
-                createdAt: new Date().toISOString()
-            };
-            
-            inspections.push(newInspection);
-            await updateData();
-            
-            hideAddInspectionModal();
-            showNotification('تم إضافة المعاينة بنجاح', 'success');
-            
-            spinner.classList.add('hidden');
-        }
-
-        // تحديث جدول العملاء
-        function updateCustomersTable() {
-            const tbody = document.getElementById('customersTableBody');
-            tbody.innerHTML = '';
-            
-            customers.forEach(customer => {
-                const customerInspections = inspections.filter(i => i.customerId === customer.id);
+            customerInspections.forEach(inspection => {
                 const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50 transition-colors';
+                row.className = 'hover:bg-gray-50';
+                
+                const approvalClass = getApprovalClass(inspection.approval);
                 
                 row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${customer.id}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${customer.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${customer.phone}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${new Date(customer.createdAt).toLocaleDateString('ar-SA')}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${customerInspections.length}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button onclick="editCustomer('${customer.id}')" class="text-blue-600 hover:text-blue-900 ml-4">تعديل</button>
-                        <button onclick="deleteCustomer('${customer.id}')" class="text-red-600 hover:text-red-900">حذف</button>
+                    <td class="px-6 py-4 text-sm font-medium text-orange-600">${inspection.id}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${inspection.area}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${inspection.serviceType}</td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${formatDate(inspection.inspectionDate)}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${approvalClass}">${inspection.approval}</span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-900">${inspection.status}</td>
+                    <td class="px-6 py-4">
+                        <button onclick="showInspectionDetails('${inspection.id}')" class="text-blue-600 hover:text-blue-900 text-sm">عرض التفاصيل</button>
+                    </td>
+                `;
+                
+                historyBody.appendChild(row);
+            });
+            
+            document.getElementById('customerHistory').classList.remove('hidden');
+        }
+
+        // إظهار نموذج العميل الجديد
+        function showNewCustomerForm() {
+            if (isExistingCustomer && currentCustomerId) {
+                showExistingCustomerForm();
+            } else {
+                document.getElementById('newCustomerForm').classList.remove('hidden');
+                generateCustomerId();
+            }
+        }
+
+        // إظهار نموذج العميل الموجود
+        function showExistingCustomerForm() {
+            const customer = customers[currentCustomerId];
+            
+            // ملء معلومات العميل الموجود
+            const customerInfo = document.getElementById('existingCustomerInfo');
+            customerInfo.innerHTML = `
+                <h4 class="font-semibold text-gray-800 mb-2">معلومات العميل</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <span class="text-sm text-gray-600">رقم العميل:</span>
+                        <p class="font-medium">${customer.id}</p>
+                    </div>
+                    <div>
+                        <span class="text-sm text-gray-600">الاسم:</span>
+                        <p class="font-medium">${customer.name}</p>
+                    </div>
+                    <div>
+                        <span class="text-sm text-gray-600">الجوال:</span>
+                        <p class="font-medium">${customer.phone}</p>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('existingCustomerForm').classList.remove('hidden');
+        }
+
+        // توليد رقم عميل جديد
+        function generateCustomerId() {
+            const customerId = 'CUST-' + Date.now();
+            document.getElementById('customerId').value = customerId;
+        }
+
+        // تحديث معاينة العنوان
+        function updateAddressPreview() {
+            const area = document.getElementById('customerArea').value;
+            const block = document.getElementById('customerBlock').value;
+            const avenue = document.getElementById('customerAvenue').value;
+            const street = document.getElementById('customerStreet').value;
+            const houseNumber = document.getElementById('customerHouseNumber').value;
+            
+            if (area) {
+                let address = area;
+                if (block) address += ` - قطعة ${block}`;
+                if (avenue) address += ` - جادة ${avenue}`;
+                if (street) address += ` - شارع ${street}`;
+                if (houseNumber) address += ` - منزل ${houseNumber}`;
+                
+                document.getElementById('fullAddress').textContent = address;
+                document.getElementById('addressPreview').classList.remove('hidden');
+            } else {
+                document.getElementById('addressPreview').classList.add('hidden');
+            }
+        }
+
+        // تبديل حقل الخدمة الأخرى
+        function toggleOtherService() {
+            const serviceType = document.getElementById('serviceType').value;
+            const otherDiv = document.getElementById('otherServiceDiv');
+            
+            if (serviceType === 'أخرى') {
+                otherDiv.classList.remove('hidden');
+                document.getElementById('otherService').required = true;
+            } else {
+                otherDiv.classList.add('hidden');
+                document.getElementById('otherService').required = false;
+            }
+        }
+
+        // تبديل حقل نوع السكن الآخر
+        function toggleOtherProperty() {
+            const propertyType = document.getElementById('propertyType').value;
+            const otherDiv = document.getElementById('otherPropertyDiv');
+            
+            if (propertyType === 'أخرى') {
+                otherDiv.classList.remove('hidden');
+                document.getElementById('otherProperty').required = true;
+            } else {
+                otherDiv.classList.add('hidden');
+                document.getElementById('otherProperty').required = false;
+            }
+        }
+
+        // تبديل الأقسام حسب الموافقة
+        function toggleApprovalSections() {
+            const approval = document.querySelector('input[name="approval"]:checked').value;
+            const paymentInfo = document.getElementById('paymentInfo');
+            const rejectionReasons = document.getElementById('rejectionReasons');
+            const customerRating = document.getElementById('customerRating');
+            
+            // إخفاء جميع الأقسام أولاً
+            paymentInfo.classList.add('hidden');
+            rejectionReasons.classList.add('hidden');
+            customerRating.classList.add('hidden');
+            
+            if (approval === 'موافق') {
+                paymentInfo.classList.remove('hidden');
+                customerRating.classList.remove('hidden');
+            } else if (approval === 'غير موافق') {
+                rejectionReasons.classList.remove('hidden');
+            }
+        }
+
+        // تبديل حقل السبب الآخر للإلغاء
+        function toggleOtherRejectionReason() {
+            const rejectionReason = document.getElementById('rejectionReason').value;
+            const otherDiv = document.getElementById('otherRejectionDiv');
+            
+            if (rejectionReason === 'أخرى') {
+                otherDiv.classList.remove('hidden');
+                document.getElementById('otherRejectionReason').required = true;
+            } else {
+                otherDiv.classList.add('hidden');
+                document.getElementById('otherRejectionReason').required = false;
+            }
+        }
+
+        // حساب الخصم
+        function calculateDiscount() {
+            const totalAmount = parseFloat(document.getElementById('totalAmount').value) || 0;
+            const discountPercent = parseFloat(document.getElementById('discountPercent').value) || 0;
+            
+            const discountAmount = totalAmount * (discountPercent / 100);
+            const finalAmount = totalAmount - discountAmount;
+            
+            document.getElementById('finalAmount').value = finalAmount.toFixed(3);
+        }
+
+        // تعيين التقييم
+        function setRating(rating) {
+            currentRating = rating;
+            highlightStars(rating);
+            updateRatingText(rating);
+        }
+
+        // تمييز النجوم
+        function highlightStars(rating) {
+            document.querySelectorAll('.star').forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+        }
+
+        // تحديث نص التقييم
+        function updateRatingText(rating) {
+            const texts = {
+                1: 'غير راضي تماماً',
+                2: 'غير راضي',
+                3: 'راضي إلى حد ما',
+                4: 'راضي',
+                5: 'راضي جداً'
+            };
+            
+            document.getElementById('ratingText').textContent = texts[rating] || 'اختر التقييم';
+        }
+
+        // حفظ المعاينة
+        async function saveInspection() {
+            const spinner = document.getElementById('saveSpinner');
+            spinner.classList.remove('hidden');
+            
+            try {
+                // جمع البيانات من النموذج
+                const inspectionData = collectFormData();
+                
+                // التحقق من صحة البيانات
+                if (!validateInspectionData(inspectionData)) {
+                    return;
+                }
+                
+                // حفظ العميل إذا كان جديداً
+                if (!isExistingCustomer) {
+                    saveCustomer(inspectionData);
+                }
+                
+                // حفظ المعاينة
+                const inspectionId = 'INS-' + (++inspectionCounter);
+                inspectionData.id = inspectionId;
+                inspectionData.status = 'معلق';
+                inspectionData.createdAt = new Date().toISOString();
+                
+                inspections.push(inspectionData);
+                
+                // حفظ البيانات محلياً
+                saveLocalData();
+                
+                // محاولة الحفظ في Google Sheets
+                await saveToGoogleSheets(inspectionData);
+                
+                showNotification('تم حفظ الطلب بنجاح! 🎉', 'success');
+                resetForm();
+                updateTables();
+                
+            } catch (error) {
+                console.error('خطأ في حفظ المعاينة:', error);
+                showNotification('تم حفظ الطلب محلياً، لكن فشل في الحفظ السحابي', 'warning');
+            } finally {
+                spinner.classList.add('hidden');
+            }
+        }
+
+        // جمع بيانات النموذج
+        function collectFormData() {
+            const serviceType = document.getElementById('serviceType').value;
+            const propertyType = document.getElementById('propertyType').value;
+            const approval = document.querySelector('input[name="approval"]:checked').value;
+            const rejectionReason = document.getElementById('rejectionReason').value;
+            
+            return {
+                customerId: isExistingCustomer ? currentCustomerId : document.getElementById('customerId').value,
+                customerName: isExistingCustomer ? customers[currentCustomerId].name : document.getElementById('customerName').value,
+                customerPhone: isExistingCustomer ? customers[currentCustomerId].phone : document.getElementById('customerPhone').value,
+                area: document.getElementById('customerArea').value,
+                block: document.getElementById('customerBlock').value,
+                avenue: document.getElementById('customerAvenue').value,
+                street: document.getElementById('customerStreet').value,
+                houseNumber: document.getElementById('customerHouseNumber').value,
+                serviceType: serviceType === 'أخرى' ? document.getElementById('otherService').value : serviceType,
+                propertyType: propertyType === 'أخرى' ? document.getElementById('otherProperty').value : propertyType,
+                inspectionDate: document.getElementById('inspectionDate').value,
+                inspectionTime: document.getElementById('inspectionTime').value,
+                additionalNotes: document.getElementById('additionalNotes').value,
+                approval: approval,
+                rejectionReason: approval === 'غير موافق' ? (rejectionReason === 'أخرى' ? document.getElementById('otherRejectionReason').value : rejectionReason) : '',
+                rejectionDetails: approval === 'غير موافق' ? document.getElementById('rejectionDetails').value : '',
+                totalAmount: parseFloat(document.getElementById('totalAmount').value) || 0,
+                discountPercent: parseFloat(document.getElementById('discountPercent').value) || 0,
+                finalAmount: parseFloat(document.getElementById('finalAmount').value) || 0,
+                serviceDate: document.getElementById('serviceDate').value,
+                paymentStatus: document.getElementById('paymentStatus').value,
+                rating: approval === 'موافق' ? currentRating : 0,
+                ratingNotes: approval === 'موافق' ? document.getElementById('ratingNotes').value : '',
+                inspectorNotes: document.getElementById('inspectorNotes').value
+            };
+        }
+
+        // التحقق من صحة البيانات
+        function validateInspectionData(data) {
+            if (!data.customerName) {
+                showNotification('يرجى إدخال اسم العميل', 'error');
+                return false;
+            }
+            
+            if (!data.customerPhone) {
+                showNotification('يرجى إدخال رقم الجوال', 'error');
+                return false;
+            }
+            
+            if (!data.area) {
+                showNotification('يرجى اختيار المنطقة', 'error');
+                return false;
+            }
+            
+            if (!data.serviceType) {
+                showNotification('يرجى اختيار نوع الخدمة', 'error');
+                return false;
+            }
+            
+            if (!data.propertyType) {
+                showNotification('يرجى اختيار نوع السكن', 'error');
+                return false;
+            }
+            
+            if (!data.inspectionDate) {
+                showNotification('يرجى اختيار تاريخ المعاينة', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+
+        // حفظ العميل الجديد
+        function saveCustomer(inspectionData) {
+            const customer = {
+                id: inspectionData.customerId,
+                name: inspectionData.customerName,
+                phone: inspectionData.customerPhone,
+                createdAt: new Date().toISOString()
+            };
+            
+            customers[customer.id] = customer;
+        }
+
+        // حفظ في Google Sheets (تم تعطيله مؤقتاً)
+        async function saveToGoogleSheets(data) {
+            // تم تعطيل الحفظ التلقائي في Google Sheets
+            // يمكن للمستخدم استخدام زر التصدير ثم نسخ البيانات يدوياً
+            console.log('تم حفظ البيانات محلياً:', data);
+            return Promise.resolve({ success: true, message: 'تم الحفظ محلياً' });
+        }
+
+        // إعادة تعيين النموذج
+        function resetForm() {
+            document.getElementById('inspectionForm').reset();
+            document.getElementById('newCustomerForm').classList.add('hidden');
+            document.getElementById('existingCustomerForm').classList.add('hidden');
+            document.getElementById('customerHistory').classList.add('hidden');
+            document.getElementById('createNewOrderBtn').classList.add('hidden');
+            document.getElementById('addressPreview').classList.add('hidden');
+            document.getElementById('paymentInfo').classList.add('hidden');
+            document.getElementById('rejectionReasons').classList.add('hidden');
+            document.getElementById('customerRating').classList.add('hidden');
+            document.getElementById('otherServiceDiv').classList.add('hidden');
+            document.getElementById('otherPropertyDiv').classList.add('hidden');
+            document.getElementById('otherRejectionDiv').classList.add('hidden');
+            
+            currentRating = 0;
+            highlightStars(0);
+            updateRatingText(0);
+            
+            generateCustomerId();
+            document.getElementById('customerSearch').value = '';
+            
+            isExistingCustomer = false;
+            currentCustomerId = null;
+        }
+
+        // تحديث الجداول
+        function updateTables() {
+            updatePendingOrdersTable();
+            updateCompletedOrdersTable();
+        }
+
+        // تحديث جدول الطلبات المعلقة
+        function updatePendingOrdersTable() {
+            const tbody = document.getElementById('pendingOrdersBody');
+            tbody.innerHTML = '';
+            
+            const pendingInspections = inspections.filter(inspection => inspection.status === 'معلق');
+            
+            pendingInspections.forEach(inspection => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-white hover:bg-opacity-10';
+                
+                const approvalClass = getApprovalClass(inspection.approval);
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 text-sm font-medium text-orange-300">${inspection.id}</td>
+                    <td class="px-6 py-4 text-sm text-white">${inspection.customerName}</td>
+                    <td class="px-6 py-4 text-sm text-white">${inspection.area}</td>
+                    <td class="px-6 py-4 text-sm text-white">${inspection.serviceType}</td>
+                    <td class="px-6 py-4 text-sm text-white">${formatDate(inspection.inspectionDate)}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${approvalClass}">${inspection.approval}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <button onclick="showInspectionDetails('${inspection.id}')" class="text-yellow-300 hover:text-yellow-100 text-sm ml-2">عرض التفاصيل</button>
+                        <button onclick="editInspection('${inspection.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm ml-2">تعديل</button>
+                        <button onclick="markAsCompleted('${inspection.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">تم الانتهاء</button>
                     </td>
                 `;
                 
@@ -1071,41 +1230,80 @@
             });
         }
 
-        // تحديث جدول المعاينات
-        function updateInspectionsTable() {
-            const tbody = document.getElementById('inspectionsTableBody');
+        // تحديث جدول الطلبات المكتملة
+        function updateCompletedOrdersTable() {
+            const tbody = document.getElementById('completedOrdersBody');
             tbody.innerHTML = '';
             
-            inspections.forEach(inspection => {
+            const completedInspections = inspections.filter(inspection => inspection.status === 'مكتمل');
+            
+            completedInspections.forEach(inspection => {
                 const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50 transition-colors';
+                row.className = 'hover:bg-white hover:bg-opacity-10';
                 
-                const statusClass = inspection.status === 'معلق' ? 'status-pending' : 'status-completed';
-                const approvalClass = inspection.approval === 'موافق' ? 'status-approved' : 
-                                    inspection.approval === 'غير موافق' ? 'status-rejected' : 'status-waiting';
+                const approvalClass = getApprovalClass(inspection.approval);
+                const stars = generateStars(inspection.rating);
                 
                 row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${inspection.id}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${inspection.customerName}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${inspection.area}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${inspection.serviceType}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${new Date(inspection.date).toLocaleDateString('ar-SA')}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 py-1 text-xs font-semibold rounded-full text-white ${statusClass}">${inspection.status}</span>
+                    <td class="px-6 py-4 text-sm font-medium text-green-300">${inspection.id}</td>
+                    <td class="px-6 py-4 text-sm text-white">${inspection.customerName}</td>
+                    <td class="px-6 py-4 text-sm text-white">${inspection.area}</td>
+                    <td class="px-6 py-4 text-sm text-white">${inspection.serviceType}</td>
+                    <td class="px-6 py-4 text-sm text-white">${formatDate(inspection.inspectionDate)}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${approvalClass}">${inspection.approval}</span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 py-1 text-xs font-semibold rounded-full text-white ${approvalClass}">${inspection.approval}</span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${inspection.finalAmount} د.ك</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button onclick="showInspectionDetails('${inspection.id}')" class="text-blue-600 hover:text-blue-900 ml-2">عرض</button>
-                        <button onclick="editInspection('${inspection.id}')" class="text-green-600 hover:text-green-900 ml-2">تعديل</button>
-                        <button onclick="deleteInspection('${inspection.id}')" class="text-red-600 hover:text-red-900">حذف</button>
+                    <td class="px-6 py-4 text-sm text-white">${stars}</td>
+                    <td class="px-6 py-4">
+                        <button onclick="showInspectionDetails('${inspection.id}')" class="text-blue-300 hover:text-blue-100 text-sm">عرض التفاصيل</button>
                     </td>
                 `;
                 
                 tbody.appendChild(row);
             });
+        }
+
+        // الحصول على فئة الموافقة
+        function getApprovalClass(approval) {
+            switch (approval) {
+                case 'موافق':
+                    return 'approval-approved';
+                case 'غير موافق':
+                    return 'approval-rejected';
+                default:
+                    return 'approval-waiting';
+            }
+        }
+
+        // توليد النجوم للتقييم
+        function generateStars(rating) {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                if (i <= rating) {
+                    stars += '<span class="text-yellow-400">★</span>';
+                } else {
+                    stars += '<span class="text-gray-400">★</span>';
+                }
+            }
+            return stars;
+        }
+
+        // تنسيق التاريخ
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ar-SA');
+        }
+
+        // تحديد المعاينة كمكتملة
+        function markAsCompleted(inspectionId) {
+            const inspection = inspections.find(i => i.id === inspectionId);
+            if (inspection) {
+                inspection.status = 'مكتمل';
+                saveLocalData();
+                updateTables();
+                showNotification('تم تحديث حالة المعاينة إلى مكتملة', 'success');
+            }
         }
 
         // عرض تفاصيل المعاينة
@@ -1113,347 +1311,780 @@
             const inspection = inspections.find(i => i.id === inspectionId);
             if (!inspection) return;
             
-            const content = document.getElementById('inspectionDetailsContent');
-            content.innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <h4 class="font-semibold text-gray-800 mb-2">معلومات أساسية</h4>
+            const customer = customers[inspection.customerId];
+            
+            const detailsHTML = `
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- معلومات العميل -->
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <h4 class="font-semibold text-blue-800 mb-3">معلومات العميل</h4>
                         <div class="space-y-2 text-sm">
+                            <p><span class="font-medium">رقم العميل:</span> ${inspection.customerId}</p>
+                            <p><span class="font-medium">الاسم:</span> ${inspection.customerName}</p>
+                            <p><span class="font-medium">الجوال:</span> ${inspection.customerPhone}</p>
                             <p><span class="font-medium">رقم المعاينة:</span> ${inspection.id}</p>
-                            <p><span class="font-medium">العميل:</span> ${inspection.customerName}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- معلومات العنوان -->
+                    <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <h4 class="font-semibold text-green-800 mb-3">معلومات العنوان</h4>
+                        <div class="space-y-2 text-sm">
                             <p><span class="font-medium">المنطقة:</span> ${inspection.area}</p>
+                            ${inspection.block ? `<p><span class="font-medium">القطعة:</span> ${inspection.block}</p>` : ''}
+                            ${inspection.avenue ? `<p><span class="font-medium">الجادة:</span> ${inspection.avenue}</p>` : ''}
+                            ${inspection.street ? `<p><span class="font-medium">الشارع:</span> ${inspection.street}</p>` : ''}
+                            ${inspection.houseNumber ? `<p><span class="font-medium">رقم المنزل:</span> ${inspection.houseNumber}</p>` : ''}
+                        </div>
+                    </div>
+                    
+                    <!-- معلومات الخدمة -->
+                    <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                        <h4 class="font-semibold text-yellow-800 mb-3">معلومات الخدمة</h4>
+                        <div class="space-y-2 text-sm">
                             <p><span class="font-medium">نوع الخدمة:</span> ${inspection.serviceType}</p>
-                            <p><span class="font-medium">نوع العقار:</span> ${inspection.propertyType}</p>
-                        </div>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold text-gray-800 mb-2">تفاصيل الموعد</h4>
-                        <div class="space-y-2 text-sm">
-                            <p><span class="font-medium">التاريخ:</span> ${new Date(inspection.date).toLocaleDateString('ar-SA')}</p>
-                            <p><span class="font-medium">الوقت:</span> ${inspection.time}</p>
-                            <p><span class="font-medium">الحالة:</span> ${inspection.status}</p>
-                            <p><span class="font-medium">الموافقة:</span> ${inspection.approval}</p>
-                        </div>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold text-gray-800 mb-2">المعلومات المالية</h4>
-                        <div class="space-y-2 text-sm">
-                            <p><span class="font-medium">المبلغ الإجمالي:</span> ${inspection.totalAmount} د.ك</p>
-                            <p><span class="font-medium">المبلغ النهائي:</span> ${inspection.finalAmount} د.ك</p>
-                            <p><span class="font-medium">التقييم:</span> ${inspection.rating}/5</p>
-                        </div>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold text-gray-800 mb-2">الملاحظات</h4>
-                        <div class="space-y-2 text-sm">
-                            <p><span class="font-medium">ملاحظات إضافية:</span></p>
-                            <p class="text-gray-600">${inspection.additionalNotes || 'لا توجد ملاحظات'}</p>
-                            <p><span class="font-medium">ملاحظات المفتش:</span></p>
-                            <p class="text-gray-600">${inspection.inspectorNotes || 'لا توجد ملاحظات'}</p>
+                            <p><span class="font-medium">نوع السكن:</span> ${inspection.propertyType}</p>
+                            <p><span class="font-medium">تاريخ المعاينة:</span> ${formatDate(inspection.inspectionDate)}</p>
+                            <p><span class="font-medium">وقت المعاينة:</span> ${inspection.inspectionTime}</p>
                         </div>
                     </div>
                 </div>
-                <div class="mt-6 flex justify-end space-x-4 space-x-reverse">
-                    <button onclick="updateInspectionStatus('${inspection.id}', 'مكتمل')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
-                        تحديد كمكتمل
-                    </button>
-                    <button onclick="updateInspectionApproval('${inspection.id}', 'موافق')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
-                        موافقة
-                    </button>
-                    <button onclick="updateInspectionApproval('${inspection.id}', 'غير موافق')" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
-                        رفض
-                    </button>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                    <!-- تفاصيل إضافية -->
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-2">الحالة والموافقة</h4>
+                            <div class="flex space-x-4 space-x-reverse">
+                                <span class="px-3 py-1 rounded-full text-sm font-medium ${inspection.status === 'مكتمل' ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}">${inspection.status}</span>
+                                <span class="px-3 py-1 rounded-full text-sm font-medium ${getApprovalClass(inspection.approval)}">${inspection.approval}</span>
+                            </div>
+                        </div>
+                        
+                        ${inspection.approval === 'موافق' ? `
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-2">المعلومات المالية</h4>
+                            <div class="space-y-1 text-sm">
+                                <p><span class="font-medium">المبلغ الكلي:</span> ${inspection.totalAmount} د.ك</p>
+                                <p><span class="font-medium">نسبة الخصم:</span> ${inspection.discountPercent}%</p>
+                                <p><span class="font-medium">المبلغ النهائي:</span> ${inspection.finalAmount} د.ك</p>
+                                <p><span class="font-medium">حالة الدفع:</span> ${inspection.paymentStatus}</p>
+                                ${inspection.serviceDate ? `<p><span class="font-medium">تاريخ تنفيذ الخدمة:</span> ${formatDate(inspection.serviceDate)}</p>` : ''}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        ${inspection.approval === 'غير موافق' && inspection.rejectionReason ? `
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-2">سبب الإلغاء</h4>
+                            <div class="space-y-1 text-sm">
+                                <p><span class="font-medium">السبب:</span> ${inspection.rejectionReason}</p>
+                                ${inspection.rejectionDetails ? `<p><span class="font-medium">التفاصيل:</span> ${inspection.rejectionDetails}</p>` : ''}
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        ${inspection.rating > 0 ? `
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-2">التقييم</h4>
+                            <div class="flex items-center space-x-2 space-x-reverse">
+                                <div>${generateStars(inspection.rating)}</div>
+                                <span class="text-sm text-gray-600">(${inspection.rating}/5)</span>
+                            </div>
+                            ${inspection.ratingNotes ? `<p class="text-sm text-gray-600 mt-1">${inspection.ratingNotes}</p>` : ''}
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <!-- الملاحظات -->
+                    <div class="space-y-4">
+                        ${inspection.additionalNotes ? `
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-2">ملاحظات إضافية</h4>
+                            <p class="text-sm text-gray-600 bg-gray-50 p-3 rounded">${inspection.additionalNotes}</p>
+                        </div>
+                        ` : ''}
+                        
+                        ${inspection.inspectorNotes ? `
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-2">ملاحظات المفتش</h4>
+                            <p class="text-sm text-gray-600 bg-gray-50 p-3 rounded">${inspection.inspectorNotes}</p>
+                        </div>
+                        ` : ''}
+                        
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-2">تاريخ الإنشاء</h4>
+                            <p class="text-sm text-gray-600">${formatDate(inspection.createdAt)}</p>
+                        </div>
+                    </div>
                 </div>
             `;
             
-            document.getElementById('inspectionDetailsModal').classList.remove('hidden');
-            document.getElementById('inspectionDetailsModal').classList.add('flex');
+            document.getElementById('inspectionDetails').innerHTML = detailsHTML;
+            document.getElementById('inspectionModal').classList.remove('hidden');
+            document.getElementById('inspectionModal').classList.add('flex');
         }
 
-        // إخفاء مودال تفاصيل المعاينة
-        function hideInspectionDetailsModal() {
-            document.getElementById('inspectionDetailsModal').classList.add('hidden');
-            document.getElementById('inspectionDetailsModal').classList.remove('flex');
+        // إغلاق نافذة تفاصيل المعاينة
+        function closeInspectionModal() {
+            document.getElementById('inspectionModal').classList.add('hidden');
+            document.getElementById('inspectionModal').classList.remove('flex');
         }
 
-        // تحديث حالة المعاينة
-        async function updateInspectionStatus(inspectionId, status) {
-            const inspection = inspections.find(i => i.id === inspectionId);
-            if (inspection) {
-                inspection.status = status;
-                await updateData();
-                hideInspectionDetailsModal();
-                showNotification('تم تحديث حالة المعاينة', 'success');
+        // اختبار الاتصال
+        async function testConnection() {
+            showNotification('جاري اختبار الاتصال مع Google Sheets...', 'warning');
+            
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL + '?action=test', {
+                    method: 'GET',
+                    mode: 'no-cors'
+                });
+                
+                showNotification('تم الاتصال بنجاح مع Google Sheets! ✅', 'success');
+            } catch (error) {
+                showNotification('فشل في الاتصال مع Google Sheets - سيعمل النظام محلياً', 'error');
             }
         }
 
-        // تحديث موافقة المعاينة
-        async function updateInspectionApproval(inspectionId, approval) {
-            const inspection = inspections.find(i => i.id === inspectionId);
-            if (inspection) {
-                inspection.approval = approval;
-                await updateData();
-                hideInspectionDetailsModal();
-                showNotification('تم تحديث موافقة المعاينة', 'success');
+        // فحص البيانات المحلية
+        function checkLocalData() {
+            const customersCount = Object.keys(customers).length;
+            const inspectionsCount = inspections.length;
+            const pendingCount = inspections.filter(i => i.status === 'معلق').length;
+            const completedCount = inspections.filter(i => i.status === 'مكتمل').length;
+            
+            const message = `📊 إحصائيات البيانات المحلية:
+            
+العملاء: ${customersCount}
+إجمالي المعاينات: ${inspectionsCount}
+المعاينات المعلقة: ${pendingCount}
+المعاينات المكتملة: ${completedCount}
+آخر رقم معاينة: ${inspectionCounter}`;
+            
+            alert(message);
+        }
+
+        // فتح Google Sheets
+        function openGoogleSheets() {
+            window.open(GOOGLE_SHEETS_URL, '_blank', 'noopener,noreferrer');
+        }
+
+        // قراءة البيانات من Google Sheets
+        async function loadFromGoogleSheets() {
+            showNotification('جاري تحميل البيانات من Google Sheets...', 'warning');
+            
+            try {
+                // محاولة قراءة بيانات المعاينات من الشيت الأول
+                const inspectionsUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEETS_ID}/gviz/tq?tqx=out:csv&gid=0`;
+                
+                console.log('محاولة الاتصال بـ:', inspectionsUrl);
+                
+                // استخدام طريقة مختلفة للوصول للبيانات
+                let response;
+                let csvData;
+                
+                try {
+                    // المحاولة الأولى: استخدام fetch عادي
+                    response = await fetch(inspectionsUrl, {
+                        method: 'GET',
+                        mode: 'cors',
+                        headers: {
+                            'Accept': 'text/csv,text/plain,*/*'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        csvData = await response.text();
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                } catch (fetchError) {
+                    console.log('فشل في fetch، محاولة طريقة بديلة...');
+                    
+                    // المحاولة الثانية: استخدام رابط مختلف
+                    const alternativeUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEETS_ID}/export?format=csv&gid=0`;
+                    console.log('محاولة الرابط البديل:', alternativeUrl);
+                    
+                    try {
+                        response = await fetch(alternativeUrl, {
+                            method: 'GET',
+                            mode: 'cors'
+                        });
+                        
+                        if (response.ok) {
+                            csvData = await response.text();
+                        } else {
+                            throw new Error(`فشل في الرابط البديل: ${response.status}`);
+                        }
+                    } catch (altError) {
+                        console.log('فشل في الرابط البديل أيضاً');
+                        
+                        // المحاولة الثالثة: استخدام JSONP
+                        try {
+                            csvData = await loadViaJSONP();
+                        } catch (jsonpError) {
+                            throw new Error('فشل في جميع طرق الاتصال. تأكد من أن الشيت مشارك للعامة للقراءة');
+                        }
+                    }
+                }
+                
+                console.log('البيانات المستلمة:', csvData ? csvData.substring(0, 500) : 'لا توجد بيانات');
+                
+                if (!csvData || csvData.trim() === '' || csvData.includes('<!DOCTYPE html>')) {
+                    throw new Error('لا توجد بيانات صالحة في الشيت أو الشيت غير مشارك للعامة');
+                }
+                
+                // تحويل CSV إلى JSON
+                const parsedInspections = parseCSVToInspections(csvData);
+                const parsedCustomers = extractCustomersFromInspections(parsedInspections);
+                
+                // دمج البيانات مع البيانات المحلية
+                let newCustomersCount = 0;
+                let newInspectionsCount = 0;
+                
+                // إضافة العملاء الجدد
+                Object.keys(parsedCustomers).forEach(customerId => {
+                    if (!customers[customerId]) {
+                        customers[customerId] = parsedCustomers[customerId];
+                        newCustomersCount++;
+                    }
+                });
+                
+                // إضافة المعاينات الجديدة
+                parsedInspections.forEach(newInsp => {
+                    if (!inspections.some(existingInsp => existingInsp.id === newInsp.id)) {
+                        inspections.push(newInsp);
+                        newInspectionsCount++;
+                    }
+                });
+                
+                // حفظ البيانات محلياً
+                saveLocalData();
+                updateTables();
+                
+                showNotification(`تم تحميل ${newCustomersCount} عميل جديد و ${newInspectionsCount} معاينة جديدة من Google Sheets! ✅`, 'success');
+                
+            } catch (error) {
+                console.error('خطأ في قراءة البيانات:', error);
+                
+                // إظهار رسالة مفصلة حسب نوع الخطأ
+                let errorMessage = 'فشل في قراءة البيانات من Google Sheets';
+                
+                if (error.message.includes('Failed to fetch')) {
+                    errorMessage = 'مشكلة في الاتصال - تأكد من الاتصال بالإنترنت وأن الشيت مشارك للعامة';
+                } else if (error.message.includes('CORS')) {
+                    errorMessage = 'مشكلة في أذونات الوصول - تأكد من أن الشيت مشارك للعامة للقراءة';
+                } else {
+                    errorMessage = error.message;
+                }
+                
+                showNotification(errorMessage, 'error');
+                
+                // اقتراح حلول
+                setTimeout(() => {
+                    showNotification('💡 نصيحة: تأكد من أن Google Sheet مشارك للعامة (Anyone with the link can view)', 'warning');
+                }, 2000);
             }
         }
 
-        // حذف عميل
-        async function deleteCustomer(customerId) {
-            if (confirm('هل أنت متأكد من حذف هذا العميل؟')) {
-                customers = customers.filter(c => c.id !== customerId);
-                // حذف معاينات العميل أيضاً
-                inspections = inspections.filter(i => i.customerId !== customerId);
-                await updateData();
-                showNotification('تم حذف العميل بنجاح', 'success');
-            }
+        // تحميل البيانات باستخدام JSONP كطريقة بديلة
+        function loadViaJSONP() {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                const callbackName = 'jsonpCallback_' + Date.now();
+                
+                window[callbackName] = function(data) {
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    
+                    // تحويل البيانات إلى CSV
+                    if (data && data.table && data.table.rows) {
+                        let csv = '';
+                        data.table.rows.forEach(row => {
+                            const rowData = row.c.map(cell => cell ? (cell.v || '') : '');
+                            csv += rowData.map(field => `"${field}"`).join(',') + '\n';
+                        });
+                        resolve(csv);
+                    } else {
+                        reject(new Error('لا توجد بيانات في الاستجابة'));
+                    }
+                };
+                
+                script.onerror = function() {
+                    document.head.removeChild(script);
+                    delete window[callbackName];
+                    reject(new Error('فشل في تحميل البيانات عبر JSONP'));
+                };
+                
+                const jsonpUrl = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEETS_ID}/gviz/tq?tqx=out:json&tq=SELECT%20*&gid=0&headers=1&callback=${callbackName}`;
+                script.src = jsonpUrl;
+                document.head.appendChild(script);
+                
+                // timeout بعد 10 ثواني
+                setTimeout(() => {
+                    if (document.head.contains(script)) {
+                        document.head.removeChild(script);
+                        delete window[callbackName];
+                        reject(new Error('انتهت مهلة الاتصال'));
+                    }
+                }, 10000);
+            });
         }
 
-        // حذف معاينة
-        async function deleteInspection(inspectionId) {
-            if (confirm('هل أنت متأكد من حذف هذه المعاينة؟')) {
-                inspections = inspections.filter(i => i.id !== inspectionId);
-                await updateData();
-                showNotification('تم حذف المعاينة بنجاح', 'success');
-            }
-        }
 
-        // تحديث التقارير
-        function updateReports() {
-            const totalInspections = inspections.length;
-            const approvedInspections = inspections.filter(i => i.approval === 'موافق').length;
-            const approvalRate = totalInspections > 0 ? ((approvedInspections / totalInspections) * 100).toFixed(1) : 0;
-            
-            const totalRevenue = inspections.reduce((sum, i) => sum + (parseFloat(i.finalAmount) || 0), 0);
-            const avgInspectionValue = totalInspections > 0 ? (totalRevenue / totalInspections).toFixed(2) : 0;
-            
-            const ratingsSum = inspections.reduce((sum, i) => sum + (parseInt(i.rating) || 0), 0);
-            const avgRating = totalInspections > 0 ? (ratingsSum / totalInspections).toFixed(1) : 0;
-            
-            document.getElementById('approvalRate').textContent = approvalRate + '%';
-            document.getElementById('avgInspectionValue').textContent = avgInspectionValue + ' د.ك';
-            document.getElementById('avgRating').textContent = avgRating + '/5';
-        }
 
-        // تصدير جميع البيانات كـ CSV
-        function exportAllDataToCSV() {
-            const today = new Date().toISOString().split('T')[0];
+        // تحويل CSV المعاينات إلى JSON
+        function parseCSVToInspections(csv) {
+            const lines = csv.split('\n').filter(line => line.trim());
+            const inspections = [];
             
-            // تصدير العملاء
-            if (customers.length > 0) {
-                exportToCSV(customers, `customers-${today}.csv`);
+            if (lines.length < 2) {
+                console.log('لا توجد بيانات كافية في CSV');
+                return inspections;
             }
             
-            // تصدير المعاينات
-            if (inspections.length > 0) {
-                exportToCSV(inspections, `inspections-${today}.csv`);
+            console.log('عدد الأسطر:', lines.length);
+            console.log('الهيدر:', lines[0]);
+            
+            // تخطي الهيدر
+            for (let i = 1; i < lines.length; i++) {
+                const values = parseCSVLine(lines[i]);
+                console.log(`السطر ${i}:`, values);
+                
+                if (values.length >= 3 && values[0] && values[0].trim() !== '') {
+                    const inspection = {
+                        id: values[0] || `INS-${Date.now()}-${i}`,
+                        customerId: values[1] || `CUST-${Date.now()}-${i}`,
+                        customerName: values[2] || '',
+                        customerPhone: values[3] || '',
+                        area: values[4] || '',
+                        serviceType: values[5] || '',
+                        propertyType: values[6] || '',
+                        inspectionDate: values[7] || '',
+                        inspectionTime: values[8] || 'صباحاً (8-12)',
+                        status: values[9] || 'معلق',
+                        approval: values[10] || 'في الانتظار',
+                        totalAmount: parseFloat(values[11]) || 0,
+                        finalAmount: parseFloat(values[12]) || 0,
+                        rating: parseInt(values[13]) || 0,
+                        additionalNotes: values[14] || '',
+                        inspectorNotes: values[15] || '',
+                        createdAt: values[16] || new Date().toISOString(),
+                        // حقول إضافية
+                        block: values[17] || '',
+                        avenue: values[18] || '',
+                        street: values[19] || '',
+                        houseNumber: values[20] || '',
+                        rejectionReason: values[21] || '',
+                        rejectionDetails: values[22] || '',
+                        discountPercent: parseFloat(values[23]) || 0,
+                        serviceDate: values[24] || '',
+                        paymentStatus: values[25] || 'في الانتظار',
+                        ratingNotes: values[26] || ''
+                    };
+                    
+                    inspections.push(inspection);
+                }
             }
             
-            showNotification('تم تصدير ملفات CSV - يمكنك الآن نسخها إلى Google Sheets', 'success');
-            
-            // إظهار تعليمات النسخ
-            setTimeout(() => {
-                alert(`📋 تعليمات النسخ إلى Google Sheets:
-
-1. افتح Google Sheets: https://sheets.google.com
-2. افتح الملف: ${SPREADSHEET_ID}
-3. أنشئ شيت جديد باسم "Customers" 
-4. افتح ملف customers-${today}.csv ونسخ المحتوى
-5. الصق في شيت "Customers"
-6. كرر نفس العملية لـ "Inspections"
-
-✅ بهذه الطريقة ستكون البيانات محفوظة في Google Sheets!`);
-            }, 2000);
+            console.log('تم تحليل', inspections.length, 'معاينة');
+            return inspections;
         }
 
-        // تصدير البيانات كـ JSON (للنسخ الاحتياطي)
+        // استخراج العملاء من المعاينات
+        function extractCustomersFromInspections(inspections) {
+            const customers = {};
+            
+            inspections.forEach(inspection => {
+                if (inspection.customerId && !customers[inspection.customerId]) {
+                    customers[inspection.customerId] = {
+                        id: inspection.customerId,
+                        name: inspection.customerName || '',
+                        phone: inspection.customerPhone || '',
+                        createdAt: inspection.createdAt || new Date().toISOString()
+                    };
+                }
+            });
+            
+            return customers;
+        }
+
+        // تحليل سطر CSV مع التعامل مع الفواصل داخل النصوص
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            
+            result.push(current.trim());
+            return result;
+        }
+
+        // تصدير البيانات كـ Excel
         function exportData() {
-            const data = {
-                customers: customers,
-                inspections: inspections,
-                exportDate: new Date().toISOString(),
-                environment: environmentType
+            // إضافة BOM للترميز العربي الصحيح
+            const BOM = '\uFEFF';
+            
+            // إنشاء محتوى CSV للعملاء
+            let customersCSV = BOM + 'customer_id,name,phone,created_at\n';
+            Object.values(customers).forEach(customer => {
+                customersCSV += `"${customer.id}","${customer.name}","${customer.phone}","${customer.createdAt}"\n`;
+            });
+
+            // إنشاء محتوى CSV للمعاينات
+            let inspectionsCSV = BOM + 'inspection_id,customer_id,customer_name,area,service_type,property_type,inspection_date,inspection_time,status,approval,total_amount,final_amount,rating,additional_notes,inspector_notes,created_at\n';
+            inspections.forEach(inspection => {
+                inspectionsCSV += `"${inspection.id}","${inspection.customerId}","${inspection.customerName}","${inspection.area}","${inspection.serviceType}","${inspection.propertyType}","${inspection.inspectionDate}","${inspection.inspectionTime}","${inspection.status}","${inspection.approval}","${inspection.totalAmount}","${inspection.finalAmount}","${inspection.rating}","${inspection.additionalNotes || ''}","${inspection.inspectorNotes || ''}","${inspection.createdAt}"\n`;
+            });
+
+            // تصدير ملف العملاء
+            const customersBlob = new Blob([customersCSV], { type: 'text/csv;charset=utf-8;' });
+            const customersUrl = URL.createObjectURL(customersBlob);
+            const customersLink = document.createElement('a');
+            customersLink.href = customersUrl;
+            customersLink.download = `Customers-${new Date().toISOString().split('T')[0]}.csv`;
+            customersLink.click();
+            URL.revokeObjectURL(customersUrl);
+
+            // تصدير ملف المعاينات
+            setTimeout(() => {
+                const inspectionsBlob = new Blob([inspectionsCSV], { type: 'text/csv;charset=utf-8;' });
+                const inspectionsUrl = URL.createObjectURL(inspectionsBlob);
+                const inspectionsLink = document.createElement('a');
+                inspectionsLink.href = inspectionsUrl;
+                inspectionsLink.download = `Inspections-${new Date().toISOString().split('T')[0]}.csv`;
+                inspectionsLink.click();
+                URL.revokeObjectURL(inspectionsUrl);
+            }, 500);
+            
+            showNotification('تم تصدير ملفي CSV بنجاح! يمكنك رفعهما إلى Google Sheets 📥', 'success');
+        }
+
+        // تعديل المعاينة
+        function editInspection(inspectionId) {
+            const inspection = inspections.find(i => i.id === inspectionId);
+            if (!inspection) return;
+            
+            const editContent = document.getElementById('editInspectionContent');
+            editContent.innerHTML = `
+                <!-- موافقة العميل على الخدمة -->
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold text-gray-700 mb-4">موافقة العميل على الخدمة</h4>
+                    <div class="flex space-x-6 space-x-reverse">
+                        <label class="flex items-center">
+                            <input type="radio" name="editApproval" value="موافق" ${inspection.approval === 'موافق' ? 'checked' : ''} onchange="toggleEditApprovalSections()" class="ml-2">
+                            <span class="px-3 py-1 bg-green-500 text-white rounded-full text-sm">موافق</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="editApproval" value="غير موافق" ${inspection.approval === 'غير موافق' ? 'checked' : ''} onchange="toggleEditApprovalSections()" class="ml-2">
+                            <span class="px-3 py-1 bg-red-500 text-white rounded-full text-sm">غير موافق</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="editApproval" value="في الانتظار" ${inspection.approval === 'في الانتظار' ? 'checked' : ''} onchange="toggleEditApprovalSections()" class="ml-2">
+                            <span class="px-3 py-1 bg-blue-500 text-white rounded-full text-sm">في الانتظار</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- أسباب الإلغاء -->
+                <div id="editRejectionReasons" class="mb-6 ${inspection.approval !== 'غير موافق' ? 'hidden' : ''}">
+                    <h4 class="text-lg font-semibold text-gray-700 mb-4">أسباب الإلغاء</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">سبب الإلغاء</label>
+                            <select id="editRejectionReason" onchange="toggleEditOtherRejectionReason()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                <option value="">اختر سبب الإلغاء</option>
+                                <option value="السعر مرتفع" ${inspection.rejectionReason === 'السعر مرتفع' ? 'selected' : ''}>السعر مرتفع</option>
+                                <option value="تغيير في الخطط" ${inspection.rejectionReason === 'تغيير في الخطط' ? 'selected' : ''}>تغيير في الخطط</option>
+                                <option value="وجد خدمة أخرى" ${inspection.rejectionReason === 'وجد خدمة أخرى' ? 'selected' : ''}>وجد خدمة أخرى</option>
+                                <option value="عدم توفر الوقت" ${inspection.rejectionReason === 'عدم توفر الوقت' ? 'selected' : ''}>عدم توفر الوقت</option>
+                                <option value="عدم الحاجة للخدمة" ${inspection.rejectionReason === 'عدم الحاجة للخدمة' ? 'selected' : ''}>عدم الحاجة للخدمة</option>
+                                <option value="مشكلة في التواصل" ${inspection.rejectionReason === 'مشكلة في التواصل' ? 'selected' : ''}>مشكلة في التواصل</option>
+                                <option value="أخرى" ${inspection.rejectionReason && !['السعر مرتفع', 'تغيير في الخطط', 'وجد خدمة أخرى', 'عدم توفر الوقت', 'عدم الحاجة للخدمة', 'مشكلة في التواصل'].includes(inspection.rejectionReason) ? 'selected' : ''}>أخرى</option>
+                            </select>
+                        </div>
+                        <div id="editOtherRejectionDiv" class="${inspection.rejectionReason && !['السعر مرتفع', 'تغيير في الخطط', 'وجد خدمة أخرى', 'عدم توفر الوقت', 'عدم الحاجة للخدمة', 'مشكلة في التواصل'].includes(inspection.rejectionReason) ? '' : 'hidden'}">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">تحديد السبب الآخر</label>
+                            <input type="text" id="editOtherRejectionReason" value="${inspection.rejectionReason && !['السعر مرتفع', 'تغيير في الخطط', 'وجد خدمة أخرى', 'عدم توفر الوقت', 'عدم الحاجة للخدمة', 'مشكلة في التواصل'].includes(inspection.rejectionReason) ? inspection.rejectionReason : ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">تفاصيل إضافية حول سبب الإلغاء</label>
+                        <textarea id="editRejectionDetails" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="اكتب تفاصيل إضافية حول سبب الإلغاء...">${inspection.rejectionDetails || ''}</textarea>
+                    </div>
+                </div>
+
+                <!-- معلومات الدفع -->
+                <div id="editPaymentInfo" class="mb-6 ${inspection.approval !== 'موافق' ? 'hidden' : ''}">
+                    <h4 class="text-lg font-semibold text-gray-700 mb-4">معلومات الدفع</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">المبلغ الكلي (د.ك)</label>
+                            <input type="number" id="editTotalAmount" step="0.001" value="${inspection.totalAmount || ''}" onchange="calculateEditDiscount()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">نسبة الخصم (%)</label>
+                            <input type="number" id="editDiscountPercent" step="0.1" value="${inspection.discountPercent || ''}" onchange="calculateEditDiscount()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">المبلغ بعد الخصم (د.ك)</label>
+                            <input type="number" id="editFinalAmount" step="0.001" value="${inspection.finalAmount || ''}" readonly class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">تاريخ تنفيذ الخدمة</label>
+                            <input type="date" id="editServiceDate" value="${inspection.serviceDate || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">حالة الدفع</label>
+                        <select id="editPaymentStatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="في الانتظار" ${inspection.paymentStatus === 'في الانتظار' ? 'selected' : ''}>في الانتظار</option>
+                            <option value="مدفوع" ${inspection.paymentStatus === 'مدفوع' ? 'selected' : ''}>مدفوع</option>
+                            <option value="مدفوع جزئياً" ${inspection.paymentStatus === 'مدفوع جزئياً' ? 'selected' : ''}>مدفوع جزئياً</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- تقييم رضا العميل -->
+                <div id="editCustomerRating" class="mb-6 ${inspection.approval !== 'موافق' ? 'hidden' : ''}">
+                    <h4 class="text-lg font-semibold text-gray-700 mb-4">تقييم رضا العميل</h4>
+                    <div class="mb-4">
+                        <div class="star-rating" id="editStarRating">
+                            <span class="star ${inspection.rating >= 1 ? 'active' : ''}" data-rating="1">★</span>
+                            <span class="star ${inspection.rating >= 2 ? 'active' : ''}" data-rating="2">★</span>
+                            <span class="star ${inspection.rating >= 3 ? 'active' : ''}" data-rating="3">★</span>
+                            <span class="star ${inspection.rating >= 4 ? 'active' : ''}" data-rating="4">★</span>
+                            <span class="star ${inspection.rating >= 5 ? 'active' : ''}" data-rating="5">★</span>
+                        </div>
+                        <p id="editRatingText" class="text-gray-600 mt-2">${getRatingText(inspection.rating)}</p>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">ملاحظة حول سبب التقييم</label>
+                        <textarea id="editRatingNotes" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">${inspection.ratingNotes || ''}</textarea>
+                    </div>
+                </div>
+
+                <!-- ملاحظات إضافية -->
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold text-gray-700 mb-4">ملاحظات إضافية</h4>
+                    <textarea id="editInspectorNotes" rows="3" placeholder="ملاحظات إضافية من المفتش..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">${inspection.inspectorNotes || ''}</textarea>
+                </div>
+
+                <input type="hidden" id="editInspectionId" value="${inspection.id}">
+            `;
+            
+            // إعداد نظام التقييم للتعديل
+            setupEditRatingSystem(inspection.rating);
+            
+            // إعداد نموذج التعديل
+            document.getElementById('editInspectionForm').onsubmit = function(e) {
+                e.preventDefault();
+                saveInspectionEdit();
             };
             
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `wajha-backup-${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            
-            showNotification('تم تصدير النسخة الاحتياطية بنجاح', 'success');
+            document.getElementById('editInspectionModal').classList.remove('hidden');
+            document.getElementById('editInspectionModal').classList.add('flex');
         }
 
-        // تصدير تقرير العملاء (PDF)
-        function exportCustomersReport() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+        // إعداد نظام التقييم للتعديل
+        function setupEditRatingSystem(currentRating) {
+            let editCurrentRating = currentRating || 0;
             
-            // إعداد الخط العربي (تقريبي)
-            doc.setFont('helvetica');
-            doc.setFontSize(16);
-            doc.text('Customers Report - Wajha', 20, 20);
-            
-            let yPosition = 40;
-            customers.forEach((customer, index) => {
-                doc.setFontSize(12);
-                doc.text(`${index + 1}. ${customer.name} - ${customer.phone}`, 20, yPosition);
-                yPosition += 10;
+            document.querySelectorAll('#editStarRating .star').forEach(star => {
+                star.addEventListener('click', function() {
+                    editCurrentRating = parseInt(this.dataset.rating);
+                    updateEditStars(editCurrentRating);
+                    updateEditRatingText(editCurrentRating);
+                });
                 
-                if (yPosition > 280) {
-                    doc.addPage();
-                    yPosition = 20;
-                }
+                star.addEventListener('mouseover', function() {
+                    const rating = parseInt(this.dataset.rating);
+                    updateEditStars(rating);
+                });
             });
             
-            doc.save('customers-report.pdf');
-            showNotification('تم تصدير تقرير العملاء', 'success');
+            document.getElementById('editStarRating').addEventListener('mouseleave', function() {
+                updateEditStars(editCurrentRating);
+            });
         }
 
-        // تصدير تقرير المعاينات (PDF)
-        function exportInspectionsReport() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            doc.setFont('helvetica');
-            doc.setFontSize(16);
-            doc.text('Inspections Report - Wajha', 20, 20);
-            
-            let yPosition = 40;
-            inspections.forEach((inspection, index) => {
-                doc.setFontSize(10);
-                doc.text(`${index + 1}. ${inspection.customerName} - ${inspection.area} - ${inspection.finalAmount} KD`, 20, yPosition);
-                yPosition += 8;
-                
-                if (yPosition > 280) {
-                    doc.addPage();
-                    yPosition = 20;
+        // تحديث نجوم التعديل
+        function updateEditStars(rating) {
+            document.querySelectorAll('#editStarRating .star').forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
                 }
             });
-            
-            doc.save('inspections-report.pdf');
-            showNotification('تم تصدير تقرير المعاينات', 'success');
         }
 
-        // تصدير التقرير المالي (PDF)
-        function exportFinancialReport() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+        // تحديث نص التقييم للتعديل
+        function updateEditRatingText(rating) {
+            document.getElementById('editRatingText').textContent = getRatingText(rating);
+        }
+
+        // الحصول على نص التقييم
+        function getRatingText(rating) {
+            const texts = {
+                1: 'غير راضي تماماً',
+                2: 'غير راضي',
+                3: 'راضي إلى حد ما',
+                4: 'راضي',
+                5: 'راضي جداً'
+            };
+            return texts[rating] || 'اختر التقييم';
+        }
+
+        // تبديل الأقسام في نموذج التعديل
+        function toggleEditApprovalSections() {
+            const approval = document.querySelector('input[name="editApproval"]:checked').value;
+            const paymentInfo = document.getElementById('editPaymentInfo');
+            const rejectionReasons = document.getElementById('editRejectionReasons');
+            const customerRating = document.getElementById('editCustomerRating');
             
-            const totalRevenue = inspections.reduce((sum, i) => sum + (parseFloat(i.finalAmount) || 0), 0);
-            const approvedInspections = inspections.filter(i => i.approval === 'موافق').length;
+            // إخفاء جميع الأقسام أولاً
+            paymentInfo.classList.add('hidden');
+            rejectionReasons.classList.add('hidden');
+            customerRating.classList.add('hidden');
             
-            doc.setFont('helvetica');
-            doc.setFontSize(16);
-            doc.text('Financial Report - Wajha', 20, 20);
+            if (approval === 'موافق') {
+                paymentInfo.classList.remove('hidden');
+                customerRating.classList.remove('hidden');
+            } else if (approval === 'غير موافق') {
+                rejectionReasons.classList.remove('hidden');
+            }
+        }
+
+        // تبديل حقل السبب الآخر في التعديل
+        function toggleEditOtherRejectionReason() {
+            const rejectionReason = document.getElementById('editRejectionReason').value;
+            const otherDiv = document.getElementById('editOtherRejectionDiv');
             
-            doc.setFontSize(12);
-            doc.text(`Total Revenue: ${totalRevenue.toFixed(2)} KD`, 20, 40);
-            doc.text(`Approved Inspections: ${approvedInspections}`, 20, 55);
-            doc.text(`Total Inspections: ${inspections.length}`, 20, 70);
+            if (rejectionReason === 'أخرى') {
+                otherDiv.classList.remove('hidden');
+                document.getElementById('editOtherRejectionReason').required = true;
+            } else {
+                otherDiv.classList.add('hidden');
+                document.getElementById('editOtherRejectionReason').required = false;
+            }
+        }
+
+        // حساب الخصم في التعديل
+        function calculateEditDiscount() {
+            const totalAmount = parseFloat(document.getElementById('editTotalAmount').value) || 0;
+            const discountPercent = parseFloat(document.getElementById('editDiscountPercent').value) || 0;
             
-            doc.save('financial-report.pdf');
-            showNotification('تم تصدير التقرير المالي', 'success');
+            const discountAmount = totalAmount * (discountPercent / 100);
+            const finalAmount = totalAmount - discountAmount;
+            
+            document.getElementById('editFinalAmount').value = finalAmount.toFixed(3);
+        }
+
+        // حفظ تعديل المعاينة
+        function saveInspectionEdit() {
+            const inspectionId = document.getElementById('editInspectionId').value;
+            const inspection = inspections.find(i => i.id === inspectionId);
+            
+            if (!inspection) return;
+            
+            const approval = document.querySelector('input[name="editApproval"]:checked').value;
+            const rejectionReason = document.getElementById('editRejectionReason').value;
+            
+            // تحديث البيانات
+            inspection.approval = approval;
+            
+            // تحديث أسباب الإلغاء
+            if (approval === 'غير موافق') {
+                inspection.rejectionReason = rejectionReason === 'أخرى' ? document.getElementById('editOtherRejectionReason').value : rejectionReason;
+                inspection.rejectionDetails = document.getElementById('editRejectionDetails').value;
+                // مسح بيانات التقييم والدفع
+                inspection.rating = 0;
+                inspection.ratingNotes = '';
+                inspection.totalAmount = 0;
+                inspection.finalAmount = 0;
+                inspection.paymentStatus = '';
+            } else {
+                // مسح أسباب الإلغاء
+                inspection.rejectionReason = '';
+                inspection.rejectionDetails = '';
+                
+                if (approval === 'موافق') {
+                    inspection.totalAmount = parseFloat(document.getElementById('editTotalAmount').value) || 0;
+                    inspection.discountPercent = parseFloat(document.getElementById('editDiscountPercent').value) || 0;
+                    inspection.finalAmount = parseFloat(document.getElementById('editFinalAmount').value) || 0;
+                    inspection.serviceDate = document.getElementById('editServiceDate').value;
+                    inspection.paymentStatus = document.getElementById('editPaymentStatus').value;
+                    inspection.rating = getCurrentEditRating();
+                    inspection.ratingNotes = document.getElementById('editRatingNotes').value;
+                } else {
+                    // في الانتظار - مسح بيانات الدفع والتقييم
+                    inspection.rating = 0;
+                    inspection.ratingNotes = '';
+                    inspection.totalAmount = 0;
+                    inspection.finalAmount = 0;
+                    inspection.paymentStatus = '';
+                }
+            }
+            
+            inspection.inspectorNotes = document.getElementById('editInspectorNotes').value;
+            
+            // حفظ البيانات
+            saveLocalData();
+            updateTables();
+            closeEditInspectionModal();
+            
+            showNotification('تم حفظ التعديلات بنجاح! ✅', 'success');
+        }
+
+        // الحصول على التقييم الحالي في التعديل
+        function getCurrentEditRating() {
+            const activeStars = document.querySelectorAll('#editStarRating .star.active');
+            return activeStars.length;
+        }
+
+        // إغلاق نافذة تعديل المعاينة
+        function closeEditInspectionModal() {
+            document.getElementById('editInspectionModal').classList.add('hidden');
+            document.getElementById('editInspectionModal').classList.remove('flex');
         }
 
         // إظهار الإشعارات
-        function showNotification(message, type = 'info') {
+        function showNotification(message, type = 'success') {
             const notification = document.createElement('div');
-            notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg text-white font-semibold transition-all duration-300 transform translate-x-full`;
-            
-            if (type === 'success') {
-                notification.classList.add('bg-green-500');
-            } else if (type === 'error') {
-                notification.classList.add('bg-red-500');
-            } else {
-                notification.classList.add('bg-blue-500');
-            }
-            
+            notification.className = `notification ${type}`;
             notification.textContent = message;
+            
             document.body.appendChild(notification);
             
             // إظهار الإشعار
             setTimeout(() => {
-                notification.classList.remove('translate-x-full');
+                notification.classList.add('show');
             }, 100);
             
             // إخفاء الإشعار
             setTimeout(() => {
-                notification.classList.add('translate-x-full');
+                notification.classList.remove('show');
                 setTimeout(() => {
-                    document.body.removeChild(notification);
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
                 }, 300);
-            }, 3000);
+            }, 4000);
         }
-
-        // تحديث الواجهة
-        function updateUI() {
-            document.getElementById('totalCustomers').textContent = customers.length;
-            updateDashboard();
-            updateCustomersTable();
-            updateInspectionsTable();
-            updateReports();
-        }
-
-        // وظائف فارغة للتعديل (يمكن تطويرها لاحقاً)
-        function editCustomer(customerId) {
-            showNotification('ميزة التعديل قيد التطوير', 'info');
-        }
-
-        function editInspection(inspectionId) {
-            showNotification('ميزة التعديل قيد التطوير', 'info');
-        }
-
-        // إعداد مستمعي الأحداث
-        document.getElementById('addCustomerForm').addEventListener('submit', addCustomer);
-        document.getElementById('addInspectionForm').addEventListener('submit', addInspection);
-
-        // البحث في العملاء
-        document.getElementById('customerSearch').addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            const rows = document.querySelectorAll('#customersTableBody tr');
-            
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(searchTerm) ? '' : 'none';
-            });
-        });
-
-        // فلاتر المعاينات
-        ['inspectionSearch', 'statusFilter', 'approvalFilter', 'dateFilter'].forEach(filterId => {
-            document.getElementById(filterId).addEventListener('input', filterInspections);
-        });
-
-        function filterInspections() {
-            const searchTerm = document.getElementById('inspectionSearch').value.toLowerCase();
-            const statusFilter = document.getElementById('statusFilter').value;
-            const approvalFilter = document.getElementById('approvalFilter').value;
-            const dateFilter = document.getElementById('dateFilter').value;
-            
-            const rows = document.querySelectorAll('#inspectionsTableBody tr');
-            
-            rows.forEach(row => {
-                const cells = row.querySelectorAll('td');
-                const text = row.textContent.toLowerCase();
-                const status = cells[5]?.textContent.trim();
-                const approval = cells[6]?.textContent.trim();
-                const date = cells[4]?.textContent.trim();
-                
-                let show = true;
-                
-                if (searchTerm && !text.includes(searchTerm)) show = false;
-                if (statusFilter && status !== statusFilter) show = false;
-                if (approvalFilter && approval !== approvalFilter) show = false;
-                if (dateFilter && !date.includes(new Date(dateFilter).toLocaleDateString('ar-SA'))) show = false;
-                
-                row.style.display = show ? '' : 'none';
-            });
-        }
-
-        // تهيئة التطبيق عند تحميل الصفحة
-        document.addEventListener('DOMContentLoaded', initApp);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98a3db7b843dc68b',t:'MTc1OTc0MDA2Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98a4346e0401c68b',t:'MTc1OTc0MzcwNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
