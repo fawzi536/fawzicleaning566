@@ -96,7 +96,7 @@
                     </button>
                     
                     <div class="bg-green-500 px-3 py-1 rounded-full text-sm font-medium">
-                        الإصدار 9
+                        الإصدار 10
                     </div>
                 </div>
             </div>
@@ -603,37 +603,50 @@
         async function fetchDataFromGoogleSheets() {
             try {
                 updateConnectionStatus('connecting');
-                showNotification('🔄 جاري الاتصال بـ Google Sheets (الإصدار 9)...', 'info');
+                showNotification('🔄 جاري الاتصال بـ Google Sheets (الطرق المحسّنة)...', 'info');
                 
                 let csvText = null;
                 let lastError = null;
                 let successMethod = '';
                 
-                // Method 1: JSONP approach (Version 9 special method)
+                // Method 1: Direct CSV (no-cors) - الطريقة الأساسية من الإصدار 9
                 try {
-                    console.log('🔄 Method 1: JSONP approach (Version 9)...');
-                    csvText = await fetchViaJSONP();
-                    if (csvText && csvText.length > 50) {
-                        console.log('✅ Method 1 successful via JSONP, data length:', csvText.length);
-                        successMethod = 'JSONP (Version 9)';
-                    } else {
-                        csvText = null;
-                    }
+                    console.log('🔄 Method 1: Direct CSV (no-cors)...');
+                    const response1 = await fetch(GOOGLE_SHEET_URL, {
+                        method: 'GET',
+                        mode: 'no-cors',
+                        cache: 'no-cache'
+                    });
+                    // no-cors doesn't allow reading response, so this won't work directly
+                    console.log('❌ Method 1: no-cors prevents reading response');
                 } catch (error1) {
                     console.log('❌ Method 1 failed:', error1.message);
                     lastError = error1;
                 }
                 
-                // Method 2: Script tag injection
+                // Method 2: Direct CSV (cors) - نسخة محسّنة مع headers إضافية
                 if (!csvText) {
                     try {
-                        console.log('🔄 Method 2: Script tag injection...');
-                        csvText = await fetchViaScriptTag();
-                        if (csvText && csvText.length > 50) {
-                            console.log('✅ Method 2 successful via script tag');
-                            successMethod = 'Script Tag Injection';
-                        } else {
-                            csvText = null;
+                        console.log('🔄 Method 2: Direct CSV (cors)...');
+                        const response2 = await fetch(GOOGLE_SHEET_URL, {
+                            method: 'GET',
+                            mode: 'cors',
+                            cache: 'no-cache',
+                            headers: {
+                                'Accept': 'text/csv,application/csv,text/plain,*/*',
+                                'Accept-Language': 'ar,en;q=0.9',
+                                'Cache-Control': 'no-cache'
+                            }
+                        });
+                        
+                        if (response2.ok) {
+                            csvText = await response2.text();
+                            if (csvText && csvText.length > 50 && !csvText.includes('<!DOCTYPE html>')) {
+                                console.log('✅ Method 2 successful via Direct CSV (cors)');
+                                successMethod = 'Direct CSV (cors)';
+                            } else {
+                                csvText = null;
+                            }
                         }
                     } catch (error2) {
                         console.log('❌ Method 2 failed:', error2.message);
@@ -641,84 +654,155 @@
                     }
                 }
                 
-                // Method 3: Published web app approach
+                // Method 3: Alternative CSV URL - رابط بديل مع معاملات مختلفة
                 if (!csvText) {
                     try {
-                        console.log('🔄 Method 3: Published web app...');
-                        const webAppUrl = 'https://docs.google.com/spreadsheets/d/14kbGPoC4ld3tkDAuVWGO36FjNtRvY0xKBXc_y0vUkZI/pub?output=csv&single=true';
-                        const response3 = await fetch(webAppUrl, {
+                        console.log('🔄 Method 3: Alternative CSV URL...');
+                        const altUrl = 'https://docs.google.com/spreadsheets/d/14kbGPoC4ld3tkDAuVWGO36FjNtRvY0xKBXc_y0vUkZI/export?format=csv&gid=0&single=true&output=csv';
+                        const response3 = await fetch(altUrl, {
                             method: 'GET',
-                            mode: 'no-cors',
-                            cache: 'no-cache'
+                            mode: 'cors',
+                            headers: {
+                                'Accept': 'text/csv,application/csv,text/plain,*/*'
+                            }
                         });
                         
-                        // For no-cors, we can't read the response directly
-                        // This method works by triggering a download that we can't access
-                        console.log('❌ Method 3: no-cors prevents reading response');
-                        csvText = null;
+                        if (response3.ok) {
+                            csvText = await response3.text();
+                            if (csvText && csvText.length > 50 && !csvText.includes('<!DOCTYPE html>')) {
+                                console.log('✅ Method 3 successful via Alternative CSV URL');
+                                successMethod = 'Alternative CSV URL';
+                            } else {
+                                csvText = null;
+                            }
+                        }
                     } catch (error3) {
                         console.log('❌ Method 3 failed:', error3.message);
                         lastError = error3;
                     }
                 }
                 
-                // Method 4: Alternative proxy services
+                // Method 4: Google Visualization API (CSV) - API مخصص للبيانات
                 if (!csvText) {
-                    const proxyServices = [
-                        'https://api.allorigins.win/get?url=',
-                        'https://cors-anywhere.herokuapp.com/',
-                        'https://api.codetabs.com/v1/proxy?quest=',
-                        'https://thingproxy.freeboard.io/fetch/'
-                    ];
-                    
-                    for (let i = 0; i < proxyServices.length; i++) {
-                        try {
-                            console.log(`🔄 Method ${4 + i}: Proxy service ${i + 1}...`);
-                            const proxyUrl = proxyServices[i] + encodeURIComponent(GOOGLE_SHEET_URL);
-                            const response = await fetch(proxyUrl, {
-                                method: 'GET',
-                                headers: {
-                                    'Accept': 'text/csv,application/csv,text/plain,*/*'
-                                }
-                            });
-                            
-                            if (response.ok) {
-                                let data;
-                                if (proxyServices[i].includes('allorigins')) {
-                                    const jsonData = await response.json();
-                                    data = jsonData.contents;
-                                } else {
-                                    data = await response.text();
-                                }
-                                
-                                if (data && data.length > 50 && !data.includes('<!DOCTYPE html>')) {
-                                    csvText = data;
-                                    console.log(`✅ Method ${4 + i} successful via proxy ${i + 1}`);
-                                    successMethod = `Proxy Service ${i + 1}`;
-                                    break;
-                                }
+                    try {
+                        console.log('🔄 Method 4: Google Visualization API (CSV)...');
+                        const vizUrl = 'https://docs.google.com/spreadsheets/d/14kbGPoC4ld3tkDAuVWGO36FjNtRvY0xKBXc_y0vUkZI/gviz/tq?tqx=out:csv&sheet=Sheet1';
+                        const response4 = await fetch(vizUrl, {
+                            method: 'GET',
+                            mode: 'cors',
+                            headers: {
+                                'Accept': 'text/csv,application/csv,text/plain,*/*'
                             }
-                        } catch (error) {
-                            console.log(`❌ Method ${4 + i} failed:`, error.message);
-                            lastError = error;
+                        });
+                        
+                        if (response4.ok) {
+                            csvText = await response4.text();
+                            if (csvText && csvText.length > 50 && !csvText.includes('<!DOCTYPE html>')) {
+                                console.log('✅ Method 4 successful via Google Visualization API (CSV)');
+                                successMethod = 'Google Visualization API (CSV)';
+                            } else {
+                                csvText = null;
+                            }
                         }
+                    } catch (error4) {
+                        console.log('❌ Method 4 failed:', error4.message);
+                        lastError = error4;
                     }
                 }
                 
-                // Method 8: Local storage fallback (if previously cached)
+                // Method 5: Google Visualization API (JSON→CSV) - تحويل JSON إلى CSV
                 if (!csvText) {
                     try {
-                        console.log('🔄 Method 8: Local storage fallback...');
-                        const cachedData = localStorage.getItem('wajha_orders_cache');
-                        if (cachedData) {
-                            const cache = JSON.parse(cachedData);
-                            const cacheAge = Date.now() - cache.timestamp;
-                            
-                            // Use cache if less than 1 hour old
-                            if (cacheAge < 3600000) {
-                                csvText = cache.data;
-                                console.log('✅ Method 8 successful via local cache');
-                                successMethod = 'Local Cache';
+                        console.log('🔄 Method 5: Google Visualization API (JSON→CSV)...');
+                        csvText = await fetchViaJSONP();
+                        if (csvText && csvText.length > 50) {
+                            console.log('✅ Method 5 successful via Google Visualization API (JSON→CSV)');
+                            successMethod = 'Google Visualization API (JSON→CSV)';
+                        } else {
+                            csvText = null;
+                        }
+                    } catch (error5) {
+                        console.log('❌ Method 5 failed:', error5.message);
+                        lastError = error5;
+                    }
+                }
+                
+                // Method 6: AllOrigins Proxy - خدمة proxy للتغلب على CORS
+                if (!csvText) {
+                    try {
+                        console.log('🔄 Method 6: AllOrigins Proxy...');
+                        const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(GOOGLE_SHEET_URL);
+                        const response6 = await fetch(proxyUrl, {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/json,text/plain,*/*'
+                            }
+                        });
+                        
+                        if (response6.ok) {
+                            const jsonData = await response6.json();
+                            if (jsonData.contents && jsonData.contents.length > 50 && !jsonData.contents.includes('<!DOCTYPE html>')) {
+                                csvText = jsonData.contents;
+                                console.log('✅ Method 6 successful via AllOrigins Proxy');
+                                successMethod = 'AllOrigins Proxy';
+                            }
+                        }
+                    } catch (error6) {
+                        console.log('❌ Method 6 failed:', error6.message);
+                        lastError = error6;
+                    }
+                }
+                
+                // Method 7: CORS Anywhere Proxy - proxy بديل
+                if (!csvText) {
+                    try {
+                        console.log('🔄 Method 7: CORS Anywhere Proxy...');
+                        const corsProxyUrl = 'https://cors-anywhere.herokuapp.com/' + GOOGLE_SHEET_URL;
+                        const response7 = await fetch(corsProxyUrl, {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'text/csv,application/csv,text/plain,*/*',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                        
+                        if (response7.ok) {
+                            csvText = await response7.text();
+                            if (csvText && csvText.length > 50 && !csvText.includes('<!DOCTYPE html>')) {
+                                console.log('✅ Method 7 successful via CORS Anywhere Proxy');
+                                successMethod = 'CORS Anywhere Proxy';
+                            } else {
+                                csvText = null;
+                            }
+                        }
+                    } catch (error7) {
+                        console.log('❌ Method 7 failed:', error7.message);
+                        lastError = error7;
+                    }
+                }
+                
+                // Method 8: Published Sheet Format - تنسيق النشر المباشر
+                if (!csvText) {
+                    try {
+                        console.log('🔄 Method 8: Published Sheet Format...');
+                        const pubUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT_YOUR_PUBLISHED_ID/pub?output=csv';
+                        // Note: This requires the sheet to be published to web with a different URL format
+                        const altPubUrl = 'https://docs.google.com/spreadsheets/d/14kbGPoC4ld3tkDAuVWGO36FjNtRvY0xKBXc_y0vUkZI/pub?output=csv&single=true';
+                        const response8 = await fetch(altPubUrl, {
+                            method: 'GET',
+                            mode: 'cors',
+                            headers: {
+                                'Accept': 'text/csv,application/csv,text/plain,*/*'
+                            }
+                        });
+                        
+                        if (response8.ok) {
+                            csvText = await response8.text();
+                            if (csvText && csvText.length > 50 && !csvText.includes('<!DOCTYPE html>')) {
+                                console.log('✅ Method 8 successful via Published Sheet Format');
+                                successMethod = 'Published Sheet Format';
+                            } else {
+                                csvText = null;
                             }
                         }
                     } catch (error8) {
@@ -768,15 +852,14 @@
                 
                 // Show detailed error message with solution
                 showNotification(`❌ خطأ في الاتصال: ${error.message}`, 'error');
-                showNotification('🔧 الحل: تأكد من نشر Google Sheet للعامة', 'warning');
-                showNotification('📋 سيتم تحميل بيانات تجريبية للاختبار...', 'info');
+                showNotification('🔧 تأكد من أن Google Sheet منشور للعامة', 'warning');
+                showNotification('📋 تحقق من رابط الشيت في الكود', 'info');
                 
-                // Load sample data as fallback
-                setTimeout(() => {
-                    loadSampleData();
-                    showNotification('✅ تم تحميل البيانات التجريبية بنجاح', 'success');
-                    updateConnectionStatus('connected');
-                }, 2000);
+                // Don't load sample data - keep it empty to show the real issue
+                ordersData = [];
+                updateDashboard();
+                updateActiveOrdersTable();
+                updateCompletedOrdersTable();
             }
         }
         
@@ -820,41 +903,6 @@
             });
         }
         
-        // Script tag injection method
-        function fetchViaScriptTag() {
-            return new Promise((resolve, reject) => {
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = 'https://docs.google.com/spreadsheets/d/14kbGPoC4ld3tkDAuVWGO36FjNtRvY0xKBXc_y0vUkZI/pub?output=csv';
-                
-                const timeout = setTimeout(() => {
-                    document.body.removeChild(iframe);
-                    reject(new Error('Script tag timeout'));
-                }, 15000);
-                
-                iframe.onload = () => {
-                    try {
-                        // This approach has limitations due to same-origin policy
-                        clearTimeout(timeout);
-                        document.body.removeChild(iframe);
-                        reject(new Error('Script tag method blocked by CORS'));
-                    } catch (e) {
-                        clearTimeout(timeout);
-                        document.body.removeChild(iframe);
-                        reject(e);
-                    }
-                };
-                
-                iframe.onerror = () => {
-                    clearTimeout(timeout);
-                    document.body.removeChild(iframe);
-                    reject(new Error('Script tag load failed'));
-                };
-                
-                document.body.appendChild(iframe);
-            });
-        }
-        
         // Helper function to convert Google JSON format to CSV
         function convertGoogleJsonToCsv(jsonData) {
             try {
@@ -887,95 +935,6 @@
                 console.error('Error converting JSON to CSV:', error);
                 return null;
             }
-        }
-        
-        function loadSampleData() {
-            // Sample data for testing when Google Sheets is not accessible
-            ordersData = [
-                {
-                    'رقم الطلب': 'ORD-12345678',
-                    'اسم العميل': 'أحمد محمد',
-                    'رقم الجوال': '99887766',
-                    'المحافظة': 'الكويت',
-                    'المنطقة': 'السالمية',
-                    'الشارع': 'شارع الخليج',
-                    'رقم المنزل': '123',
-                    'الدور': 'الأول',
-                    'نوع السكن': 'شقة',
-                    'نوع الخدمة': 'تنظيف عام',
-                    'عدد العاملات': '2',
-                    'مدة العمل': '4',
-                    'تاريخ الزيارة': '2024-01-15',
-                    'وقت الزيارة': '10:00',
-                    'تكرار الخدمة': 'مرة واحدة',
-                    'طريقة الدفع': 'نقدي',
-                    'المبلغ الكلي': '50',
-                    'حالة الدفع': 'مدفوع',
-                    'ملاحظات العميل': 'تنظيف شامل للمطبخ',
-                    'تاريخ الإنشاء': '2024-01-10',
-                    'حالة الطلب': 'تم الانتهاء',
-                    'تقييم العميل': '5',
-                    'ملاحظة التقييم': 'خدمة ممتازة',
-                    'ملاحظات الفريق': 'تم التنظيف بنجاح'
-                },
-                {
-                    'رقم الطلب': 'ORD-12345679',
-                    'اسم العميل': 'فاطمة علي',
-                    'رقم الجوال': '99887767',
-                    'المحافظة': 'حولي',
-                    'المنطقة': 'الجابرية',
-                    'الشارع': 'شارع تونس',
-                    'رقم المنزل': '456',
-                    'الدور': 'الثاني',
-                    'نوع السكن': 'فيلا',
-                    'نوع الخدمة': 'تنظيف عميق',
-                    'عدد العاملات': '3',
-                    'مدة العمل': '6',
-                    'تاريخ الزيارة': '2024-01-20',
-                    'وقت الزيارة': '09:00',
-                    'تكرار الخدمة': 'شهري',
-                    'طريقة الدفع': 'تحويل بنكي',
-                    'المبلغ الكلي': '80',
-                    'حالة الدفع': 'في الانتظار',
-                    'ملاحظات العميل': 'تركيز على الحمامات',
-                    'تاريخ الإنشاء': '2024-01-12',
-                    'حالة الطلب': 'موافق',
-                    'تقييم العميل': '',
-                    'ملاحظة التقييم': '',
-                    'ملاحظات الفريق': ''
-                },
-                {
-                    'رقم الطلب': 'ORD-12345680',
-                    'اسم العميل': 'محمد سالم',
-                    'رقم الجوال': '99887768',
-                    'المحافظة': 'الأحمدي',
-                    'المنطقة': 'الفحيحيل',
-                    'الشارع': 'شارع الأمير',
-                    'رقم المنزل': '789',
-                    'الدور': 'الأرضي',
-                    'نوع السكن': 'بيت شعبي',
-                    'نوع الخدمة': 'تنظيف شقق',
-                    'عدد العاملات': '1',
-                    'مدة العمل': '3',
-                    'تاريخ الزيارة': '2024-01-25',
-                    'وقت الزيارة': '14:00',
-                    'تكرار الخدمة': 'مرة واحدة',
-                    'طريقة الدفع': 'بطاقة ائتمان',
-                    'المبلغ الكلي': '30',
-                    'حالة الدفع': 'في الانتظار',
-                    'ملاحظات العميل': 'تنظيف سريع',
-                    'تاريخ الإنشاء': '2024-01-18',
-                    'حالة الطلب': 'في الانتظار',
-                    'تقييم العميل': '',
-                    'ملاحظة التقييم': '',
-                    'ملاحظات الفريق': ''
-                }
-            ];
-            
-            updateDashboard();
-            updateActiveOrdersTable();
-            updateCompletedOrdersTable();
-            updateConnectionStatus('connected');
         }
         
         function parseCSVData(csvText) {
@@ -1734,5 +1693,5 @@
         window.editOrderStatus = editOrderStatus;
         window.completeOrder = completeOrder;
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98ac749e931d7ccf',t:'MTc1OTgzMDIyMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98ac9409c36e7ccf',t:'MTc1OTgzMTUwNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
