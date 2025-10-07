@@ -111,14 +111,47 @@
             </div>
             
             <div class="bg-white rounded-xl shadow-lg p-6">
-                <h3 class="text-xl font-bold text-gray-800 mb-4">📈 إحصائيات سريعة</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="text-center p-4 bg-blue-50 rounded-lg">
-                        <p class="text-2xl font-bold text-blue-600" id="today-orders">0</p>
-                        <p class="text-gray-600">طلبات اليوم</p>
+                <h3 class="text-xl font-bold text-gray-800 mb-4">📊 فلاتر الإحصائيات</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">فلترة حسب التاريخ</label>
+                        <select id="date-filter" onchange="updateDashboard()" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                            <option value="all">جميع الفترات</option>
+                            <option value="today">اليوم</option>
+                            <option value="week">هذا الأسبوع</option>
+                            <option value="month">هذا الشهر</option>
+                            <option value="year">هذا العام</option>
+                            <option value="custom">فترة مخصصة</option>
+                        </select>
                     </div>
+                    <div id="custom-date-from" class="hidden">
+                        <label class="block text-gray-700 font-semibold mb-2">من تاريخ</label>
+                        <input type="date" id="date-from" onchange="updateDashboard()" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                    <div id="custom-date-to" class="hidden">
+                        <label class="block text-gray-700 font-semibold mb-2">إلى تاريخ</label>
+                        <input type="date" id="date-to" onchange="updateDashboard()" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">فلترة حسب الحالة</label>
+                        <select id="status-filter" onchange="updateDashboard()" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                            <option value="all">جميع الحالات</option>
+                            <option value="معاينة">معاينة</option>
+                            <option value="موافق">موافق</option>
+                            <option value="مكتمل">مكتمل</option>
+                            <option value="ملغي">ملغي</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="text-center p-4 bg-green-50 rounded-lg">
-                        <p class="text-2xl font-bold text-green-600" id="total-revenue">0 د.ك</p>
+                        <div class="flex justify-between items-center mb-2">
+                            <p class="text-2xl font-bold text-green-600" id="total-revenue">0 د.ك</p>
+                            <button onclick="exportRevenue()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">
+                                تصدير
+                            </button>
+                        </div>
                         <p class="text-gray-600">إجمالي الإيرادات</p>
                     </div>
                     <div class="text-center p-4 bg-yellow-50 rounded-lg">
@@ -283,6 +316,14 @@
         let orders = [];
         let nextOrderNumber = 1;
 
+        // Format date from Google Sheets
+        function formatDate(dateValue) {
+            if (!dateValue) return '';
+            // Google Sheets date format conversion
+            const date = new Date((dateValue - 25569) * 86400 * 1000);
+            return date.toISOString().split('T')[0];
+        }
+
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             showTab('dashboard');
@@ -311,19 +352,20 @@
                         housingType: cells[7]?.v || '',
                         locationNotes: cells[8]?.v || '',
                         serviceType: cells[9]?.v || '',
-                        visitDate: cells[10]?.v || '',
+                        visitDate: cells[10]?.f ? formatDate(cells[10].v) : (cells[10]?.v || ''),
                         visitTime: cells[11]?.v || '',
                         serviceFrequency: cells[12]?.v || '',
                         paymentMethod: cells[13]?.v || '',
                         totalAmount: cells[14]?.v || 0,
                         paymentStatus: cells[15]?.v || 'معاينة',
-                        teamName: cells[16]?.v || '',
+        
                         bookingStatus: cells[17]?.v || 'معاينة',
                         departureTime: cells[18]?.v || '',
                         customerNotes: cells[19]?.v || '',
                         teamNotes: cells[20]?.v || '',
                         customerRating: cells[21]?.v || 0,
-                        orderCoordinator: cells[22]?.v || ''
+                        ratingNotes: cells[22]?.v || '',
+                        orderCoordinator: cells[23]?.v || ''
                     };
                 });
 
@@ -357,19 +399,32 @@
 
         // Update dashboard statistics
         function updateDashboard() {
-            const totalOrders = orders.length;
-            const paidOrders = orders.filter(o => o.paymentStatus === 'مدفوع كامل').length;
-            const activeOrders = orders.filter(o => ['معاينة', 'موافق', 'غير مدفوع', 'مدفوع جزئي'].includes(o.bookingStatus)).length;
-            const completedOrders = orders.filter(o => ['مكتمل', 'ملغي'].includes(o.bookingStatus)).length;
+            // Handle custom date filter visibility
+            const dateFilter = document.getElementById('date-filter').value;
+            const customFromDiv = document.getElementById('custom-date-from');
+            const customToDiv = document.getElementById('custom-date-to');
             
-            const today = new Date().toISOString().split('T')[0];
-            const todayOrders = orders.filter(o => o.visitDate === today).length;
+            if (dateFilter === 'custom') {
+                customFromDiv.classList.remove('hidden');
+                customToDiv.classList.remove('hidden');
+            } else {
+                customFromDiv.classList.add('hidden');
+                customToDiv.classList.add('hidden');
+            }
             
-            const totalRevenue = orders
+            // Filter orders based on selected criteria
+            const filteredOrders = getFilteredOrders();
+            
+            const totalOrders = filteredOrders.length;
+            const paidOrders = filteredOrders.filter(o => o.paymentStatus === 'مدفوع كامل').length;
+            const activeOrders = filteredOrders.filter(o => ['معاينة', 'موافق', 'غير مدفوع', 'مدفوع جزئي'].includes(o.bookingStatus)).length;
+            const completedOrders = filteredOrders.filter(o => ['مكتمل', 'ملغي'].includes(o.bookingStatus)).length;
+            
+            const totalRevenue = filteredOrders
                 .filter(o => o.paymentStatus === 'مدفوع كامل')
                 .reduce((sum, o) => sum + (parseFloat(o.totalAmount) || 0), 0);
             
-            const ratings = orders.filter(o => o.customerRating > 0);
+            const ratings = filteredOrders.filter(o => o.customerRating > 0);
             const avgRating = ratings.length > 0 
                 ? (ratings.reduce((sum, o) => sum + o.customerRating, 0) / ratings.length).toFixed(1)
                 : 0;
@@ -378,9 +433,79 @@
             document.getElementById('paid-orders').textContent = paidOrders;
             document.getElementById('active-orders').textContent = activeOrders;
             document.getElementById('completed-orders').textContent = completedOrders;
-            document.getElementById('today-orders').textContent = todayOrders;
             document.getElementById('total-revenue').textContent = totalRevenue.toFixed(1) + ' د.ك';
             document.getElementById('avg-rating').textContent = avgRating;
+        }
+
+        // Get filtered orders based on dashboard filters
+        function getFilteredOrders() {
+            let filtered = [...orders];
+            
+            // Date filter
+            const dateFilter = document.getElementById('date-filter').value;
+            const today = new Date();
+            
+            if (dateFilter !== 'all') {
+                filtered = filtered.filter(order => {
+                    if (!order.visitDate) return false;
+                    const orderDate = new Date(order.visitDate);
+                    
+                    switch (dateFilter) {
+                        case 'today':
+                            return orderDate.toDateString() === today.toDateString();
+                        case 'week':
+                            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                            return orderDate >= weekAgo && orderDate <= today;
+                        case 'month':
+                            return orderDate.getMonth() === today.getMonth() && 
+                                   orderDate.getFullYear() === today.getFullYear();
+                        case 'year':
+                            return orderDate.getFullYear() === today.getFullYear();
+                        case 'custom':
+                            const fromDate = document.getElementById('date-from').value;
+                            const toDate = document.getElementById('date-to').value;
+                            if (fromDate && toDate) {
+                                return orderDate >= new Date(fromDate) && orderDate <= new Date(toDate);
+                            }
+                            return true;
+                        default:
+                            return true;
+                    }
+                });
+            }
+            
+            // Status filter
+            const statusFilter = document.getElementById('status-filter').value;
+            if (statusFilter !== 'all') {
+                filtered = filtered.filter(order => order.bookingStatus === statusFilter);
+            }
+            
+            return filtered;
+        }
+
+        // Export revenue data
+        function exportRevenue() {
+            const filteredOrders = getFilteredOrders().filter(o => o.paymentStatus === 'مدفوع كامل');
+            
+            if (filteredOrders.length === 0) {
+                alert('لا توجد بيانات إيرادات للتصدير');
+                return;
+            }
+            
+            const csvContent = [
+                ['رقم الطلب', 'اسم العميل', 'نوع الخدمة', 'تاريخ الزيارة', 'المبلغ'].join('\t'),
+                ...filteredOrders.map(order => [
+                    order.orderNumber,
+                    order.customerName,
+                    order.serviceType,
+                    order.visitDate,
+                    order.totalAmount + ' د.ك'
+                ].join('\t'))
+            ].join('\n');
+            
+            navigator.clipboard.writeText(csvContent).then(() => {
+                alert('تم نسخ بيانات الإيرادات! يمكنك لصقها في Excel أو Google Sheets.');
+            });
         }
 
         // Search for customer
@@ -460,12 +585,12 @@
                 paymentMethod: document.getElementById('payment-method').value,
                 totalAmount: document.getElementById('initial-amount').value,
                 paymentStatus: 'غير مدفوع',
-                teamName: '',
                 bookingStatus: 'معاينة',
                 departureTime: '',
                 customerNotes: document.getElementById('customer-notes').value,
                 teamNotes: '',
                 customerRating: 0,
+                ratingNotes: '',
                 orderCoordinator: ''
             };
 
@@ -506,12 +631,12 @@
                 order.paymentMethod,
                 order.totalAmount,
                 order.paymentStatus,
-                order.teamName,
                 order.bookingStatus,
                 order.departureTime,
                 order.customerNotes,
                 order.teamNotes,
                 order.customerRating,
+                order.ratingNotes || '',
                 order.orderCoordinator
             ].join('\t');
 
@@ -676,11 +801,7 @@
                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                         </div>
                         
-                        <div>
-                            <label class="block text-gray-700 font-semibold mb-2">اسم الفريق</label>
-                            <input type="text" id="modal-team-name" value="${order.teamName}" 
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                        </div>
+
                     </div>
                     
                     <div id="cancellation-reason-div" class="hidden">
@@ -706,7 +827,7 @@
                             `).join('')}
                         </div>
                         <textarea id="modal-rating-notes" placeholder="ملاحظات التقييم..." 
-                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg" rows="2">${order.teamNotes}</textarea>
+                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg" rows="2">${order.ratingNotes || ''}</textarea>
                     </div>
                     
                     <div>
@@ -780,7 +901,6 @@
             const bookingStatus = document.getElementById('modal-booking-status').value;
             const paymentStatus = document.getElementById('modal-payment-status').value;
             const finalAmount = document.getElementById('modal-final-amount').value;
-            const teamName = document.getElementById('modal-team-name').value;
             const teamNotes = document.getElementById('modal-team-notes').value;
             
             let cancellationReason = '';
@@ -794,11 +914,13 @@
             }
             
             let customerRating = 0;
+            let ratingNotes = '';
             if (bookingStatus === 'مكتمل') {
                 const selectedStar = document.querySelector('.rating-star.text-yellow-500:last-of-type');
                 if (selectedStar) {
                     customerRating = parseInt(selectedStar.dataset.rating);
                 }
+                ratingNotes = document.getElementById('modal-rating-notes').value;
             }
 
             // Update order
@@ -807,9 +929,9 @@
                 bookingStatus,
                 paymentStatus,
                 totalAmount: finalAmount,
-                teamName,
                 teamNotes: bookingStatus === 'ملغي' ? cancellationReason : teamNotes,
                 customerRating,
+                ratingNotes: bookingStatus === 'مكتمل' ? ratingNotes : '',
                 departureTime: bookingStatus === 'مكتمل' ? new Date().toLocaleTimeString('ar-SA') : ''
             };
 
@@ -830,5 +952,5 @@
             document.getElementById('order-modal').classList.remove('flex');
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98aea9d065e54e4e',t:'MTc1OTg1MzM3MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98af037e15f351c4',t:'MTc1OTg1NzA0NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
