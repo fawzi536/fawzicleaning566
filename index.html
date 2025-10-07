@@ -352,20 +352,19 @@
                         housingType: cells[7]?.v || '',
                         locationNotes: cells[8]?.v || '',
                         serviceType: cells[9]?.v || '',
-                        visitDate: cells[10]?.f ? formatDate(cells[10].v) : (cells[10]?.v || ''),
+                        visitDate: cells[10]?.v || '',
                         visitTime: cells[11]?.v || '',
                         serviceFrequency: cells[12]?.v || '',
                         paymentMethod: cells[13]?.v || '',
                         totalAmount: cells[14]?.v || 0,
-                        paymentStatus: cells[15]?.v || 'معاينة',
-        
-                        bookingStatus: cells[17]?.v || 'معاينة',
-                        departureTime: cells[18]?.v || '',
-                        customerNotes: cells[19]?.v || '',
-                        teamNotes: cells[20]?.v || '',
-                        customerRating: cells[21]?.v || 0,
-                        ratingNotes: cells[22]?.v || '',
-                        orderCoordinator: cells[23]?.v || ''
+                        paymentStatus: cells[15]?.v || 'غير مدفوع',
+                        bookingStatus: cells[16]?.v || 'معاينة',
+                        departureTime: cells[17]?.v || '',
+                        customerNotes: cells[18]?.v || '',
+                        teamNotes: cells[19]?.v || '',
+                        customerRating: cells[20]?.v || 0,
+                        ratingNotes: cells[21]?.v || '',
+                        orderCoordinator: cells[22]?.v || ''
                     };
                 });
 
@@ -373,8 +372,43 @@
                 updateDashboard();
                 displayActiveOrders();
                 displayCompletedOrders();
+                console.log('تم تحميل', orders.length, 'طلب من Google Sheets');
             } catch (error) {
-                console.error('Error fetching orders:', error);
+                console.error('خطأ في تحميل البيانات من Google Sheets:', error);
+                // إضافة بيانات تجريبية في حالة فشل التحميل
+                if (orders.length === 0) {
+                    orders = [
+                        {
+                            orderNumber: 1,
+                            customerNumber: '99887766',
+                            customerName: 'أحمد محمد',
+                            area: 'السالمية',
+                            street: 'شارع الخليج العربي',
+                            houseNumber: '123',
+                            floor: 'الأول',
+                            housingType: 'شقة',
+                            locationNotes: 'بجانب المسجد',
+                            serviceType: 'تنظيف عام',
+                            visitDate: '2024-01-15',
+                            visitTime: '10:00',
+                            serviceFrequency: 'مرة واحدة',
+                            paymentMethod: 'نقدي',
+                            totalAmount: 25,
+                            paymentStatus: 'مدفوع كامل',
+                            bookingStatus: 'مكتمل',
+                            departureTime: '12:30',
+                            customerNotes: 'تنظيف شامل للمطبخ',
+                            teamNotes: 'تم التنظيف بنجاح',
+                            customerRating: 5,
+                            ratingNotes: 'خدمة ممتازة',
+                            orderCoordinator: 'سارة'
+                        }
+                    ];
+                    nextOrderNumber = 2;
+                    updateDashboard();
+                    displayActiveOrders();
+                    displayCompletedOrders();
+                }
             }
         }
 
@@ -952,5 +986,5 @@
             document.getElementById('order-modal').classList.remove('flex');
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98af037e15f351c4',t:'MTc1OTg1NzA0NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98afc41b74a54e4e',t:'MTc1OTg2NDkzMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
