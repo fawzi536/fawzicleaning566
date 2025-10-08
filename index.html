@@ -999,7 +999,7 @@
                                     ${order.paymentStatus}
                                 </span>
                                 ${order.paymentMethod ? `<div class="text-xs text-gray-400 mt-1">طريقة: ${order.paymentMethod}</div>` : ''}
-                                ${order.cleaningTime ? `<div class="text-xs text-blue-400 mt-1">تنظيف: ${order.cleaningDate || order.visitDate} ${order.cleaningTime}</div>` : ''}
+                                ${(order.cleaningDate || order.cleaningTime) ? `<div class="text-xs text-blue-400 mt-1">تنظيف: ${order.cleaningDate || order.visitDate} ${order.cleaningTime || order.visitTime}</div>` : ''}
                             </div>
                         ` : order.bookingStatus === 'مكتمل' ? `
                             <div>
@@ -1007,7 +1007,8 @@
                                     ${order.paymentStatus}
                                 </span>
                                 ${order.paymentMethod ? `<div class="text-xs text-gray-400 mt-1">طريقة: ${order.paymentMethod}</div>` : ''}
-                                ${order.cleaningTime ? `<div class="text-xs text-blue-400 mt-1">تنظيف: ${order.cleaningDate || order.visitDate} ${order.cleaningTime}</div>` : ''}
+                                ${(order.cleaningDate || order.cleaningTime) ? `<div class="text-xs text-blue-400 mt-1">تنظيف: ${order.cleaningDate || order.visitDate} ${order.cleaningTime || order.visitTime}</div>` : ''}
+                                ${order.ratingNotes ? `<div class="text-xs text-green-400 mt-1">تقييم: ${order.ratingNotes}</div>` : ''}
                             </div>
                         ` : `
                             <span class="text-gray-500">-</span>
@@ -1460,18 +1461,39 @@
             const cleaningDate = document.getElementById('modal-cleaning-date')?.value || '';
             const cleaningTime = document.getElementById('modal-cleaning-time')?.value || '';
             
-            // Update order - Fixed rating notes issue
+            // Update order with proper notes handling
+            let finalTeamNotes = teamNotes;
+            let finalRatingNotes = ratingNotes;
+            
+            // Handle cancellation notes
+            if (bookingStatus === 'ملغي' && cancellationReason) {
+                if (!teamNotes.trim()) {
+                    finalTeamNotes = `سبب الإلغاء: ${cancellationReason}`;
+                } else {
+                    finalTeamNotes = `${teamNotes}\n\nسبب الإلغاء: ${cancellationReason}`;
+                }
+            }
+            
+            // Handle rating notes for completed orders
+            if (bookingStatus === 'مكتمل' && ratingNotes) {
+                if (!teamNotes.trim()) {
+                    finalTeamNotes = `ملاحظات التقييم: ${ratingNotes}`;
+                } else if (!teamNotes.includes('ملاحظات التقييم:')) {
+                    finalTeamNotes = `${teamNotes}\n\nملاحظات التقييم: ${ratingNotes}`;
+                }
+            }
+            
             orders[orderIndex] = {
                 ...orders[orderIndex],
                 bookingStatus,
                 paymentMethod: ['موافق', 'مكتمل'].includes(bookingStatus) ? paymentMethod : '',
                 paymentStatus,
                 totalAmount: finalAmount,
-                cleaningDate: ['موافق', 'مكتمل'].includes(bookingStatus) ? cleaningDate : '',
-                cleaningTime: ['موافق', 'مكتمل'].includes(bookingStatus) ? cleaningTime : '',
-                teamNotes: bookingStatus === 'ملغي' ? cancellationReason : teamNotes,
+                cleaningDate: ['موافق', 'مكتمل'].includes(bookingStatus) ? (cleaningDate || orders[orderIndex].visitDate) : '',
+                cleaningTime: ['موافق', 'مكتمل'].includes(bookingStatus) ? (cleaningTime || orders[orderIndex].visitTime) : '',
+                teamNotes: finalTeamNotes,
                 customerRating,
-                ratingNotes: ratingNotes, // Fixed: Always save rating notes
+                ratingNotes: finalRatingNotes,
                 departureTime: bookingStatus === 'مكتمل' ? new Date().toLocaleTimeString('ar-SA', {hour: '2-digit', minute: '2-digit'}) : ''
             };
 
@@ -1492,5 +1514,5 @@
             document.getElementById('order-modal').classList.remove('flex');
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b3ecfce12e7cde',t:'MTc1OTkwODU1MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b4157391967cde',t:'MTc1OTkxMDIwOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
