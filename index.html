@@ -411,12 +411,12 @@
                     </div>
                     
                     <div>
-                        <label class="block text-gray-300 font-semibold mb-3">تاريخ الزيارة</label>
+                        <label class="block text-gray-300 font-semibold mb-3">تاريخ المعاينة</label>
                         <input type="date" id="visit-date" required class="dark-input w-full px-4 py-3 rounded-xl">
                     </div>
                     
                     <div>
-                        <label class="block text-gray-300 font-semibold mb-3">وقت الزيارة</label>
+                        <label class="block text-gray-300 font-semibold mb-3">وقت المعاينة</label>
                         <input type="time" id="visit-time" required class="dark-input w-full px-4 py-3 rounded-xl">
                     </div>
                     
@@ -548,6 +548,16 @@
                 return timeValue;
             }
             
+            // Handle Google Sheets date format with time like "Date(1899,11,30,22,0,0)"
+            if (typeof timeValue === 'string' && timeValue.startsWith('Date(')) {
+                const match = timeValue.match(/Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)/);
+                if (match) {
+                    const hours = parseInt(match[4]);
+                    const minutes = parseInt(match[5]);
+                    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                }
+            }
+            
             // If it's a decimal from Google Sheets (0.5 = 12:00 PM)
             if (typeof timeValue === 'number') {
                 const totalMinutes = Math.round(timeValue * 24 * 60);
@@ -563,31 +573,61 @@
         function formatDate(dateValue) {
             if (!dateValue) return '';
             
-            // If it's already in YYYY-MM-DD format, return as is
-            if (typeof dateValue === 'string' && dateValue.includes('-')) {
+            // If it's already in DD-MM-YYYY format, return as is
+            if (typeof dateValue === 'string' && dateValue.match(/^\d{2}-\d{2}-\d{4}$/)) {
                 return dateValue;
+            }
+            
+            // If it's in YYYY-MM-DD format, convert to DD-MM-YYYY
+            if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                const [year, month, day] = dateValue.split('-');
+                return `${day}-${month}-${year}`;
             }
             
             // Handle Google Sheets date format like "Date(2025,9,10)"
             if (typeof dateValue === 'string' && dateValue.startsWith('Date(')) {
-                const match = dateValue.match(/Date\((\d+),(\d+),(\d+)\)/);
+                const match = dateValue.match(/Date\((\d+),(\d+),(\d+)(?:,\d+,\d+,\d+)?\)/);
                 if (match) {
                     const year = parseInt(match[1]);
                     const month = parseInt(match[2]) + 1; // Google Sheets months are 0-based
                     const day = parseInt(match[3]);
-                    return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                    return `${day.toString().padStart(2, '0')}-${month.toString().padStart(2, '0')}-${year}`;
                 }
             }
             
             // If it's a number from Google Sheets (Excel serial date)
             if (typeof dateValue === 'number') {
                 const date = new Date((dateValue - 25569) * 86400 * 1000);
-                return date.toISOString().split('T')[0];
+                const day = date.getDate().toString().padStart(2, '0');
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}-${month}-${year}`;
             }
             
             // If it's a Date object
             if (dateValue instanceof Date) {
-                return dateValue.toISOString().split('T')[0];
+                const day = dateValue.getDate().toString().padStart(2, '0');
+                const month = (dateValue.getMonth() + 1).toString().padStart(2, '0');
+                const year = dateValue.getFullYear();
+                return `${day}-${month}-${year}`;
+            }
+            
+            return dateValue;
+        }
+
+        // Convert DD-MM-YYYY to YYYY-MM-DD for input fields
+        function convertToInputDate(dateValue) {
+            if (!dateValue) return '';
+            
+            // If already in YYYY-MM-DD format
+            if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                return dateValue;
+            }
+            
+            // If in DD-MM-YYYY format, convert to YYYY-MM-DD
+            if (typeof dateValue === 'string' && dateValue.match(/^\d{2}-\d{2}-\d{4}$/)) {
+                const [day, month, year] = dateValue.split('-');
+                return `${year}-${month}-${day}`;
             }
             
             return dateValue;
@@ -1309,7 +1349,7 @@
                         
                         <div id="cleaning-date-div" class="${['موافق', 'مكتمل'].includes(order.bookingStatus) ? '' : 'hidden'}">
                             <label class="block text-gray-300 font-semibold mb-3">تاريخ التنظيف</label>
-                            <input type="date" id="modal-cleaning-date" value="${order.cleaningDate || order.visitDate}" 
+                            <input type="date" id="modal-cleaning-date" value="${convertToInputDate(order.cleaningDate || order.visitDate)}" 
                                    class="dark-input w-full px-4 py-3 rounded-xl ${readOnlyClass}" ${isReadOnly}>
                         </div>
                         
@@ -1343,8 +1383,12 @@
                                         data-rating="${i}">★</button>
                             `).join('')}
                         </div>
+                    </div>
+                    
+                    <div id="rating-notes-div" class="hidden">
+                        <label class="block text-gray-300 font-semibold mb-3">ملاحظات التقييم</label>
                         <textarea id="modal-rating-notes" placeholder="ملاحظات التقييم..." 
-                                  class="dark-input w-full px-4 py-3 rounded-xl" rows="2">${order.ratingNotes || ''}</textarea>
+                                  class="dark-input w-full px-4 py-3 rounded-xl ${readOnlyClass}" rows="2" ${isReadOnly}>${order.ratingNotes || ''}</textarea>
                     </div>
                     
                     <div>
@@ -1391,9 +1435,12 @@
                 const cleaningTimeDiv = document.getElementById('cleaning-time-div');
                 const amountLabel = document.getElementById('amount-label');
                 
+                const ratingNotesDiv = document.getElementById('rating-notes-div');
+                
                 if (status === 'ملغي') {
                     cancellationDiv.classList.remove('hidden');
                     ratingDiv.classList.add('hidden');
+                    ratingNotesDiv.classList.add('hidden');
                     paymentStatusDiv.classList.add('hidden');
                     paymentMethodDiv.classList.add('hidden');
                     discountDiv.classList.add('hidden');
@@ -1404,6 +1451,7 @@
                 } else if (status === 'مكتمل') {
                     cancellationDiv.classList.add('hidden');
                     ratingDiv.classList.remove('hidden');
+                    ratingNotesDiv.classList.remove('hidden');
                     paymentStatusDiv.classList.remove('hidden');
                     paymentMethodDiv.classList.remove('hidden');
                     discountDiv.classList.remove('hidden');
@@ -1415,6 +1463,7 @@
                 } else if (status === 'موافق') {
                     cancellationDiv.classList.add('hidden');
                     ratingDiv.classList.add('hidden');
+                    ratingNotesDiv.classList.add('hidden');
                     paymentStatusDiv.classList.remove('hidden');
                     paymentMethodDiv.classList.remove('hidden');
                     discountDiv.classList.remove('hidden');
@@ -1426,6 +1475,7 @@
                 } else { // معاينة
                     cancellationDiv.classList.add('hidden');
                     ratingDiv.classList.add('hidden');
+                    ratingNotesDiv.classList.add('hidden');
                     paymentStatusDiv.classList.add('hidden');
                     paymentMethodDiv.classList.add('hidden');
                     discountDiv.classList.add('hidden');
@@ -1511,7 +1561,6 @@
             
             // Update order with proper notes handling
             let finalTeamNotes = teamNotes;
-            let finalRatingNotes = ratingNotes;
             
             // Handle cancellation notes
             if (bookingStatus === 'ملغي' && cancellationReason) {
@@ -1522,14 +1571,8 @@
                 }
             }
             
-            // Handle rating notes for completed orders
-            if (bookingStatus === 'مكتمل' && ratingNotes) {
-                if (!teamNotes.trim()) {
-                    finalTeamNotes = `ملاحظات التقييم: ${ratingNotes}`;
-                } else if (!teamNotes.includes('ملاحظات التقييم:')) {
-                    finalTeamNotes = `${teamNotes}\n\nملاحظات التقييم: ${ratingNotes}`;
-                }
-            }
+            // Convert date format for storage
+            const formattedCleaningDate = cleaningDate ? formatDate(cleaningDate) : '';
             
             orders[orderIndex] = {
                 ...orders[orderIndex],
@@ -1537,11 +1580,11 @@
                 paymentMethod: ['موافق', 'مكتمل'].includes(bookingStatus) ? paymentMethod : '',
                 paymentStatus,
                 totalAmount: finalAmount,
-                cleaningDate: ['موافق', 'مكتمل'].includes(bookingStatus) ? (cleaningDate || orders[orderIndex].visitDate) : '',
+                cleaningDate: ['موافق', 'مكتمل'].includes(bookingStatus) ? (formattedCleaningDate || orders[orderIndex].visitDate) : '',
                 cleaningTime: ['موافق', 'مكتمل'].includes(bookingStatus) ? (cleaningTime || orders[orderIndex].visitTime) : '',
                 teamNotes: finalTeamNotes,
                 customerRating,
-                ratingNotes: finalRatingNotes,
+                ratingNotes: ratingNotes,
                 departureTime: bookingStatus === 'مكتمل' ? new Date().toLocaleTimeString('ar-SA', {hour: '2-digit', minute: '2-digit'}) : ''
             };
 
@@ -1562,5 +1605,5 @@
             document.getElementById('order-modal').classList.remove('flex');
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b421bf767e7cde',t:'MTc1OTkxMDcxMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b4323ae3c87cde',t:'MTc1OTkxMTM4Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
