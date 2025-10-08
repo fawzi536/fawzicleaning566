@@ -737,19 +737,19 @@
             
             if (customerOrders.length > 0) {
                 historyDiv.innerHTML = `
-                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">
-                        <h4 class="text-lg font-semibold text-blue-800 mb-4 flex items-center space-x-2 space-x-reverse">
+                    <div class="bg-blue-900 bg-opacity-30 border border-blue-700 rounded-xl p-6 mb-6">
+                        <h4 class="text-lg font-semibold text-blue-300 mb-4 flex items-center space-x-2 space-x-reverse">
                             <i class="fas fa-history"></i>
                             <span>طلبات العميل السابقة (${customerOrders.length})</span>
                         </h4>
                         <div class="space-y-3">
                             ${customerOrders.map(order => `
-                                <div class="bg-white p-4 rounded-lg border border-blue-100">
+                                <div class="bg-dark-card p-4 rounded-lg border border-gray-700">
                                     <div class="flex justify-between items-start">
                                         <div>
-                                            <p class="font-semibold text-gray-800">طلب #${order.orderNumber}</p>
-                                            <p class="text-sm text-gray-600">${order.serviceType} - ${order.visitDate}</p>
-                                            <p class="text-sm text-gray-600">المبلغ: ${order.totalAmount} د.ك</p>
+                                            <p class="font-semibold text-blue-400">طلب #${order.orderNumber}</p>
+                                            <p class="text-sm text-gray-300">${order.serviceType} - ${order.visitDate}</p>
+                                            <p class="text-sm text-gray-300">المبلغ: ${order.totalAmount} د.ك</p>
                                         </div>
                                         <span class="px-3 py-1 rounded-full text-xs font-semibold ${getStatusClass(order.bookingStatus)}">
                                             ${order.bookingStatus}
@@ -773,10 +773,10 @@
                 document.getElementById('location-notes').value = lastOrder.locationNotes;
             } else {
                 historyDiv.innerHTML = `
-                    <div class="bg-green-50 border border-green-200 rounded-xl p-6 mb-6">
+                    <div class="bg-blue-900 bg-opacity-20 border border-blue-700 rounded-xl p-6 mb-6">
                         <div class="flex items-center space-x-3 space-x-reverse">
-                            <i class="fas fa-user-plus text-green-600 text-xl"></i>
-                            <p class="text-green-800 font-medium">عميل جديد - لا توجد طلبات سابقة</p>
+                            <i class="fas fa-user-plus text-blue-400 text-xl"></i>
+                            <p class="text-blue-300 font-medium">عميل جديد - لا توجد طلبات سابقة</p>
                         </div>
                     </div>
                 `;
@@ -889,8 +889,8 @@
             if (activeOrders.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-12">
-                        <i class="fas fa-clipboard-list text-6xl text-gray-300 mb-4"></i>
-                        <p class="text-gray-500 text-lg">لا توجد طلبات قيد التنفيذ</p>
+                        <i class="fas fa-clipboard-list text-6xl text-gray-600 mb-4"></i>
+                        <p class="text-gray-400 text-lg">لا توجد طلبات قيد التنفيذ</p>
                     </div>
                 `;
                 return;
@@ -1090,20 +1090,20 @@
             
             content.innerHTML = `
                 <div class="space-y-6">
-                    <div class="bg-gradient-to-r from-purple-50 to-blue-50 p-6 rounded-xl border border-purple-100">
-                        <h4 class="font-bold text-lg mb-4 text-purple-800">معلومات الطلب #${order.orderNumber}</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                            <div><strong>العميل:</strong> ${order.customerName} (${order.customerNumber})</div>
-                            <div><strong>الخدمة:</strong> ${order.serviceType}</div>
-                            <div><strong>التاريخ:</strong> ${order.visitDate} - ${order.visitTime}</div>
-                            <div><strong>العنوان:</strong> ${order.area}, ${order.street}, ${order.houseNumber}</div>
+                    <div class="bg-gradient-to-r from-blue-900 to-blue-800 bg-opacity-30 p-6 rounded-xl border border-blue-700">
+                        <h4 class="font-bold text-lg mb-4 text-blue-300">معلومات الطلب #${order.orderNumber}</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-200">
+                            <div><strong class="text-blue-400">العميل:</strong> ${order.customerName} (${order.customerNumber})</div>
+                            <div><strong class="text-blue-400">الخدمة:</strong> ${order.serviceType}</div>
+                            <div><strong class="text-blue-400">التاريخ:</strong> ${order.visitDate} - ${order.visitTime}</div>
+                            <div><strong class="text-blue-400">العنوان:</strong> ${order.area}, ${order.street}, ${order.houseNumber}</div>
                         </div>
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-gray-700 font-semibold mb-3">حالة الحجز</label>
-                            <select id="modal-booking-status" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <label class="block text-gray-300 font-semibold mb-3">حالة الحجز</label>
+                            <select id="modal-booking-status" class="dark-select w-full px-4 py-3 rounded-xl">
                                 <option value="معاينة" ${order.bookingStatus === 'معاينة' ? 'selected' : ''}>معاينة</option>
                                 <option value="موافق" ${order.bookingStatus === 'موافق' ? 'selected' : ''}>موافق</option>
                                 <option value="مكتمل" ${order.bookingStatus === 'مكتمل' ? 'selected' : ''}>مكتمل</option>
@@ -1112,8 +1112,8 @@
                         </div>
                         
                         <div id="payment-method-div" class="${['موافق', 'مكتمل'].includes(order.bookingStatus) ? '' : 'hidden'}">
-                            <label class="block text-gray-700 font-semibold mb-3">طريقة الدفع</label>
-                            <select id="modal-payment-method" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <label class="block text-gray-300 font-semibold mb-3">طريقة الدفع</label>
+                            <select id="modal-payment-method" class="dark-select w-full px-4 py-3 rounded-xl">
                                 <option value="">اختر طريقة الدفع</option>
                                 <option value="كاش" ${order.paymentMethod === 'كاش' ? 'selected' : ''}>كاش</option>
                                 <option value="رابط upay" ${order.paymentMethod === 'رابط upay' ? 'selected' : ''}>رابط upay</option>
@@ -1122,8 +1122,8 @@
                         </div>
                         
                         <div>
-                            <label class="block text-gray-700 font-semibold mb-3">حالة الدفع</label>
-                            <select id="modal-payment-status" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <label class="block text-gray-300 font-semibold mb-3">حالة الدفع</label>
+                            <select id="modal-payment-status" class="dark-select w-full px-4 py-3 rounded-xl">
                                 <option value="غير مدفوع" ${order.paymentStatus === 'غير مدفوع' ? 'selected' : ''}>غير مدفوع</option>
                                 <option value="مدفوع جزئي" ${order.paymentStatus === 'مدفوع جزئي' ? 'selected' : ''}>مدفوع جزئي</option>
                                 <option value="مدفوع كامل" ${order.paymentStatus === 'مدفوع كامل' ? 'selected' : ''}>مدفوع كامل</option>
@@ -1131,21 +1131,21 @@
                         </div>
                         
                         <div>
-                            <label class="block text-gray-700 font-semibold mb-3">المبلغ النهائي (د.ك)</label>
+                            <label class="block text-gray-300 font-semibold mb-3">المبلغ النهائي (د.ك)</label>
                             <input type="number" id="modal-final-amount" step="0.1" value="${order.totalAmount}" 
-                                   class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                   class="dark-input w-full px-4 py-3 rounded-xl">
                         </div>
                         
                         <div>
-                            <label class="block text-gray-700 font-semibold mb-3">منسق الطلب</label>
+                            <label class="block text-gray-300 font-semibold mb-3">منسق الطلب</label>
                             <input type="text" id="modal-coordinator" value="${order.orderCoordinator}" 
-                                   class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                   class="dark-input w-full px-4 py-3 rounded-xl">
                         </div>
                     </div>
                     
                     <div id="cancellation-reason-div" class="hidden">
-                        <label class="block text-gray-700 font-semibold mb-3">سبب الإلغاء</label>
-                        <select id="modal-cancellation-reason" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent mb-3">
+                        <label class="block text-gray-300 font-semibold mb-3">سبب الإلغاء</label>
+                        <select id="modal-cancellation-reason" class="dark-select w-full px-4 py-3 rounded-xl mb-3">
                             <option value="">اختر سبب الإلغاء</option>
                             <option value="عدم توفر العميل">عدم توفر العميل</option>
                             <option value="تغيير الموعد">تغيير الموعد</option>
@@ -1153,36 +1153,36 @@
                             <option value="أخرى">أخرى</option>
                         </select>
                         <input type="text" id="modal-other-reason" placeholder="اكتب السبب..." 
-                               class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent hidden">
+                               class="dark-input w-full px-4 py-3 rounded-xl hidden">
                     </div>
                     
                     <div id="rating-div" class="hidden">
-                        <label class="block text-gray-700 font-semibold mb-3">تقييم العميل</label>
+                        <label class="block text-gray-300 font-semibold mb-3">تقييم العميل</label>
                         <div class="flex gap-2 mb-3">
                             ${[1,2,3,4,5].map(i => `
                                 <button type="button" onclick="setRating(${i})" 
-                                        class="rating-star text-3xl transition-colors ${order.customerRating >= i ? 'text-yellow-500' : 'text-gray-300'}" 
+                                        class="rating-star text-3xl transition-colors ${order.customerRating >= i ? 'text-yellow-500' : 'text-gray-500'}" 
                                         data-rating="${i}">★</button>
                             `).join('')}
                         </div>
                         <textarea id="modal-rating-notes" placeholder="ملاحظات التقييم..." 
-                                  class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent" rows="2">${order.ratingNotes || ''}</textarea>
+                                  class="dark-input w-full px-4 py-3 rounded-xl" rows="2">${order.ratingNotes || ''}</textarea>
                     </div>
                     
                     <div>
-                        <label class="block text-gray-700 font-semibold mb-3">ملاحظات الفريق</label>
-                        <textarea id="modal-team-notes" class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent" 
+                        <label class="block text-gray-300 font-semibold mb-3">ملاحظات الفريق</label>
+                        <textarea id="modal-team-notes" class="dark-input w-full px-4 py-3 rounded-xl" 
                                   rows="3">${order.teamNotes}</textarea>
                     </div>
                     
                     <div class="flex gap-4 pt-4">
                         <button onclick="updateOrder('${order.orderNumber}')" 
-                                class="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 space-x-reverse">
+                                class="flex-1 btn-primary text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 space-x-reverse">
                             <i class="fas fa-save"></i>
                             <span>حفظ التغييرات</span>
                         </button>
                         <button onclick="closeModal()" 
-                                class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold transition-colors flex items-center justify-center space-x-2 space-x-reverse">
+                                class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold transition-colors flex items-center justify-center space-x-2 space-x-reverse border border-gray-600">
                             <i class="fas fa-times"></i>
                             <span>إلغاء</span>
                         </button>
@@ -1305,5 +1305,5 @@
             document.getElementById('order-modal').classList.remove('flex');
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b33068835b7cde',t:'MTc1OTkwMDgyNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b34a6f119f7cde',t:'MTc1OTkwMTg5My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
