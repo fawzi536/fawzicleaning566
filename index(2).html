@@ -184,7 +184,6 @@
                     </div>
                     <div>
                         <h1 class="text-3xl font-bold text-white">نظام إدارة الطلبات</h1>
-                        <p class="text-blue-100 text-sm">إدارة شاملة للطلبات والعملاء</p>
                     </div>
                 </div>
                 <div class="text-white text-left">
@@ -773,7 +772,8 @@
                         customerNotes: String(cells[20]?.v || ''),
                         teamNotes: String(cells[21]?.v || ''),
                         customerRating: parseInt(cells[22]?.v) || 0,
-                        ratingNotes: String(cells[23]?.v || '')
+                        ratingNotes: String(cells[23]?.v || ''),
+                        cancellationReason: String(cells[24]?.v || '')
                     };
                 }).filter(order => order !== null);
 
@@ -815,7 +815,8 @@
                             customerNotes: 'تنظيف شامل للمطبخ',
                             teamNotes: 'تم التنظيف بنجاح',
                             customerRating: 5,
-                            ratingNotes: 'خدمة ممتازة'
+                            ratingNotes: 'خدمة ممتازة',
+                            cancellationReason: ''
                         }
                     ];
                     nextOrderNumber = 2;
@@ -920,12 +921,12 @@
             
             // Calculate total revenue (مدفوع كامل)
             const totalRevenue = filteredOrders
-                .filter(o => o.paymentStatus === 'مدفوع كامل')
+                .filter(o => o.paymentStatus === 'مدفوع كامل' && parseFloat(o.totalAmount) > 0)
                 .reduce((sum, o) => sum + (parseFloat(o.totalAmount) || 0), 0);
             
             // Calculate partial revenue (مدفوع جزئي)
             const partialRevenue = filteredOrders
-                .filter(o => o.paymentStatus === 'مدفوع جزئي')
+                .filter(o => o.paymentStatus === 'مدفوع جزئي' && parseFloat(o.totalAmount) > 0)
                 .reduce((sum, o) => sum + (parseFloat(o.totalAmount) || 0), 0);
             
             const ratings = filteredOrders.filter(o => o.customerRating > 0);
@@ -1087,7 +1088,8 @@
                 customerNotes: '',
                 teamNotes: '',
                 customerRating: 0,
-                ratingNotes: ''
+                ratingNotes: '',
+                cancellationReason: ''
             };
 
             orders.push(newOrder);
@@ -1559,6 +1561,16 @@
                                class="dark-input w-full px-4 py-3 rounded-xl hidden">
                     </div>
                     
+                    ${order.cancellationReason ? `
+                        <div class="bg-red-900 bg-opacity-20 border border-red-700 rounded-xl p-4">
+                            <h5 class="font-semibold text-red-300 mb-2 flex items-center space-x-2 space-x-reverse">
+                                <i class="fas fa-times-circle text-red-400"></i>
+                                <span>سبب الإلغاء</span>
+                            </h5>
+                            <p class="text-red-200">${order.cancellationReason}</p>
+                        </div>
+                    ` : ''}
+                    
                     <div id="rating-div" class="hidden">
                         <label class="block text-gray-300 font-semibold mb-3">تقييم العميل</label>
                         <div class="flex gap-2 mb-3">
@@ -1682,6 +1694,12 @@
                     cleaningTimeDiv.classList.add('hidden');
                     amountLabel.textContent = 'المبلغ النهائي (د.ك)';
                 }
+                
+                // Trigger change to show/hide fields immediately
+                setTimeout(() => {
+                    const event = new Event('change');
+                    this.dispatchEvent(event);
+                }, 100);
             });
             
             document.getElementById('modal-cancellation-reason').addEventListener('change', function() {
@@ -1757,18 +1775,6 @@
             const cleaningDate = document.getElementById('modal-cleaning-date')?.value || '';
             const cleaningTime = document.getElementById('modal-cleaning-time')?.value || '';
             
-            // Update order with proper notes handling
-            let finalTeamNotes = teamNotes;
-            
-            // Handle cancellation notes
-            if (bookingStatus === 'ملغي' && cancellationReason) {
-                if (!teamNotes.trim()) {
-                    finalTeamNotes = `سبب الإلغاء: ${cancellationReason}`;
-                } else {
-                    finalTeamNotes = `${teamNotes}\n\nسبب الإلغاء: ${cancellationReason}`;
-                }
-            }
-            
             // Convert date format for storage
             const formattedCleaningDate = cleaningDate ? formatDate(cleaningDate) : '';
             
@@ -1780,9 +1786,10 @@
                 totalAmount: finalAmount,
                 cleaningDate: ['موافق', 'مكتمل'].includes(bookingStatus) ? (formattedCleaningDate || orders[orderIndex].visitDate) : '',
                 cleaningTime: ['موافق', 'مكتمل'].includes(bookingStatus) ? (cleaningTime || orders[orderIndex].visitTime) : '',
-                teamNotes: finalTeamNotes,
+                teamNotes: teamNotes,
                 customerRating,
                 ratingNotes: ratingNotes,
+                cancellationReason: cancellationReason,
                 departureTime: bookingStatus === 'مكتمل' ? new Date().toLocaleTimeString('ar-SA', {hour: '2-digit', minute: '2-digit'}) : ''
             };
 
@@ -1975,9 +1982,6 @@
                 completedOrders = completedOrders.filter(o => o.bookingStatus === filter);
             }
             
-            // Reset to first page when filter changes
-            currentCompletedPage = 1;
-            
             const totalPages = Math.ceil(completedOrders.length / ordersPerPage);
             
             currentCompletedPage += direction;
@@ -1994,6 +1998,5 @@
             document.getElementById('order-modal').classList.remove('flex');
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b4849444a07cde',t:'MTc1OTkxNDc2MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b49df905617cde',t:'MTc1OTkxNTgwMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
-
