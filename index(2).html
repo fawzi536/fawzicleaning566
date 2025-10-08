@@ -170,6 +170,59 @@
         .bg-dark-secondary {
             background: #0a0a0a;
         }
+        
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(30, 64, 175, 0.3);
+            border: 1px solid #3b82f6;
+            z-index: 9999;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 400px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .notification.success {
+            background: linear-gradient(135deg, #059669, #10b981);
+            border-color: #10b981;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+        }
+        
+        .notification.error {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            border-color: #ef4444;
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3);
+        }
+        
+        .notification-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .notification-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        
+        .notification-text {
+            flex: 1;
+            font-weight: 500;
+            line-height: 1.4;
+        }
     </style>
 </head>
 <body class="bg-dark-secondary min-h-screen">
@@ -587,6 +640,57 @@
         let currentCompletedPage = 1;
         const ordersPerPage = 5;
 
+        // Show notification function
+        function showNotification(message, type = 'success') {
+            // Remove any existing notifications
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notification => {
+                notification.remove();
+            });
+            
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            
+            // Set icon based on type
+            let icon = '';
+            switch (type) {
+                case 'success':
+                    icon = 'fas fa-check-circle';
+                    break;
+                case 'error':
+                    icon = 'fas fa-exclamation-circle';
+                    break;
+                default:
+                    icon = 'fas fa-info-circle';
+            }
+            
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <i class="${icon} notification-icon"></i>
+                    <div class="notification-text">${message}</div>
+                </div>
+            `;
+            
+            // Add to body
+            document.body.appendChild(notification);
+            
+            // Show notification with animation
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            // Hide notification after 4 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 400);
+            }, 4000);
+        }
+
         // Format time properly
         function formatTime(timeValue) {
             if (!timeValue) return '';
@@ -887,16 +991,28 @@
             }
             
             return orders.filter(order => {
-                // Use order date (تاريخ فتح الطلب) for filtering - if not available, use visit date
-                const orderDateStr = order.orderDate || order.visitDate;
+                // Always use order date (تاريخ فتح الطلب) for filtering - if not available, use visit date
+                let orderDateStr = order.orderDate;
+                if (!orderDateStr) {
+                    orderDateStr = order.visitDate;
+                }
                 if (!orderDateStr) return false;
                 
-                // Convert DD-MM-YYYY to Date object
-                const dateParts = orderDateStr.split('-');
-                if (dateParts.length !== 3) return false;
+                // Handle different date formats
+                let orderDate;
                 
-                const [day, month, year] = dateParts;
-                const orderDate = new Date(year, month - 1, day);
+                // If it's in YYYY-MM-DD format (from input)
+                if (orderDateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    orderDate = new Date(orderDateStr);
+                }
+                // If it's in DD-MM-YYYY format (stored format)
+                else if (orderDateStr.match(/^\d{2}-\d{2}-\d{4}$/)) {
+                    const [day, month, year] = orderDateStr.split('-');
+                    orderDate = new Date(year, month - 1, day);
+                }
+                else {
+                    return false;
+                }
                 
                 return orderDate >= startDate && orderDate < endDate;
             });
@@ -950,7 +1066,7 @@
         function searchCustomer() {
             const customerNumber = document.getElementById('customer-search').value.trim();
             if (!customerNumber) {
-                alert('يرجى إدخال رقم العميل');
+                showNotification('يرجى إدخال رقم العميل', 'error');
                 return;
             }
 
@@ -1098,7 +1214,7 @@
             orders.push(newOrder);
             nextOrderNumber++;
             
-            alert('تم إضافة الطلب بنجاح! سيتم عرضه في قائمة الطلبات قيد التنفيذ.');
+            showNotification('تم إضافة الطلب بنجاح! سيتم عرضه في قائمة الطلبات قيد التنفيذ.', 'success');
             
             // Reset form
             document.getElementById('new-order-form').reset();
@@ -1141,11 +1257,14 @@
                 order.customerNotes || '',
                 order.teamNotes || '',
                 order.customerRating || 0,
-                order.ratingNotes || ''
+                order.ratingNotes || '',
+                order.cancellationReason || ''
             ].join('\t');
 
             navigator.clipboard.writeText(orderData).then(() => {
-                alert('تم نسخ بيانات الطلب! يمكنك لصقها في Google Sheets الآن.');
+                showNotification('تم نسخ بيانات الطلب! يمكنك لصقها في Google Sheets الآن.', 'success');
+            }).catch(() => {
+                showNotification('فشل في نسخ البيانات. يرجى المحاولة مرة أخرى.', 'error');
             });
         }
 
@@ -1493,7 +1612,7 @@
                             </select>
                         </div>
                         
-                        <div id="payment-method-div" class="${['موافق', 'مكتمل'].includes(order.bookingStatus) ? '' : 'hidden'}">
+                        <div id="payment-method-div" class="${order.bookingStatus === 'موافق' || order.bookingStatus === 'مكتمل' ? '' : 'hidden'}">
                             <label class="block text-gray-300 font-semibold mb-3">طريقة الدفع</label>
                             <select id="modal-payment-method" class="dark-select w-full px-4 py-3 rounded-xl ${readOnlyClass}" ${isReadOnly}>
                                 <option value="">اختر طريقة الدفع</option>
@@ -1795,7 +1914,7 @@
             // Copy updated order to clipboard
             copyOrderToClipboard(orders[orderIndex]);
             
-            alert('تم تحديث الطلب بنجاح! تم نسخ البيانات المحدثة للحافظة.');
+            showNotification('تم تحديث الطلب بنجاح! تم نسخ البيانات المحدثة للحافظة.', 'success');
         }
 
         // Show new order form
@@ -1992,5 +2111,5 @@
             document.getElementById('order-modal').classList.remove('flex');
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b4a6c753067cde',t:'MTc1OTkxNjE2MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b4c96fd5497cde',t:'MTc1OTkxNzU4MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
