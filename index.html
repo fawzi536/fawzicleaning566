@@ -727,7 +727,7 @@
         function updateDashboard() {
             const totalOrders = orders.length;
             const paidOrders = orders.filter(o => o.paymentStatus === 'مدفوع كامل').length;
-            const activeOrders = orders.filter(o => ['معاينة', 'موافق', 'غير مدفوع', 'مدفوع جزئي'].includes(o.bookingStatus)).length;
+            const activeOrders = orders.filter(o => !['مكتمل', 'ملغي'].includes(o.bookingStatus)).length;
             const completedOrders = orders.filter(o => ['مكتمل', 'ملغي'].includes(o.bookingStatus)).length;
             
             const totalRevenue = orders
@@ -840,6 +840,7 @@
                 serviceType: serviceType,
                 visitDate: document.getElementById('visit-date').value,
                 visitTime: document.getElementById('visit-time').value,
+                cleaningDate: '',
                 cleaningTime: '',
                 paymentMethod: document.getElementById('payment-method').value,
                 totalAmount: 0,
@@ -905,7 +906,7 @@
 
         // Display active orders
         function displayActiveOrders() {
-            const activeOrders = orders.filter(o => ['معاينة', 'موافق', 'غير مدفوع', 'مدفوع جزئي'].includes(o.bookingStatus));
+            const activeOrders = orders.filter(o => !['مكتمل', 'ملغي'].includes(o.bookingStatus));
             const tableBody = document.getElementById('active-orders-table');
             const noOrdersDiv = document.getElementById('no-active-orders');
             
@@ -982,7 +983,7 @@
                                     ${order.paymentStatus}
                                 </span>
                                 ${order.paymentMethod ? `<div class="text-xs text-gray-400 mt-1">طريقة: ${order.paymentMethod}</div>` : ''}
-                                ${order.cleaningTime ? `<div class="text-xs text-blue-400 mt-1">تنظيف: ${order.visitDate} ${order.cleaningTime}</div>` : ''}
+                                ${order.cleaningTime ? `<div class="text-xs text-blue-400 mt-1">تنظيف: ${order.cleaningDate || order.visitDate} ${order.cleaningTime}</div>` : ''}
                             </div>
                         ` : order.bookingStatus === 'مكتمل' ? `
                             <div>
@@ -990,7 +991,7 @@
                                     ${order.paymentStatus}
                                 </span>
                                 ${order.paymentMethod ? `<div class="text-xs text-gray-400 mt-1">طريقة: ${order.paymentMethod}</div>` : ''}
-                                ${order.cleaningTime ? `<div class="text-xs text-blue-400 mt-1">تنظيف: ${order.visitDate} ${order.cleaningTime}</div>` : ''}
+                                ${order.cleaningTime ? `<div class="text-xs text-blue-400 mt-1">تنظيف: ${order.cleaningDate || order.visitDate} ${order.cleaningTime}</div>` : ''}
                             </div>
                         ` : `
                             <span class="text-gray-500">-</span>
@@ -1241,6 +1242,12 @@
                                    class="dark-input w-full px-4 py-3 rounded-xl bg-gray-800 ${readOnlyClass}" readonly>
                         </div>
                         
+                        <div id="cleaning-date-div" class="${['موافق', 'مكتمل'].includes(order.bookingStatus) ? '' : 'hidden'}">
+                            <label class="block text-gray-300 font-semibold mb-3">تاريخ التنظيف</label>
+                            <input type="date" id="modal-cleaning-date" value="${order.cleaningDate || order.visitDate}" 
+                                   class="dark-input w-full px-4 py-3 rounded-xl ${readOnlyClass}" ${isReadOnly}>
+                        </div>
+                        
                         <div id="cleaning-time-div" class="${['موافق', 'مكتمل'].includes(order.bookingStatus) ? '' : 'hidden'}">
                             <label class="block text-gray-300 font-semibold mb-3">وقت التنظيف</label>
                             <input type="time" id="modal-cleaning-time" value="${order.cleaningTime || ''}" 
@@ -1315,6 +1322,7 @@
                 const paymentStatusDiv = document.getElementById('payment-status-div');
                 const discountDiv = document.getElementById('discount-div');
                 const finalAmountDiv = document.getElementById('final-amount-div');
+                const cleaningDateDiv = document.getElementById('cleaning-date-div');
                 const cleaningTimeDiv = document.getElementById('cleaning-time-div');
                 const amountLabel = document.getElementById('amount-label');
                 
@@ -1325,6 +1333,7 @@
                     paymentMethodDiv.classList.add('hidden');
                     discountDiv.classList.add('hidden');
                     finalAmountDiv.classList.add('hidden');
+                    cleaningDateDiv.classList.add('hidden');
                     cleaningTimeDiv.classList.add('hidden');
                     amountLabel.textContent = 'المبلغ المقترح (د.ك)';
                 } else if (status === 'مكتمل') {
@@ -1334,6 +1343,7 @@
                     paymentMethodDiv.classList.remove('hidden');
                     discountDiv.classList.remove('hidden');
                     finalAmountDiv.classList.remove('hidden');
+                    cleaningDateDiv.classList.remove('hidden');
                     cleaningTimeDiv.classList.remove('hidden');
                     amountLabel.textContent = 'المبلغ المقترح (د.ك)';
                     calculateFinalAmount();
@@ -1344,6 +1354,7 @@
                     paymentMethodDiv.classList.remove('hidden');
                     discountDiv.classList.remove('hidden');
                     finalAmountDiv.classList.remove('hidden');
+                    cleaningDateDiv.classList.remove('hidden');
                     cleaningTimeDiv.classList.remove('hidden');
                     amountLabel.textContent = 'المبلغ المقترح (د.ك)';
                     calculateFinalAmount();
@@ -1354,6 +1365,7 @@
                     paymentMethodDiv.classList.add('hidden');
                     discountDiv.classList.add('hidden');
                     finalAmountDiv.classList.add('hidden');
+                    cleaningDateDiv.classList.add('hidden');
                     cleaningTimeDiv.classList.add('hidden');
                     amountLabel.textContent = 'المبلغ النهائي (د.ك)';
                 }
@@ -1428,7 +1440,8 @@
                 ratingNotes = document.getElementById('modal-rating-notes').value;
             }
 
-            // Get cleaning time
+            // Get cleaning date and time
+            const cleaningDate = document.getElementById('modal-cleaning-date')?.value || '';
             const cleaningTime = document.getElementById('modal-cleaning-time')?.value || '';
             
             // Update order - Fixed rating notes issue
@@ -1438,6 +1451,7 @@
                 paymentMethod: ['موافق', 'مكتمل'].includes(bookingStatus) ? paymentMethod : '',
                 paymentStatus,
                 totalAmount: finalAmount,
+                cleaningDate: ['موافق', 'مكتمل'].includes(bookingStatus) ? cleaningDate : '',
                 cleaningTime: ['موافق', 'مكتمل'].includes(bookingStatus) ? cleaningTime : '',
                 teamNotes: bookingStatus === 'ملغي' ? cancellationReason : teamNotes,
                 customerRating,
@@ -1462,5 +1476,5 @@
             document.getElementById('order-modal').classList.remove('flex');
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b3c86420c17cde',t:'MTc1OTkwNzA1Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b3d523b0bb7cde',t:'MTc1OTkwNzU3NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
