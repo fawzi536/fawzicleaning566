@@ -342,18 +342,23 @@
                     </div>
                     
                     <div>
+                        <label class="block text-gray-300 font-semibold mb-3">تاريخ فتح الطلب</label>
+                        <input type="date" id="order-date" readonly class="dark-input w-full px-4 py-3 rounded-xl bg-gray-800 opacity-60">
+                    </div>
+                    
+                    <div>
                         <label class="block text-gray-300 font-semibold mb-3">المنطقة</label>
-                        <input type="text" id="area" required class="dark-input w-full px-4 py-3 rounded-xl">
+                        <input type="text" id="area" class="dark-input w-full px-4 py-3 rounded-xl">
                     </div>
                     
                     <div>
                         <label class="block text-gray-300 font-semibold mb-3">الشارع</label>
-                        <input type="text" id="street" required class="dark-input w-full px-4 py-3 rounded-xl">
+                        <input type="text" id="street" class="dark-input w-full px-4 py-3 rounded-xl">
                     </div>
                     
                     <div>
                         <label class="block text-gray-300 font-semibold mb-3">رقم المنزل</label>
-                        <input type="text" id="house-number" required class="dark-input w-full px-4 py-3 rounded-xl">
+                        <input type="text" id="house-number" class="dark-input w-full px-4 py-3 rounded-xl">
                     </div>
                     
                     <div>
@@ -554,7 +559,7 @@
             return timeValue;
         }
 
-        // Format date properly
+        // Format date properly from Google Sheets
         function formatDate(dateValue) {
             if (!dateValue) return '';
             
@@ -563,7 +568,18 @@
                 return dateValue;
             }
             
-            // If it's a number from Google Sheets
+            // Handle Google Sheets date format like "Date(2025,9,10)"
+            if (typeof dateValue === 'string' && dateValue.startsWith('Date(')) {
+                const match = dateValue.match(/Date\((\d+),(\d+),(\d+)\)/);
+                if (match) {
+                    const year = parseInt(match[1]);
+                    const month = parseInt(match[2]) + 1; // Google Sheets months are 0-based
+                    const day = parseInt(match[3]);
+                    return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+                }
+            }
+            
+            // If it's a number from Google Sheets (Excel serial date)
             if (typeof dateValue === 'number') {
                 const date = new Date((dateValue - 25569) * 86400 * 1000);
                 return date.toISOString().split('T')[0];
@@ -642,28 +658,29 @@
                     
                     return {
                         orderNumber: cells[0]?.v || (index + 1),
-                        customerNumber: String(cells[1]?.v || ''),
-                        customerName: String(cells[2]?.v || ''),
-                        area: String(cells[3]?.v || ''),
-                        street: String(cells[4]?.v || ''),
-                        houseNumber: String(cells[5]?.v || ''),
-                        floor: String(cells[6]?.v || ''),
-                        housingType: String(cells[7]?.v || ''),
-                        locationNotes: String(cells[8]?.v || ''),
-                        serviceType: String(cells[9]?.v || ''),
-                        visitDate: formatDate(cells[10]?.v) || '',
-                        visitTime: formatTime(cells[11]?.v) || '',
-                        cleaningDate: formatDate(cells[12]?.v) || '',
-                        cleaningTime: formatTime(cells[13]?.v) || '',
-                        paymentMethod: String(cells[14]?.v || ''),
-                        totalAmount: parseFloat(cells[15]?.v) || 0,
-                        paymentStatus: String(cells[16]?.v || 'غير مدفوع'),
-                        bookingStatus: String(cells[17]?.v || 'معاينة'),
-                        departureTime: formatTime(cells[18]?.v) || '',
-                        customerNotes: String(cells[19]?.v || ''),
-                        teamNotes: String(cells[20]?.v || ''),
-                        customerRating: parseInt(cells[21]?.v) || 0,
-                        ratingNotes: String(cells[22]?.v || '')
+                        orderDate: formatDate(cells[1]?.v) || '',
+                        customerNumber: String(cells[2]?.v || ''),
+                        customerName: String(cells[3]?.v || ''),
+                        area: String(cells[4]?.v || ''),
+                        street: String(cells[5]?.v || ''),
+                        houseNumber: String(cells[6]?.v || ''),
+                        floor: String(cells[7]?.v || ''),
+                        housingType: String(cells[8]?.v || ''),
+                        locationNotes: String(cells[9]?.v || ''),
+                        serviceType: String(cells[10]?.v || ''),
+                        visitDate: formatDate(cells[11]?.v) || '',
+                        visitTime: formatTime(cells[12]?.v) || '',
+                        cleaningDate: formatDate(cells[13]?.v) || '',
+                        cleaningTime: formatTime(cells[14]?.v) || '',
+                        paymentMethod: String(cells[15]?.v || ''),
+                        totalAmount: parseFloat(cells[16]?.v) || 0,
+                        paymentStatus: String(cells[17]?.v || 'غير مدفوع'),
+                        bookingStatus: String(cells[18]?.v || 'معاينة'),
+                        departureTime: formatTime(cells[19]?.v) || '',
+                        customerNotes: String(cells[20]?.v || ''),
+                        teamNotes: String(cells[21]?.v || ''),
+                        customerRating: parseInt(cells[22]?.v) || 0,
+                        ratingNotes: String(cells[23]?.v || '')
                     };
                 }).filter(order => order !== null);
 
@@ -680,6 +697,7 @@
                     orders = [
                         {
                             orderNumber: 1,
+                            orderDate: '2024-01-14',
                             customerNumber: '99887766',
                             customerName: 'أحمد محمد',
                             area: 'السالمية',
@@ -692,8 +710,8 @@
                             visitDate: '2024-01-15',
                             visitTime: '10:00',
                             cleaningDate: '2024-01-15',
-                            cleaningTime: '11:00',
-                            paymentMethod: 'نقدي',
+                            cleaningTime: '10:00',
+                            paymentMethod: 'كاش',
                             totalAmount: 25,
                             paymentStatus: 'مدفوع كامل',
                             bookingStatus: 'مكتمل',
@@ -777,16 +795,32 @@
                         <div class="space-y-3">
                             ${customerOrders.map(order => `
                                 <div class="bg-dark-card p-4 rounded-lg border border-gray-700">
-                                    <div class="flex justify-between items-start">
+                                    <div class="flex justify-between items-start mb-3">
                                         <div>
                                             <p class="font-semibold text-blue-400">طلب #${order.orderNumber}</p>
-                                            <p class="text-sm text-gray-300">${order.serviceType} - ${order.visitDate}</p>
+                                            <p class="text-sm text-gray-300">${order.serviceType}</p>
                                             <p class="text-sm text-gray-300">المبلغ: ${order.totalAmount} د.ك</p>
                                         </div>
                                         <span class="px-3 py-1 rounded-full text-xs font-semibold ${getStatusClass(order.bookingStatus)}">
                                             ${order.bookingStatus}
                                         </span>
                                     </div>
+                                    <div class="grid grid-cols-2 gap-2 text-xs text-gray-400">
+                                        ${order.orderDate ? `<div><strong>تاريخ فتح الطلب:</strong> ${order.orderDate}</div>` : ''}
+                                        <div><strong>تاريخ المعاينة:</strong> ${order.visitDate} ${order.visitTime}</div>
+                                        ${order.cleaningDate ? `<div><strong>تاريخ التنظيف:</strong> ${order.cleaningDate} ${order.cleaningTime || order.visitTime}</div>` : ''}
+                                        ${order.area ? `<div><strong>المنطقة:</strong> ${order.area}</div>` : ''}
+                                        ${order.street ? `<div><strong>الشارع:</strong> ${order.street}</div>` : ''}
+                                        ${order.houseNumber ? `<div><strong>رقم المنزل:</strong> ${order.houseNumber}</div>` : ''}
+                                        ${order.floor ? `<div><strong>الدور:</strong> ${order.floor}</div>` : ''}
+                                        ${order.housingType ? `<div><strong>نوع السكن:</strong> ${order.housingType}</div>` : ''}
+                                        ${order.paymentMethod ? `<div><strong>طريقة الدفع:</strong> ${order.paymentMethod}</div>` : ''}
+                                        ${order.paymentStatus ? `<div><strong>حالة الدفع:</strong> ${order.paymentStatus}</div>` : ''}
+                                        ${order.customerRating > 0 ? `<div><strong>التقييم:</strong> ${'★'.repeat(order.customerRating)}${'☆'.repeat(5-order.customerRating)}</div>` : ''}
+                                    </div>
+                                    ${order.locationNotes ? `<div class="mt-2 text-xs text-gray-400"><strong>ملاحظات الموقع:</strong> ${order.locationNotes}</div>` : ''}
+                                    ${order.teamNotes ? `<div class="mt-2 text-xs text-gray-400"><strong>ملاحظات الفريق:</strong> ${order.teamNotes}</div>` : ''}
+                                    ${order.ratingNotes ? `<div class="mt-2 text-xs text-green-400"><strong>ملاحظات التقييم:</strong> ${order.ratingNotes}</div>` : ''}
                                 </div>
                             `).join('')}
                         </div>
@@ -817,6 +851,11 @@
 
             document.getElementById('customer-number').value = customerNumber;
             document.getElementById('order-number').value = nextOrderNumber;
+            
+            // Set current date as order date
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('order-date').value = today;
+            
             document.getElementById('add-order-form').classList.remove('hidden');
         }
 
@@ -838,6 +877,7 @@
             
             const newOrder = {
                 orderNumber: document.getElementById('order-number').value,
+                orderDate: document.getElementById('order-date').value,
                 customerNumber: document.getElementById('customer-number').value,
                 customerName: document.getElementById('customer-name').value,
                 area: document.getElementById('area').value,
@@ -886,27 +926,28 @@
         function copyOrderToClipboard(order) {
             const orderData = [
                 order.orderNumber,
+                order.orderDate || '',
                 order.customerNumber,
                 order.customerName,
-                order.area,
-                order.street,
-                order.houseNumber,
-                order.floor,
-                order.housingType,
-                order.locationNotes,
+                order.area || '',
+                order.street || '',
+                order.houseNumber || '',
+                order.floor || '',
+                order.housingType || '',
+                order.locationNotes || '',
                 order.serviceType,
                 order.visitDate,
                 order.visitTime,
                 order.cleaningDate || '',
                 order.cleaningTime || '',
-                order.paymentMethod,
+                order.paymentMethod || '',
                 order.totalAmount,
                 order.paymentStatus,
                 order.bookingStatus,
-                order.departureTime,
-                order.customerNotes,
-                order.teamNotes,
-                order.customerRating,
+                order.departureTime || '',
+                order.customerNotes || '',
+                order.teamNotes || '',
+                order.customerRating || 0,
                 order.ratingNotes || ''
             ].join('\t');
 
@@ -999,7 +1040,7 @@
                                     ${order.paymentStatus}
                                 </span>
                                 ${order.paymentMethod ? `<div class="text-xs text-gray-400 mt-1">طريقة: ${order.paymentMethod}</div>` : ''}
-                                ${(order.cleaningDate || order.cleaningTime) ? `<div class="text-xs text-blue-400 mt-1">تنظيف: ${order.cleaningDate || order.visitDate} ${order.cleaningTime || order.visitTime}</div>` : ''}
+                                <div class="text-xs text-blue-400 mt-1">تنظيف: ${order.cleaningDate || order.visitDate} ${order.cleaningTime || order.visitTime}</div>
                             </div>
                         ` : order.bookingStatus === 'مكتمل' ? `
                             <div>
@@ -1007,7 +1048,7 @@
                                     ${order.paymentStatus}
                                 </span>
                                 ${order.paymentMethod ? `<div class="text-xs text-gray-400 mt-1">طريقة: ${order.paymentMethod}</div>` : ''}
-                                ${(order.cleaningDate || order.cleaningTime) ? `<div class="text-xs text-blue-400 mt-1">تنظيف: ${order.cleaningDate || order.visitDate} ${order.cleaningTime || order.visitTime}</div>` : ''}
+                                <div class="text-xs text-blue-400 mt-1">تنظيف: ${order.cleaningDate || order.visitDate} ${order.cleaningTime || order.visitTime}</div>
                                 ${order.ratingNotes ? `<div class="text-xs text-green-400 mt-1">تقييم: ${order.ratingNotes}</div>` : ''}
                             </div>
                         ` : `
@@ -1199,11 +1240,18 @@
                 <div class="space-y-6">
                     <div class="bg-gradient-to-r from-blue-900 to-blue-800 bg-opacity-30 p-6 rounded-xl border border-blue-700">
                         <h4 class="font-bold text-lg mb-4 text-blue-300">معلومات الطلب #${order.orderNumber}</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-200">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-gray-200">
                             <div><strong class="text-blue-400">العميل:</strong> ${order.customerName} (${order.customerNumber})</div>
                             <div><strong class="text-blue-400">الخدمة:</strong> ${order.serviceType}</div>
-                            <div><strong class="text-blue-400">التاريخ:</strong> ${order.visitDate} - ${order.visitTime}</div>
-                            <div><strong class="text-blue-400">العنوان:</strong> ${order.area}, ${order.street}, ${order.houseNumber}</div>
+                            ${order.orderDate ? `<div><strong class="text-blue-400">تاريخ فتح الطلب:</strong> ${order.orderDate}</div>` : ''}
+                            <div><strong class="text-blue-400">تاريخ المعاينة:</strong> ${order.visitDate} - ${order.visitTime}</div>
+                            ${order.cleaningDate ? `<div><strong class="text-blue-400">تاريخ التنظيف:</strong> ${order.cleaningDate} - ${order.cleaningTime || order.visitTime}</div>` : ''}
+                            ${order.area ? `<div><strong class="text-blue-400">المنطقة:</strong> ${order.area}</div>` : ''}
+                            ${order.street ? `<div><strong class="text-blue-400">الشارع:</strong> ${order.street}</div>` : ''}
+                            ${order.houseNumber ? `<div><strong class="text-blue-400">رقم المنزل:</strong> ${order.houseNumber}</div>` : ''}
+                            ${order.floor ? `<div><strong class="text-blue-400">الدور:</strong> ${order.floor}</div>` : ''}
+                            ${order.housingType ? `<div><strong class="text-blue-400">نوع السكن:</strong> ${order.housingType}</div>` : ''}
+                            ${order.locationNotes ? `<div class="md:col-span-2 lg:col-span-3"><strong class="text-blue-400">ملاحظات الموقع:</strong> ${order.locationNotes}</div>` : ''}
                         </div>
                     </div>
                     
@@ -1267,7 +1315,7 @@
                         
                         <div id="cleaning-time-div" class="${['موافق', 'مكتمل'].includes(order.bookingStatus) ? '' : 'hidden'}">
                             <label class="block text-gray-300 font-semibold mb-3">وقت التنظيف</label>
-                            <input type="time" id="modal-cleaning-time" value="${order.cleaningTime || ''}" 
+                            <input type="time" id="modal-cleaning-time" value="${order.cleaningTime || order.visitTime}" 
                                    class="dark-input w-full px-4 py-3 rounded-xl ${readOnlyClass}" ${isReadOnly}>
                         </div>
 
@@ -1514,5 +1562,5 @@
             document.getElementById('order-modal').classList.remove('flex');
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b4157391967cde',t:'MTc1OTkxMDIwOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b421bf767e7cde',t:'MTc1OTkxMDcxMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
