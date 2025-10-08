@@ -179,11 +179,12 @@
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4 space-x-reverse">
                     <div class="bg-white bg-opacity-20 p-3 rounded-xl">
-                        <i class="fas fa-home text-2xl text-white"></i>
+                        <img src="https://i.ibb.co/cXJ6kvd/8.png" alt="شعار CleanPro" class="w-8 h-8 object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <i class="fas fa-home text-2xl text-white hidden"></i>
                     </div>
                     <div>
                         <h1 class="text-3xl font-bold text-white">CleanPro</h1>
-                        <p class="text-blue-100 text-sm">نظام إدارة الطلبات المتقدم</p>
+                        <p class="text-blue-100 text-sm">نظام إدارة الطلبات</p>
                     </div>
                 </div>
                 <div class="text-white text-left">
@@ -541,6 +542,24 @@
                     <i class="fas fa-clipboard-list text-6xl text-gray-600 mb-4"></i>
                     <p class="text-gray-400 text-lg">لا توجد طلبات مكتملة</p>
                 </div>
+                
+                <!-- Pagination for completed orders -->
+                <div id="completed-pagination" class="flex items-center justify-between mt-6 pt-4 border-t border-gray-700">
+                    <div class="text-sm text-gray-400">
+                        إجمالي الطلبات: <span id="completed-total-orders" class="font-semibold text-blue-400">0</span>
+                    </div>
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        <button id="completed-prev-btn" onclick="changeCompletedPage(-1)" 
+                                class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <span id="completed-page-info" class="text-sm text-gray-300 px-3">صفحة 1 من 1</span>
+                        <button id="completed-next-btn" onclick="changeCompletedPage(1)" 
+                                class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -565,6 +584,9 @@
         // Global variables
         let orders = [];
         let nextOrderNumber = 1;
+        let currentCustomerPage = 1;
+        let currentCompletedPage = 1;
+        const ordersPerPage = 5;
 
         // Format time properly
         function formatTime(timeValue) {
@@ -931,48 +953,64 @@
             const customerOrders = orders.filter(o => o.customerNumber === customerNumber);
             const historyDiv = document.getElementById('customer-history');
             
+            // Reset pagination
+            currentCustomerPage = 1;
+            
             if (customerOrders.length > 0) {
                 historyDiv.innerHTML = `
                     <div class="bg-blue-900 bg-opacity-30 border border-blue-700 rounded-xl p-6 mb-6">
-                        <h4 class="text-lg font-semibold text-blue-300 mb-4 flex items-center space-x-2 space-x-reverse">
-                            <i class="fas fa-history"></i>
-                            <span>طلبات العميل السابقة (${customerOrders.length})</span>
-                        </h4>
-                        <div class="space-y-3">
-                            ${customerOrders.map(order => `
-                                <div class="bg-dark-card p-4 rounded-lg border border-gray-700">
-                                    <div class="flex justify-between items-start mb-3">
-                                        <div>
-                                            <p class="font-semibold text-blue-400">طلب #${order.orderNumber}</p>
-                                            <p class="text-sm text-gray-300">${order.serviceType}</p>
-                                            <p class="text-sm text-gray-300">المبلغ: ${order.totalAmount} د.ك</p>
-                                        </div>
-                                        <span class="px-3 py-1 rounded-full text-xs font-semibold ${getStatusClass(order.bookingStatus)}">
-                                            ${order.bookingStatus}
-                                        </span>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-2 text-xs text-gray-400">
-                                        ${order.orderDate ? `<div><strong>تاريخ فتح الطلب:</strong> ${order.orderDate}</div>` : ''}
-                                        <div><strong>تاريخ المعاينة:</strong> ${order.visitDate} ${order.visitTime}</div>
-                                        ${order.cleaningDate ? `<div><strong>تاريخ التنظيف:</strong> ${order.cleaningDate} ${order.cleaningTime || order.visitTime}</div>` : ''}
-                                        ${order.area ? `<div><strong>المنطقة:</strong> ${order.area}</div>` : ''}
-                                        ${order.street ? `<div><strong>الشارع:</strong> ${order.street}</div>` : ''}
-                                        ${order.houseNumber ? `<div><strong>رقم المنزل:</strong> ${order.houseNumber}</div>` : ''}
-                                        ${order.floor ? `<div><strong>الدور:</strong> ${order.floor}</div>` : ''}
-                                        ${order.housingType ? `<div><strong>نوع السكن:</strong> ${order.housingType}</div>` : ''}
-                                        ${order.paymentMethod ? `<div><strong>طريقة الدفع:</strong> ${order.paymentMethod}</div>` : ''}
-                                        ${order.paymentStatus ? `<div><strong>حالة الدفع:</strong> ${order.paymentStatus}</div>` : ''}
-                                        ${order.customerRating > 0 ? `<div><strong>التقييم:</strong> ${'★'.repeat(order.customerRating)}${'☆'.repeat(5-order.customerRating)}</div>` : ''}
-                                    </div>
-                                    ${order.locationNotes ? `<div class="mt-2 text-xs text-gray-400"><strong>ملاحظات الموقع:</strong> ${order.locationNotes}</div>` : ''}
-                                    ${order.teamNotes ? `<div class="mt-2 text-xs text-gray-400"><strong>ملاحظات الفريق:</strong> ${order.teamNotes}</div>` : ''}
-                                    ${order.ratingNotes ? `<div class="mt-2 text-xs text-green-400"><strong>ملاحظات التقييم:</strong> ${order.ratingNotes}</div>` : ''}
-                                </div>
-                            `).join('')}
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-lg font-semibold text-blue-300 flex items-center space-x-2 space-x-reverse">
+                                <i class="fas fa-history"></i>
+                                <span>طلبات العميل السابقة (${customerOrders.length})</span>
+                            </h4>
+                            <button onclick="showNewOrderForm()" class="btn-primary text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 space-x-reverse">
+                                <i class="fas fa-plus"></i>
+                                <span>إنشاء طلب جديد</span>
+                            </button>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full table-dark">
+                                <thead>
+                                    <tr class="border-b border-gray-700">
+                                        <th class="text-right py-3 px-4 font-semibold text-gray-300">رقم الطلب</th>
+                                        <th class="text-right py-3 px-4 font-semibold text-gray-300">الخدمة</th>
+                                        <th class="text-right py-3 px-4 font-semibold text-gray-300">التاريخ</th>
+                                        <th class="text-right py-3 px-4 font-semibold text-gray-300">المبلغ</th>
+                                        <th class="text-right py-3 px-4 font-semibold text-gray-300">الحالة</th>
+                                        <th class="text-right py-3 px-4 font-semibold text-gray-300">التقييم</th>
+                                        <th class="text-center py-3 px-4 font-semibold text-gray-300">الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="customer-orders-table">
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination for customer orders -->
+                        <div id="customer-pagination" class="flex items-center justify-between mt-4 pt-4 border-t border-gray-700">
+                            <div class="text-sm text-gray-400">
+                                إجمالي الطلبات: <span id="customer-total-orders" class="font-semibold text-blue-400">0</span>
+                            </div>
+                            <div class="flex items-center space-x-2 space-x-reverse">
+                                <button id="customer-prev-btn" onclick="changeCustomerPage(-1)" 
+                                        class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                                <span id="customer-page-info" class="text-sm text-gray-300 px-3">صفحة 1 من 1</span>
+                                <button id="customer-next-btn" onclick="changeCustomerPage(1)" 
+                                        class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
                 historyDiv.classList.remove('hidden');
+                
+                // Display customer orders with pagination
+                displayCustomerOrders(customerOrders);
                 
                 // Pre-fill customer info from last order
                 const lastOrder = customerOrders[customerOrders.length - 1];
@@ -986,9 +1024,15 @@
             } else {
                 historyDiv.innerHTML = `
                     <div class="bg-blue-900 bg-opacity-20 border border-blue-700 rounded-xl p-6 mb-6">
-                        <div class="flex items-center space-x-3 space-x-reverse">
-                            <i class="fas fa-user-plus text-blue-400 text-xl"></i>
-                            <p class="text-blue-300 font-medium">عميل جديد - لا توجد طلبات سابقة</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3 space-x-reverse">
+                                <i class="fas fa-user-plus text-blue-400 text-xl"></i>
+                                <p class="text-blue-300 font-medium">عميل جديد - لا توجد طلبات سابقة</p>
+                            </div>
+                            <button onclick="showNewOrderForm()" class="btn-primary text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 space-x-reverse">
+                                <i class="fas fa-plus"></i>
+                                <span>إنشاء طلب جديد</span>
+                            </button>
                         </div>
                     </div>
                 `;
@@ -1001,8 +1045,6 @@
             // Set current date as order date
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('order-date').value = today;
-            
-            document.getElementById('add-order-form').classList.remove('hidden');
         }
 
         // Handle new order form submission
@@ -1133,17 +1175,54 @@
                 completedOrders = completedOrders.filter(o => o.bookingStatus === filter);
             }
             
+            // Reset to first page when filter changes
+            currentCompletedPage = 1;
+            
             const tableBody = document.getElementById('completed-orders-table');
             const noOrdersDiv = document.getElementById('no-completed-orders');
+            const paginationDiv = document.getElementById('completed-pagination');
             
             if (completedOrders.length === 0) {
                 tableBody.innerHTML = '';
                 noOrdersDiv.classList.remove('hidden');
+                paginationDiv.classList.add('hidden');
                 return;
             }
 
             noOrdersDiv.classList.add('hidden');
-            tableBody.innerHTML = completedOrders.map(order => createCompletedOrderRow(order)).join('');
+            paginationDiv.classList.remove('hidden');
+            
+            // Calculate pagination
+            const totalPages = Math.ceil(completedOrders.length / ordersPerPage);
+            const startIndex = (currentCompletedPage - 1) * ordersPerPage;
+            const endIndex = startIndex + ordersPerPage;
+            const paginatedOrders = completedOrders.slice(startIndex, endIndex);
+            
+            // Update table
+            tableBody.innerHTML = paginatedOrders.map(order => createCompletedOrderRow(order)).join('');
+            
+            // Update pagination info
+            document.getElementById('completed-total-orders').textContent = completedOrders.length;
+            document.getElementById('completed-page-info').textContent = `صفحة ${currentCompletedPage} من ${totalPages}`;
+            
+            // Update pagination buttons
+            const prevBtn = document.getElementById('completed-prev-btn');
+            const nextBtn = document.getElementById('completed-next-btn');
+            
+            prevBtn.disabled = currentCompletedPage === 1;
+            nextBtn.disabled = currentCompletedPage === totalPages;
+            
+            if (prevBtn.disabled) {
+                prevBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                prevBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            
+            if (nextBtn.disabled) {
+                nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                nextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
         }
 
         // Create active order row
@@ -1718,11 +1797,202 @@
             alert('تم تحديث الطلب بنجاح! تم نسخ البيانات المحدثة للحافظة.');
         }
 
+        // Show new order form
+        function showNewOrderForm() {
+            document.getElementById('add-order-form').classList.remove('hidden');
+            document.getElementById('customer-history').classList.add('hidden');
+        }
+
+        // View order details (read-only)
+        function viewOrderDetails(orderNumber) {
+            const order = orders.find(o => o.orderNumber == orderNumber);
+            if (!order) return;
+
+            const modal = document.getElementById('order-modal');
+            const content = document.getElementById('modal-content');
+            
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-gradient-to-r from-blue-900 to-blue-800 bg-opacity-30 p-6 rounded-xl border border-blue-700">
+                        <h4 class="font-bold text-lg mb-4 text-blue-300">تفاصيل الطلب #${order.orderNumber}</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-gray-200">
+                            <div><strong class="text-blue-400">العميل:</strong> ${order.customerName} (${order.customerNumber})</div>
+                            <div><strong class="text-blue-400">الخدمة:</strong> ${order.serviceType}</div>
+                            ${order.orderDate ? `<div><strong class="text-blue-400">تاريخ فتح الطلب:</strong> ${order.orderDate}</div>` : ''}
+                            <div><strong class="text-blue-400">تاريخ المعاينة:</strong> ${order.visitDate} - ${order.visitTime}</div>
+                            ${order.cleaningDate ? `<div><strong class="text-blue-400">تاريخ التنظيف:</strong> ${order.cleaningDate} - ${order.cleaningTime || order.visitTime}</div>` : ''}
+                            ${order.area ? `<div><strong class="text-blue-400">المنطقة:</strong> ${order.area}</div>` : ''}
+                            ${order.street ? `<div><strong class="text-blue-400">الشارع:</strong> ${order.street}</div>` : ''}
+                            ${order.houseNumber ? `<div><strong class="text-blue-400">رقم المنزل:</strong> ${order.houseNumber}</div>` : ''}
+                            ${order.floor ? `<div><strong class="text-blue-400">الدور:</strong> ${order.floor}</div>` : ''}
+                            ${order.housingType ? `<div><strong class="text-blue-400">نوع السكن:</strong> ${order.housingType}</div>` : ''}
+                            ${order.paymentMethod ? `<div><strong class="text-blue-400">طريقة الدفع:</strong> ${order.paymentMethod}</div>` : ''}
+                            <div><strong class="text-blue-400">حالة الحجز:</strong> <span class="status-badge ${getStatusClass(order.bookingStatus)}">${order.bookingStatus}</span></div>
+                            <div><strong class="text-blue-400">حالة الدفع:</strong> <span class="status-badge ${getPaymentStatusClass(order.paymentStatus)}">${order.paymentStatus}</span></div>
+                            <div><strong class="text-blue-400">المبلغ:</strong> ${order.totalAmount} د.ك</div>
+                            ${order.customerRating > 0 ? `<div><strong class="text-blue-400">التقييم:</strong> ${'★'.repeat(order.customerRating)}${'☆'.repeat(5-order.customerRating)}</div>` : ''}
+                            ${order.locationNotes ? `<div class="md:col-span-2 lg:col-span-3"><strong class="text-blue-400">ملاحظات الموقع:</strong> ${order.locationNotes}</div>` : ''}
+                        </div>
+                    </div>
+                    
+                    ${order.teamNotes ? `
+                        <div class="bg-gray-900 bg-opacity-50 border border-gray-700 rounded-xl p-4">
+                            <h5 class="font-semibold text-gray-300 mb-2 flex items-center space-x-2 space-x-reverse">
+                                <i class="fas fa-users text-blue-400"></i>
+                                <span>ملاحظات الفريق</span>
+                            </h5>
+                            <p class="text-gray-200">${order.teamNotes}</p>
+                        </div>
+                    ` : ''}
+                    
+                    ${order.ratingNotes ? `
+                        <div class="bg-green-900 bg-opacity-20 border border-green-700 rounded-xl p-4">
+                            <h5 class="font-semibold text-green-300 mb-2 flex items-center space-x-2 space-x-reverse">
+                                <i class="fas fa-star text-yellow-500"></i>
+                                <span>ملاحظات التقييم</span>
+                            </h5>
+                            <div class="flex items-center space-x-2 space-x-reverse mb-2">
+                                <span class="text-green-300">التقييم:</span>
+                                <span class="text-yellow-500">${'★'.repeat(order.customerRating)}${'☆'.repeat(5-order.customerRating)}</span>
+                            </div>
+                            <p class="text-green-200">${order.ratingNotes}</p>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="flex gap-4 pt-4">
+                        <button onclick="closeModal()" 
+                                class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold transition-colors flex items-center justify-center space-x-2 space-x-reverse border border-gray-600">
+                            <i class="fas fa-times"></i>
+                            <span>إغلاق</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // Display customer orders with pagination
+        function displayCustomerOrders(customerOrders) {
+            const tableBody = document.getElementById('customer-orders-table');
+            const totalPages = Math.ceil(customerOrders.length / ordersPerPage);
+            const startIndex = (currentCustomerPage - 1) * ordersPerPage;
+            const endIndex = startIndex + ordersPerPage;
+            const paginatedOrders = customerOrders.slice(startIndex, endIndex);
+            
+            // Update table
+            tableBody.innerHTML = paginatedOrders.map(order => `
+                <tr class="border-b border-gray-700 hover:bg-gray-800 hover:bg-opacity-30 transition-colors">
+                    <td class="py-3 px-4">
+                        <span class="font-semibold text-blue-400">#${order.orderNumber}</span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="text-gray-300">${order.serviceType}</span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="text-sm">
+                            ${order.orderDate ? `<div class="text-gray-200">${order.orderDate}</div>` : ''}
+                            <div class="text-gray-400">معاينة: ${order.visitDate}</div>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="font-semibold text-blue-400">${order.totalAmount} د.ك</span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="status-badge ${getStatusClass(order.bookingStatus)}">
+                            ${order.bookingStatus}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="text-blue-400 text-sm">
+                            ${order.customerRating > 0 ? '★'.repeat(order.customerRating) + '☆'.repeat(5-order.customerRating) : 'لا يوجد'}
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                        <button onclick="viewOrderDetails('${order.orderNumber}')" 
+                                class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1 space-x-reverse mx-auto">
+                            <i class="fas fa-eye text-xs"></i>
+                            <span>عرض</span>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            // Update pagination info
+            document.getElementById('customer-total-orders').textContent = customerOrders.length;
+            document.getElementById('customer-page-info').textContent = `صفحة ${currentCustomerPage} من ${totalPages}`;
+            
+            // Update pagination buttons
+            const prevBtn = document.getElementById('customer-prev-btn');
+            const nextBtn = document.getElementById('customer-next-btn');
+            
+            prevBtn.disabled = currentCustomerPage === 1;
+            nextBtn.disabled = currentCustomerPage === totalPages;
+            
+            if (prevBtn.disabled) {
+                prevBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                prevBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            
+            if (nextBtn.disabled) {
+                nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                nextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            
+            // Hide pagination if only one page
+            const paginationDiv = document.getElementById('customer-pagination');
+            if (totalPages <= 1) {
+                paginationDiv.classList.add('hidden');
+            } else {
+                paginationDiv.classList.remove('hidden');
+            }
+        }
+
+        // Change customer page
+        function changeCustomerPage(direction) {
+            const customerNumber = document.getElementById('customer-search').value.trim();
+            const customerOrders = orders.filter(o => o.customerNumber === customerNumber);
+            const totalPages = Math.ceil(customerOrders.length / ordersPerPage);
+            
+            currentCustomerPage += direction;
+            
+            if (currentCustomerPage < 1) currentCustomerPage = 1;
+            if (currentCustomerPage > totalPages) currentCustomerPage = totalPages;
+            
+            displayCustomerOrders(customerOrders);
+        }
+
+        // Change completed page
+        function changeCompletedPage(direction) {
+            let completedOrders = orders.filter(o => o.bookingStatus === 'مكتمل' || o.bookingStatus === 'ملغي');
+            
+            // Apply filter
+            const filter = document.getElementById('completed-filter')?.value || 'all';
+            if (filter !== 'all') {
+                completedOrders = completedOrders.filter(o => o.bookingStatus === filter);
+            }
+            
+            // Reset to first page when filter changes
+            currentCompletedPage = 1;
+            
+            const totalPages = Math.ceil(completedOrders.length / ordersPerPage);
+            
+            currentCompletedPage += direction;
+            
+            if (currentCompletedPage < 1) currentCompletedPage = 1;
+            if (currentCompletedPage > totalPages) currentCompletedPage = totalPages;
+            
+            displayCompletedOrders();
+        }
+
         // Close modal
         function closeModal() {
             document.getElementById('order-modal').classList.add('hidden');
             document.getElementById('order-modal').classList.remove('flex');
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b440ecc5e77cde',t:'MTc1OTkxMTk4OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b474bab1217cde',t:'MTc1OTkxNDExMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
