@@ -887,12 +887,15 @@
             }
             
             return orders.filter(order => {
-                // Use order date (تاريخ فتح الطلب) for filtering
-                const orderDateStr = order.orderDate;
+                // Use order date (تاريخ فتح الطلب) for filtering - if not available, use visit date
+                const orderDateStr = order.orderDate || order.visitDate;
                 if (!orderDateStr) return false;
                 
                 // Convert DD-MM-YYYY to Date object
-                const [day, month, year] = orderDateStr.split('-');
+                const dateParts = orderDateStr.split('-');
+                if (dateParts.length !== 3) return false;
+                
+                const [day, month, year] = dateParts;
                 const orderDate = new Date(year, month - 1, day);
                 
                 return orderDate >= startDate && orderDate < endDate;
@@ -1176,9 +1179,6 @@
             if (filter !== 'all') {
                 completedOrders = completedOrders.filter(o => o.bookingStatus === filter);
             }
-            
-            // Reset to first page when filter changes
-            currentCompletedPage = 1;
             
             const tableBody = document.getElementById('completed-orders-table');
             const noOrdersDiv = document.getElementById('no-completed-orders');
@@ -1562,12 +1562,12 @@
                     </div>
                     
                     ${order.cancellationReason ? `
-                        <div class="bg-red-900 bg-opacity-20 border border-red-700 rounded-xl p-4">
+                        <div class="bg-red-900 bg-opacity-30 border border-red-600 rounded-xl p-4">
                             <h5 class="font-semibold text-red-300 mb-2 flex items-center space-x-2 space-x-reverse">
                                 <i class="fas fa-times-circle text-red-400"></i>
                                 <span>سبب الإلغاء</span>
                             </h5>
-                            <p class="text-red-200">${order.cancellationReason}</p>
+                            <p class="text-red-200 bg-red-800 bg-opacity-40 p-3 rounded-lg border border-red-600">${order.cancellationReason}</p>
                         </div>
                     ` : ''}
                     
@@ -1694,12 +1694,6 @@
                     cleaningTimeDiv.classList.add('hidden');
                     amountLabel.textContent = 'المبلغ النهائي (د.ك)';
                 }
-                
-                // Trigger change to show/hide fields immediately
-                setTimeout(() => {
-                    const event = new Event('change');
-                    this.dispatchEvent(event);
-                }, 100);
             });
             
             document.getElementById('modal-cancellation-reason').addEventListener('change', function() {
@@ -1998,5 +1992,5 @@
             document.getElementById('order-modal').classList.remove('flex');
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b49df905617cde',t:'MTc1OTkxNTgwMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b4a6c753067cde',t:'MTc1OTkxNjE2MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
