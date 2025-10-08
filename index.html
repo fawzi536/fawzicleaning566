@@ -634,37 +634,45 @@
                 
                 orders = data.table.rows.map((row, index) => {
                     const cells = row.c || [];
+                    
+                    // Skip empty rows
+                    if (!cells[0]?.v && !cells[1]?.v && !cells[2]?.v) {
+                        return null;
+                    }
+                    
                     return {
                         orderNumber: cells[0]?.v || (index + 1),
-                        customerNumber: cells[1]?.v || '',
-                        customerName: cells[2]?.v || '',
-                        area: cells[3]?.v || '',
-                        street: cells[4]?.v || '',
-                        houseNumber: cells[5]?.v || '',
-                        floor: cells[6]?.v || '',
-                        housingType: cells[7]?.v || '',
-                        locationNotes: cells[8]?.v || '',
-                        serviceType: cells[9]?.v || '',
+                        customerNumber: String(cells[1]?.v || ''),
+                        customerName: String(cells[2]?.v || ''),
+                        area: String(cells[3]?.v || ''),
+                        street: String(cells[4]?.v || ''),
+                        houseNumber: String(cells[5]?.v || ''),
+                        floor: String(cells[6]?.v || ''),
+                        housingType: String(cells[7]?.v || ''),
+                        locationNotes: String(cells[8]?.v || ''),
+                        serviceType: String(cells[9]?.v || ''),
                         visitDate: formatDate(cells[10]?.v) || '',
                         visitTime: formatTime(cells[11]?.v) || '',
-                        serviceFrequency: cells[12]?.v || '',
-                        paymentMethod: cells[13]?.v || '',
-                        totalAmount: cells[14]?.v || 0,
-                        paymentStatus: cells[15]?.v || 'غير مدفوع',
-                        bookingStatus: cells[16]?.v || 'معاينة',
-                        departureTime: formatTime(cells[17]?.v) || '',
-                        customerNotes: cells[18]?.v || '',
-                        teamNotes: cells[19]?.v || '',
-                        customerRating: cells[20]?.v || 0,
-                        ratingNotes: cells[21]?.v || ''
+                        cleaningDate: formatDate(cells[12]?.v) || '',
+                        cleaningTime: formatTime(cells[13]?.v) || '',
+                        paymentMethod: String(cells[14]?.v || ''),
+                        totalAmount: parseFloat(cells[15]?.v) || 0,
+                        paymentStatus: String(cells[16]?.v || 'غير مدفوع'),
+                        bookingStatus: String(cells[17]?.v || 'معاينة'),
+                        departureTime: formatTime(cells[18]?.v) || '',
+                        customerNotes: String(cells[19]?.v || ''),
+                        teamNotes: String(cells[20]?.v || ''),
+                        customerRating: parseInt(cells[21]?.v) || 0,
+                        ratingNotes: String(cells[22]?.v || '')
                     };
-                });
+                }).filter(order => order !== null);
 
                 nextOrderNumber = Math.max(...orders.map(o => parseInt(o.orderNumber) || 0)) + 1;
                 updateDashboard();
                 displayActiveOrders();
                 displayCompletedOrders();
                 console.log('تم تحميل', orders.length, 'طلب من Google Sheets');
+                console.log('البيانات المحملة:', orders);
             } catch (error) {
                 console.error('خطأ في تحميل البيانات من Google Sheets:', error);
                 // إضافة بيانات تجريبية في حالة فشل التحميل
@@ -683,6 +691,7 @@
                             serviceType: 'تنظيف عام',
                             visitDate: '2024-01-15',
                             visitTime: '10:00',
+                            cleaningDate: '2024-01-15',
                             cleaningTime: '11:00',
                             paymentMethod: 'نقدي',
                             totalAmount: 25,
@@ -727,8 +736,8 @@
         function updateDashboard() {
             const totalOrders = orders.length;
             const paidOrders = orders.filter(o => o.paymentStatus === 'مدفوع كامل').length;
-            const activeOrders = orders.filter(o => !['مكتمل', 'ملغي'].includes(o.bookingStatus)).length;
-            const completedOrders = orders.filter(o => ['مكتمل', 'ملغي'].includes(o.bookingStatus)).length;
+            const activeOrders = orders.filter(o => o.bookingStatus !== 'مكتمل' && o.bookingStatus !== 'ملغي').length;
+            const completedOrders = orders.filter(o => o.bookingStatus === 'مكتمل' || o.bookingStatus === 'ملغي').length;
             
             const totalRevenue = orders
                 .filter(o => o.paymentStatus === 'مدفوع كامل')
@@ -888,6 +897,8 @@
                 order.serviceType,
                 order.visitDate,
                 order.visitTime,
+                order.cleaningDate || '',
+                order.cleaningTime || '',
                 order.paymentMethod,
                 order.totalAmount,
                 order.paymentStatus,
@@ -906,7 +917,12 @@
 
         // Display active orders
         function displayActiveOrders() {
-            const activeOrders = orders.filter(o => !['مكتمل', 'ملغي'].includes(o.bookingStatus));
+            // Only show orders that are NOT completed or cancelled
+            const activeOrders = orders.filter(o => {
+                const status = o.bookingStatus;
+                return status !== 'مكتمل' && status !== 'ملغي';
+            });
+            
             const tableBody = document.getElementById('active-orders-table');
             const noOrdersDiv = document.getElementById('no-active-orders');
             
@@ -922,7 +938,7 @@
 
         // Display completed orders
         function displayCompletedOrders() {
-            let completedOrders = orders.filter(o => ['مكتمل', 'ملغي'].includes(o.bookingStatus));
+            let completedOrders = orders.filter(o => o.bookingStatus === 'مكتمل' || o.bookingStatus === 'ملغي');
             
             // Apply filter
             const filter = document.getElementById('completed-filter')?.value || 'all';
@@ -1476,5 +1492,5 @@
             document.getElementById('order-modal').classList.remove('flex');
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b3d523b0bb7cde',t:'MTc1OTkwNzU3NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b3ecfce12e7cde',t:'MTc1OTkwODU1MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
