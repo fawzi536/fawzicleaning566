@@ -442,7 +442,30 @@
                     <i class="fas fa-tasks text-blue-400"></i>
                     <span>الطلبات قيد التنفيذ</span>
                 </h3>
-                <div id="active-orders-list" class="space-y-6"></div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full table-dark">
+                        <thead>
+                            <tr class="border-b border-gray-700">
+                                <th class="text-right py-4 px-4 font-semibold text-gray-300">رقم الطلب</th>
+                                <th class="text-right py-4 px-4 font-semibold text-gray-300">العميل</th>
+                                <th class="text-right py-4 px-4 font-semibold text-gray-300">الخدمة</th>
+                                <th class="text-right py-4 px-4 font-semibold text-gray-300">التاريخ</th>
+                                <th class="text-right py-4 px-4 font-semibold text-gray-300">المبلغ</th>
+                                <th class="text-right py-4 px-4 font-semibold text-gray-300">حالة الحجز</th>
+                                <th class="text-right py-4 px-4 font-semibold text-gray-300">حالة الدفع</th>
+                                <th class="text-center py-4 px-4 font-semibold text-gray-300">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="active-orders-table">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="no-active-orders" class="text-center py-12 hidden">
+                    <i class="fas fa-clipboard-list text-6xl text-gray-600 mb-4"></i>
+                    <p class="text-gray-400 text-lg">لا توجد طلبات قيد التنفيذ</p>
+                </div>
             </div>
         </div>
 
@@ -595,9 +618,10 @@
                 weekday: 'long', 
                 year: 'numeric', 
                 month: 'long', 
-                day: 'numeric' 
+                day: 'numeric',
+                calendar: 'gregory'
             };
-            document.getElementById('current-date').textContent = now.toLocaleDateString('ar-SA', options);
+            document.getElementById('current-date').textContent = now.toLocaleDateString('ar', options);
         }
 
         // Fetch orders from Google Sheets
@@ -632,8 +656,7 @@
                         customerNotes: cells[18]?.v || '',
                         teamNotes: cells[19]?.v || '',
                         customerRating: cells[20]?.v || 0,
-                        ratingNotes: cells[21]?.v || '',
-                        orderCoordinator: cells[22]?.v || ''
+                        ratingNotes: cells[21]?.v || ''
                     };
                 });
 
@@ -660,6 +683,7 @@
                             serviceType: 'تنظيف عام',
                             visitDate: '2024-01-15',
                             visitTime: '10:00',
+                            cleaningTime: '11:00',
                             paymentMethod: 'نقدي',
                             totalAmount: 25,
                             paymentStatus: 'مدفوع كامل',
@@ -668,8 +692,7 @@
                             customerNotes: 'تنظيف شامل للمطبخ',
                             teamNotes: 'تم التنظيف بنجاح',
                             customerRating: 5,
-                            ratingNotes: 'خدمة ممتازة',
-                            orderCoordinator: 'سارة'
+                            ratingNotes: 'خدمة ممتازة'
                         }
                     ];
                     nextOrderNumber = 2;
@@ -817,6 +840,7 @@
                 serviceType: serviceType,
                 visitDate: document.getElementById('visit-date').value,
                 visitTime: document.getElementById('visit-time').value,
+                cleaningTime: '',
                 paymentMethod: document.getElementById('payment-method').value,
                 totalAmount: 0,
                 paymentStatus: 'غير مدفوع',
@@ -825,8 +849,7 @@
                 customerNotes: '',
                 teamNotes: '',
                 customerRating: 0,
-                ratingNotes: '',
-                orderCoordinator: ''
+                ratingNotes: ''
             };
 
             orders.push(newOrder);
@@ -872,8 +895,7 @@
                 order.customerNotes,
                 order.teamNotes,
                 order.customerRating,
-                order.ratingNotes || '',
-                order.orderCoordinator
+                order.ratingNotes || ''
             ].join('\t');
 
             navigator.clipboard.writeText(orderData).then(() => {
@@ -884,19 +906,17 @@
         // Display active orders
         function displayActiveOrders() {
             const activeOrders = orders.filter(o => ['معاينة', 'موافق', 'غير مدفوع', 'مدفوع جزئي'].includes(o.bookingStatus));
-            const container = document.getElementById('active-orders-list');
+            const tableBody = document.getElementById('active-orders-table');
+            const noOrdersDiv = document.getElementById('no-active-orders');
             
             if (activeOrders.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-12">
-                        <i class="fas fa-clipboard-list text-6xl text-gray-600 mb-4"></i>
-                        <p class="text-gray-400 text-lg">لا توجد طلبات قيد التنفيذ</p>
-                    </div>
-                `;
+                tableBody.innerHTML = '';
+                noOrdersDiv.classList.remove('hidden');
                 return;
             }
 
-            container.innerHTML = activeOrders.map(order => createOrderCard(order)).join('');
+            noOrdersDiv.classList.add('hidden');
+            tableBody.innerHTML = activeOrders.map(order => createActiveOrderRow(order)).join('');
         }
 
         // Display completed orders
@@ -920,6 +940,55 @@
 
             noOrdersDiv.classList.add('hidden');
             tableBody.innerHTML = completedOrders.map(order => createCompletedOrderRow(order)).join('');
+        }
+
+        // Create active order row
+        function createActiveOrderRow(order) {
+            const statusClass = getStatusClass(order.bookingStatus);
+            const paymentClass = getPaymentStatusClass(order.paymentStatus);
+            
+            return `
+                <tr class="border-b border-gray-700 hover:bg-gray-800 hover:bg-opacity-30 transition-colors">
+                    <td class="py-4 px-4">
+                        <span class="font-semibold text-blue-400">#${order.orderNumber}</span>
+                    </td>
+                    <td class="py-4 px-4">
+                        <div>
+                            <div class="font-medium text-gray-200">${order.customerName}</div>
+                            <div class="text-sm text-gray-400">${order.customerNumber}</div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4">
+                        <span class="text-gray-300">${order.serviceType}</span>
+                    </td>
+                    <td class="py-4 px-4">
+                        <div>
+                            <div class="text-gray-200">${order.visitDate}</div>
+                            <div class="text-sm text-gray-400">${order.visitTime}</div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4">
+                        <span class="font-semibold text-blue-400">${order.totalAmount} د.ك</span>
+                    </td>
+                    <td class="py-4 px-4">
+                        <span class="status-badge ${statusClass}">
+                            ${order.bookingStatus}
+                        </span>
+                    </td>
+                    <td class="py-4 px-4">
+                        <span class="status-badge ${paymentClass}">
+                            ${order.paymentStatus}
+                        </span>
+                    </td>
+                    <td class="py-4 px-4 text-center">
+                        <button onclick="manageOrder('${order.orderNumber}')" 
+                                class="btn-primary text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1 space-x-reverse mx-auto">
+                            <i class="fas fa-cog text-xs"></i>
+                            <span>إدارة</span>
+                        </button>
+                    </td>
+                </tr>
+            `;
         }
 
         // Create completed order row
@@ -1088,6 +1157,10 @@
             const modal = document.getElementById('order-modal');
             const content = document.getElementById('modal-content');
             
+            const isCompleted = order.bookingStatus === 'مكتمل';
+            const isReadOnly = isCompleted ? 'disabled' : '';
+            const readOnlyClass = isCompleted ? 'opacity-60 cursor-not-allowed' : '';
+            
             content.innerHTML = `
                 <div class="space-y-6">
                     <div class="bg-gradient-to-r from-blue-900 to-blue-800 bg-opacity-30 p-6 rounded-xl border border-blue-700">
@@ -1103,7 +1176,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-gray-300 font-semibold mb-3">حالة الحجز</label>
-                            <select id="modal-booking-status" class="dark-select w-full px-4 py-3 rounded-xl">
+                            <select id="modal-booking-status" class="dark-select w-full px-4 py-3 rounded-xl ${readOnlyClass}" ${isReadOnly}>
                                 <option value="معاينة" ${order.bookingStatus === 'معاينة' ? 'selected' : ''}>معاينة</option>
                                 <option value="موافق" ${order.bookingStatus === 'موافق' ? 'selected' : ''}>موافق</option>
                                 <option value="مكتمل" ${order.bookingStatus === 'مكتمل' ? 'selected' : ''}>مكتمل</option>
@@ -1113,7 +1186,7 @@
                         
                         <div id="payment-method-div" class="${['موافق', 'مكتمل'].includes(order.bookingStatus) ? '' : 'hidden'}">
                             <label class="block text-gray-300 font-semibold mb-3">طريقة الدفع</label>
-                            <select id="modal-payment-method" class="dark-select w-full px-4 py-3 rounded-xl">
+                            <select id="modal-payment-method" class="dark-select w-full px-4 py-3 rounded-xl ${readOnlyClass}" ${isReadOnly}>
                                 <option value="">اختر طريقة الدفع</option>
                                 <option value="كاش" ${order.paymentMethod === 'كاش' ? 'selected' : ''}>كاش</option>
                                 <option value="رابط upay" ${order.paymentMethod === 'رابط upay' ? 'selected' : ''}>رابط upay</option>
@@ -1121,9 +1194,9 @@
                             </select>
                         </div>
                         
-                        <div>
+                        <div id="payment-status-div" class="${order.bookingStatus === 'ملغي' ? 'hidden' : ''}">
                             <label class="block text-gray-300 font-semibold mb-3">حالة الدفع</label>
-                            <select id="modal-payment-status" class="dark-select w-full px-4 py-3 rounded-xl">
+                            <select id="modal-payment-status" class="dark-select w-full px-4 py-3 rounded-xl ${readOnlyClass}" ${isReadOnly}>
                                 <option value="غير مدفوع" ${order.paymentStatus === 'غير مدفوع' ? 'selected' : ''}>غير مدفوع</option>
                                 <option value="مدفوع جزئي" ${order.paymentStatus === 'مدفوع جزئي' ? 'selected' : ''}>مدفوع جزئي</option>
                                 <option value="مدفوع كامل" ${order.paymentStatus === 'مدفوع كامل' ? 'selected' : ''}>مدفوع كامل</option>
@@ -1131,16 +1204,28 @@
                         </div>
                         
                         <div>
-                            <label class="block text-gray-300 font-semibold mb-3">المبلغ النهائي (د.ك)</label>
-                            <input type="number" id="modal-final-amount" step="0.1" value="${order.totalAmount}" 
-                                   class="dark-input w-full px-4 py-3 rounded-xl">
+                            <label class="block text-gray-300 font-semibold mb-3" id="amount-label">
+                                ${order.bookingStatus === 'ملغي' ? 'المبلغ المقترح (د.ك)' : 
+                                  order.bookingStatus === 'موافق' ? 'المبلغ المقترح (د.ك)' : 'المبلغ النهائي (د.ك)'}
+                            </label>
+                            <input type="number" id="modal-suggested-amount" step="0.1" value="${order.totalAmount}" 
+                                   class="dark-input w-full px-4 py-3 rounded-xl ${readOnlyClass}" ${isReadOnly}>
                         </div>
                         
-                        <div>
-                            <label class="block text-gray-300 font-semibold mb-3">منسق الطلب</label>
-                            <input type="text" id="modal-coordinator" value="${order.orderCoordinator}" 
-                                   class="dark-input w-full px-4 py-3 rounded-xl">
+                        <div id="discount-div" class="${order.bookingStatus === 'موافق' ? '' : 'hidden'}">
+                            <label class="block text-gray-300 font-semibold mb-3">الخصم (د.ك)</label>
+                            <input type="number" id="modal-discount" step="0.1" value="0" 
+                                   class="dark-input w-full px-4 py-3 rounded-xl ${readOnlyClass}" ${isReadOnly}
+                                   onchange="calculateFinalAmount()">
                         </div>
+                        
+                        <div id="final-amount-div" class="${order.bookingStatus === 'موافق' ? '' : 'hidden'}">
+                            <label class="block text-gray-300 font-semibold mb-3">المبلغ النهائي (د.ك)</label>
+                            <input type="number" id="modal-final-amount" step="0.1" value="${order.totalAmount}" 
+                                   class="dark-input w-full px-4 py-3 rounded-xl bg-gray-800 ${readOnlyClass}" readonly>
+                        </div>
+                        
+
                     </div>
                     
                     <div id="cancellation-reason-div" class="hidden">
@@ -1176,15 +1261,22 @@
                     </div>
                     
                     <div class="flex gap-4 pt-4">
-                        <button onclick="updateOrder('${order.orderNumber}')" 
-                                class="flex-1 btn-primary text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 space-x-reverse">
-                            <i class="fas fa-save"></i>
-                            <span>حفظ التغييرات</span>
-                        </button>
+                        ${!isCompleted ? `
+                            <button onclick="updateOrder('${order.orderNumber}')" 
+                                    class="flex-1 btn-primary text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 space-x-reverse">
+                                <i class="fas fa-save"></i>
+                                <span>حفظ التغييرات</span>
+                            </button>
+                        ` : `
+                            <div class="flex-1 bg-gray-800 text-gray-400 py-3 px-6 rounded-xl font-semibold flex items-center justify-center space-x-2 space-x-reverse border border-gray-700">
+                                <i class="fas fa-lock"></i>
+                                <span>طلب مكتمل - للعرض فقط</span>
+                            </div>
+                        `}
                         <button onclick="closeModal()" 
                                 class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold transition-colors flex items-center justify-center space-x-2 space-x-reverse border border-gray-600">
                             <i class="fas fa-times"></i>
-                            <span>إلغاء</span>
+                            <span>إغلاق</span>
                         </button>
                     </div>
                 </div>
@@ -1199,23 +1291,45 @@
                 const cancellationDiv = document.getElementById('cancellation-reason-div');
                 const ratingDiv = document.getElementById('rating-div');
                 const paymentMethodDiv = document.getElementById('payment-method-div');
+                const paymentStatusDiv = document.getElementById('payment-status-div');
+                const discountDiv = document.getElementById('discount-div');
+                const finalAmountDiv = document.getElementById('final-amount-div');
+                const amountLabel = document.getElementById('amount-label');
                 
                 if (status === 'ملغي') {
                     cancellationDiv.classList.remove('hidden');
                     ratingDiv.classList.add('hidden');
+                    paymentStatusDiv.classList.add('hidden');
+                    paymentMethodDiv.classList.add('hidden');
+                    discountDiv.classList.add('hidden');
+                    finalAmountDiv.classList.add('hidden');
+                    amountLabel.textContent = 'المبلغ المقترح (د.ك)';
                 } else if (status === 'مكتمل') {
                     cancellationDiv.classList.add('hidden');
                     ratingDiv.classList.remove('hidden');
-                } else {
+                    paymentStatusDiv.classList.remove('hidden');
+                    paymentMethodDiv.classList.remove('hidden');
+                    discountDiv.classList.remove('hidden');
+                    finalAmountDiv.classList.remove('hidden');
+                    amountLabel.textContent = 'المبلغ المقترح (د.ك)';
+                    calculateFinalAmount();
+                } else if (status === 'موافق') {
                     cancellationDiv.classList.add('hidden');
                     ratingDiv.classList.add('hidden');
-                }
-                
-                // Show payment method only when status is "موافق" or higher
-                if (['موافق', 'مكتمل'].includes(status)) {
+                    paymentStatusDiv.classList.remove('hidden');
                     paymentMethodDiv.classList.remove('hidden');
-                } else {
+                    discountDiv.classList.remove('hidden');
+                    finalAmountDiv.classList.remove('hidden');
+                    amountLabel.textContent = 'المبلغ المقترح (د.ك)';
+                    calculateFinalAmount();
+                } else { // معاينة
+                    cancellationDiv.classList.add('hidden');
+                    ratingDiv.classList.add('hidden');
+                    paymentStatusDiv.classList.add('hidden');
                     paymentMethodDiv.classList.add('hidden');
+                    discountDiv.classList.add('hidden');
+                    finalAmountDiv.classList.add('hidden');
+                    amountLabel.textContent = 'المبلغ النهائي (د.ك)';
                 }
             });
             
@@ -1227,6 +1341,14 @@
                     otherInput.classList.add('hidden');
                 }
             });
+        }
+
+        // Calculate final amount
+        function calculateFinalAmount() {
+            const suggestedAmount = parseFloat(document.getElementById('modal-suggested-amount').value) || 0;
+            const discount = parseFloat(document.getElementById('modal-discount').value) || 0;
+            const finalAmount = suggestedAmount - discount;
+            document.getElementById('modal-final-amount').value = finalAmount.toFixed(1);
         }
 
         // Set rating
@@ -1250,9 +1372,15 @@
             const bookingStatus = document.getElementById('modal-booking-status').value;
             const paymentMethod = document.getElementById('modal-payment-method').value;
             const paymentStatus = document.getElementById('modal-payment-status').value;
-            const finalAmount = document.getElementById('modal-final-amount').value;
-            const coordinator = document.getElementById('modal-coordinator').value;
             const teamNotes = document.getElementById('modal-team-notes').value;
+            
+            // Get the correct amount based on status
+            let finalAmount;
+            if (bookingStatus === 'موافق') {
+                finalAmount = document.getElementById('modal-final-amount').value;
+            } else {
+                finalAmount = document.getElementById('modal-suggested-amount').value;
+            }
             
             let cancellationReason = '';
             if (bookingStatus === 'ملغي') {
@@ -1281,7 +1409,6 @@
                 paymentMethod: ['موافق', 'مكتمل'].includes(bookingStatus) ? paymentMethod : '',
                 paymentStatus,
                 totalAmount: finalAmount,
-                orderCoordinator: coordinator,
                 teamNotes: bookingStatus === 'ملغي' ? cancellationReason : teamNotes,
                 customerRating,
                 ratingNotes: ratingNotes, // Fixed: Always save rating notes
@@ -1305,5 +1432,5 @@
             document.getElementById('order-modal').classList.remove('flex');
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b34a6f119f7cde',t:'MTc1OTkwMTg5My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b3a6e500357cde',t:'MTc1OTkwNTY4MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
