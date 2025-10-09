@@ -2445,7 +2445,7 @@
                 bookingStatus,
                 paymentMethod: ['موافق', 'مكتمل'].includes(bookingStatus) ? paymentMethod : '',
                 paymentStatus,discount,
-                totalAmount: finalAmount,
+                proposedAmount: proposedAmount,
                 cleaningDate: ['موافق', 'مكتمل'].includes(bookingStatus) ? (formattedCleaningDate || orders[orderIndex].visitDate) : '',
                 cleaningTime: ['موافق', 'مكتمل'].includes(bookingStatus) ? (cleaningTime || orders[orderIndex].visitTime) : '',
                 teamNotes: teamNotes,
