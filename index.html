@@ -2914,7 +2914,8 @@
 
         // Populate advanced filter options
         function populateAdvancedFilterOptions() {
-            let completedOrders = orders.filter(o => o.bookingStatus === 'مكتمل' || o.bookingStatus === 'ملغي').sort((a, b) => parseInt(b.orderNumber) - parseInt(a.orderNumber));
+            let completedOrders = orders.filter(o => o.bookingStatus === 'مكتمل' || o.bookingStatus === 'ملغي')
+              .sort((a, b) => parseInt(b.orderNumber) - parseInt(a.orderNumber));;
             
             // Populate service options
             const services = [...new Set(completedOrders.map(o => o.serviceType))].sort();
