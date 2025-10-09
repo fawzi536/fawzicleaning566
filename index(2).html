@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إدارة الطلبات - CleanPro</title>
+    <title> إدارة الطلبات - CleanPro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -1151,6 +1151,7 @@
                 currentUser = JSON.parse(savedUser);
                 hideLoginScreen();
                 setupUserInterface();
+                initializeApp();
             } else {
                 showLoginScreen();
             }
@@ -1874,9 +1875,6 @@
                 }
             });
             
-            // ترتيب حسب NUMORDER (orderNumber) رقمي نزولاً — الأكبر أولاً
-            completedOrders.sort((a,b)=> (parseInt(b.orderNumber,10)||0) - (parseInt(a.orderNumber,10)||0));
-            
             return completedOrders;
         }
 
@@ -2115,7 +2113,7 @@
                 'مدفوع جزئي': 'bg-orange-100 text-orange-800 border border-orange-200',
                 'غير مدفوع': 'bg-red-100 text-red-800 border border-red-200'
             };
-            return classes[status] || 'bg_gray-100 text-gray-800 border border-gray-200';
+            return classes[status] || 'bg-gray-100 text-gray-800 border border-gray-200';
         }
 
         // Manage order (open modal)
@@ -2489,7 +2487,7 @@
                             ${order.orderDate ? `<div><strong class="text-blue-400">تاريخ فتح الطلب:</strong> ${order.orderDate}</div>` : ''}
                             <div><strong class="text-blue-400">تاريخ المعاينة:</strong> ${order.visitDate} - ${order.visitTime}</div>
                             ${order.cleaningDate ? `<div><strong class="text-blue-400">تاريخ التنظيف:</strong> ${order.cleaningDate} - ${order.cleaningTime || order.visitTime}</div>` : ''}
-                            ${order.area ? `<div class="text-blue-400">المنطقة:</strong> ${order.area}</div>` : ''}
+                            ${order.area ? `<div><strong class="text-blue-400">المنطقة:</strong> ${order.area}</div>` : ''}
                             ${order.street ? `<div><strong class="text-blue-400">الشارع:</strong> ${order.street}</div>` : ''}
                             ${order.houseNumber ? `<div><strong class="text-blue-400">رقم المنزل:</strong> ${order.houseNumber}</div>` : ''}
                             ${order.floor ? `<div><strong class="text-blue-400">الدور:</strong> ${order.floor}</div>` : ''}
@@ -2916,7 +2914,8 @@
 
         // Populate advanced filter options
         function populateAdvancedFilterOptions() {
-            let completedOrders = orders.filter(o => o.bookingStatus === 'مكتمل' || o.bookingStatus === 'ملغي');
+            let completedOrders = orders.filter(o => o.bookingStatus === 'مكتمل' || o.bookingStatus === 'ملغي')
+                reverse();
             
             // Populate service options
             const services = [...new Set(completedOrders.map(o => o.serviceType))].sort();
