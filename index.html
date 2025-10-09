@@ -2914,9 +2914,28 @@
 
         // Populate advanced filter options
         function populateAdvancedFilterOptions() {
-            let completedOrders = orders.filter(o => o.bookingStatus === 'مكتمل' || o.bookingStatus === 'ملغي')
-              .sort((a, b) => parseInt(b.orderNumber) - parseInt(a.orderNumber));;
-            
+       let completedOrders = orders.filter(o => o.bookingStatus === 'مكتمل' || o.bookingStatus === 'ملغي');
+
+    // 🔹 ترتيب تنازلي حسب رقم الطلب (الأحدث أولاً)
+    completedOrders.sort((a, b) => {
+        const numA = parseInt(a.orderNumber);
+        const numB = parseInt(b.orderNumber);
+        if (isNaN(numA) || isNaN(numB)) {
+            return String(b.orderNumber).localeCompare(String(a.orderNumber), 'en', { numeric: true });
+        }
+        return numB - numA;
+    });
+
+    const totalCompleted = completedOrders.length;
+    const totalPages = Math.ceil(totalCompleted / ordersPerPage);
+
+    // 🔹 نجعل الصفحة الحالية تبدأ من الصفحة الأولى بعد الفرز (يعني أحدث الطلبات)
+    if (currentCompletedPage > totalPages) {
+        currentCompletedPage = 1;
+    }
+
+    const startIndex = (currentCompletedPage - 1) * ordersPerPage;
+    const paginatedOrders = completedOrders.slice(startIndex, startIndex + ordersPerPage);            
             // Populate service options
             const services = [...new Set(completedOrders.map(o => o.serviceType))].sort();
             const serviceContainer = document.getElementById('service-filter-options');
