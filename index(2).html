@@ -2377,7 +2377,7 @@
         // Calculate final amount
         function calculateFinalAmount() {
             const suggestedAmount = parseFloat(document.getElementById('modal-suggested-amount').value) || 0;
-            const discount = parseFloat(document.getElementById('modal-discount').value) || 0;
+            const discount = parseFloat(document.getElementById('modal-discount').value) ;
             const finalAmount = suggestedAmount - discount;
             document.getElementById('modal-final-amount').value = finalAmount.toFixed(1);
         }
