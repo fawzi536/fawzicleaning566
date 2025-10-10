@@ -949,7 +949,7 @@
     <script>
         // Login credentials - يمكنك تغيير هذه البيانات
         const LOGIN_CREDENTIALS = {
-            'fawzi': { password: '565656', role: 'admin', name: 'fawzi' },
+            'fawzi': { password: '123456', role: 'admin', name: 'fawzi' },
             'admin2': { password: '789012', role: 'admin', name: 'المدير الثاني' },
             'admin3': { password: '345678', role: 'admin', name: 'المدير الثالث' },
             'admin4': { password: '901234', role: 'admin', name: 'المدير الرابع' },
@@ -1151,7 +1151,6 @@
                 currentUser = JSON.parse(savedUser);
                 hideLoginScreen();
                 setupUserInterface();
-                initializeApp();
             } else {
                 showLoginScreen();
             }
@@ -2116,7 +2115,7 @@
                 'مدفوع جزئي': 'bg-orange-100 text-orange-800 border border-orange-200',
                 'غير مدفوع': 'bg-red-100 text-red-800 border border-red-200'
             };
-            return classes[status] || 'bg_gray-100 text-gray-800 border border-gray-200';
+            return classes[status] || 'bg-gray-100 text-gray-800 border border-gray-200';
         }
 
         // Manage order (open modal)
@@ -2186,14 +2185,14 @@
                                   order.bookingStatus === 'موافق' ? 'المبلغ المقترح (د.ك)' : 'المبلغ النهائي (د.ك)'}
                             </label>
                             <input type="number" id="modal-suggested-amount" step="0.1" value="${order.totalAmount}" 
-                                   class="dark-input w-full px-4 py-3 rounded-xl ${readOnlyClass}" ${isReadOnly}>
+                                   class="dark-input w-full px-4 py-3 rounded-xl ${readOnlyClass}" ${isReadOnly} oninput="calculateFinalAmount()">
                         </div>
                         
                         <div id="discount-div" class="${order.bookingStatus === 'موافق' ? '' : 'hidden'}">
                             <label class="block text-gray-300 font-semibold mb-3">الخصم (د.ك)</label>
                             <input type="number" id="modal-discount" step="0.1" value="0" 
                                    class="dark-input w-full px-4 py-3 rounded-xl ${readOnlyClass}" ${isReadOnly}
-                                   onchange="calculateFinalAmount()">
+                                   oninput="calculateFinalAmount()">
                         </div>
                         
                         <div id="final-amount-div" class="${order.bookingStatus === 'موافق' ? '' : 'hidden'}">
@@ -2372,14 +2371,38 @@
                     otherInput.classList.add('hidden');
                 }
             });
+
+            // ربط تحديث مباشر لحقل المبلغ المقترح والخصم
+            const _suggested = document.getElementById('modal-suggested-amount');
+            const _discount = document.getElementById('modal-discount');
+            if (_suggested) _suggested.addEventListener('input', calculateFinalAmount);
+            if (_discount) _discount.addEventListener('input', calculateFinalAmount);
+
+            // احسب مرة أولى عند فتح المودال لعرض القيمة الحالية (أو لتهيئة الحقل النهائي)
+            calculateFinalAmount();
         }
 
         // Calculate final amount
         function calculateFinalAmount() {
-            const suggestedAmount = parseFloat(document.getElementById('modal-suggested-amount').value) || 0;
-            const discount = parseFloat(document.getElementById('modal-discount').value) ;
+            const suggestedEl = document.getElementById('modal-suggested-amount');
+            const discountEl = document.getElementById('modal-discount');
+            const finalEl = document.getElementById('modal-final-amount');
+
+            if (!finalEl || !suggestedEl || !discountEl) return;
+
+            const suggestedRaw = String(suggestedEl.value || '').trim();
+            // إذا مسح المستخدم قيمة المبلغ المقترح نمسح الحقل النهائي مباشرة
+            if (suggestedRaw === '') {
+                finalEl.value = '';
+                return;
+            }
+
+            const suggestedAmount = parseFloat(suggestedRaw) || 0;
+            const discountRaw = String(discountEl.value || '').trim();
+            const discount = discountRaw === '' ? 0 : (parseFloat(discountRaw) || 0);
+
             const finalAmount = suggestedAmount - discount;
-            document.getElementById('modal-final-amount').value = finalAmount.toFixed(1);
+            finalEl.value = isFinite(finalAmount) ? finalAmount.toFixed(1) : '';
         }
 
         // Set rating
@@ -2500,8 +2523,6 @@
                             <div><strong class="text-blue-400">حالة الدفع:</strong> <span class="status-badge ${getPaymentStatusClass(order.paymentStatus)}">${order.paymentStatus}</span></div>
                             <div><strong class="text-blue-400">المبلغ:</strong> ${order.totalAmount} د.ك</div>
                             ${order.customerRating > 0 ? `<div><strong class="text-blue-400">التقييم:</strong> ${'★'.repeat(order.customerRating)}${'☆'.repeat(5-order.customerRating)}</div>` : ''}
-                              ${order.cancellationReason ? `<div class="bg-red-900 bg-opacity-30 border border-red-600 rounded-xl p-4"><h5 class="font-semibold text-red-300 mb-2 flex items-center space-x-2 space-x-reverse"><i class="fas fa-times-circle text-red-400"></i> <span>سبب الإلغاء</span></h5>
-                            <p class="text-red-200 bg-red-800 bg-opacity-40 p-3 rounded-lg border border-red-600">${order.cancellationReason}</p></div> ` : ''}
                             ${order.locationNotes ? `<div class="md:col-span-2 lg:col-span-3"><strong class="text-blue-400">ملاحظات الموقع:</strong> ${order.locationNotes}</div>` : ''}
                         </div>
                     </div>
