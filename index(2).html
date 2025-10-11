@@ -969,8 +969,12 @@
         let isLoggedIn = false;
         let currentUser = null;
 
-// ID for the periodic fetch interval so we can clear it if needed
+        // ID for the periodic fetch interval so we can clear it if needed
         let fetchIntervalId = null;
+
+        // Google Apps Script Web App URL - ضع رابط Web App هنا بعد إعداد Apps Script
+        // راجع ملف GoogleAppsScript-Setup.md للتعليمات المفصلة
+        const GOOGLE_APPS_SCRIPT_URL = '';
 
         // Show notification function
         function showNotification(message, type = 'success') {
@@ -1021,6 +1025,39 @@
                     }
                 }, 400);
             }, 4000);
+        }
+
+        // Sync order to Google Sheets automatically
+        async function syncOrderToGoogleSheets(order, action = 'create') {
+            // إذا لم يتم إعداد رابط Apps Script، استخدم الطريقة القديمة
+            if (!GOOGLE_APPS_SCRIPT_URL || GOOGLE_APPS_SCRIPT_URL === '') {
+                // النظام القديم - نسخ للحافظة
+                copyOrderToClipboard(order);
+                return;
+            }
+
+            try {
+                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // مهم لتجنب مشاكل CORS
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: action,
+                        order: order
+                    })
+                });
+
+                // في وضع no-cors لا نستطيع قراءة الاستجابة، لكن الطلب سيُرسل
+                showNotification('✅ تم إرسال البيانات إلى Google Sheets تلقائياً!', 'success');
+                
+            } catch (error) {
+                console.error('خطأ في إرسال البيانات إلى Google Sheets:', error);
+                showNotification('⚠️ فشل الإرسال التلقائي - يرجى النسخ يدوياً', 'error');
+                // في حالة الفشل، استخدم الطريقة القديمة كنسخة احتياطية
+                copyOrderToClipboard(order);
+            }
         }
 
         // Format time properly
@@ -1699,8 +1736,8 @@
             updateDashboard();
             displayActiveOrders();
             
-            // Copy order data to clipboard for Google Sheets
-            copyOrderToClipboard(newOrder);
+            // Sync order to Google Sheets automatically
+            syncOrderToGoogleSheets(newOrder, 'create');
         });
 
         // Copy order data to clipboard - clean text for single row
@@ -2488,10 +2525,10 @@ ${order.cancellationReason ? `
             displayActiveOrders();
             displayCompletedOrders();
             
-            // Copy updated order to clipboard
-            copyOrderToClipboard(orders[orderIndex]);
+            // Sync updated order to Google Sheets automatically
+            syncOrderToGoogleSheets(orders[orderIndex], 'update');
             
-            showNotification('تم تحديث الطلب بنجاح! تم نسخ البيانات المحدثة للحافظة.', 'success');
+            showNotification('تم تحديث الطلب بنجاح!', 'success');
         }
 
         // Show new order form
