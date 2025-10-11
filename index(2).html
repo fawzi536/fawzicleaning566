@@ -2232,16 +2232,6 @@
                         <input type="text" id="modal-other-reason" placeholder="اكتب السبب..." 
                                class="dark-input w-full px-4 py-3 rounded-xl hidden">
                     </div>
-                    //manageOrder
-${order.cancellationReason ? `
-    <div id="cancellation-reason-block" class="bg-red-900 bg-opacity-30 border border-red-600 rounded-xl p-4">
-        <h5 class="font-semibold text-red-300 mb-2 flex items-center space-x-2 space-x-reverse">
-            <i class="fas fa-times-circle text-red-400"></i>
-            <span>سبب الإلغاء</span>
-        </h5>
-        <p id="cancellation-reason-text" class="text-red-200 bg-red-800 bg-opacity-40 p-3 rounded-lg border border-red-600">${order.cancellationReason}</p>
-    </div>
-` : ''}
                     
                     <div id="rating-div" class="hidden">
                         <label class="block text-gray-300 font-semibold mb-3">تقييم العميل</label>
