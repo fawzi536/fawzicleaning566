@@ -1350,26 +1350,27 @@
                         customerNumber: String(cells[2]?.v || ''),
                         customerName: String(cells[3]?.v || ''),
                         area: String(cells[4]?.v || ''),
-                        street: String(cells[5]?.v || ''),
-                        houseNumber: String(cells[6]?.v || ''),
-                        floor: String(cells[7]?.v || ''),
-                        housingType: String(cells[8]?.v || ''),
-                        locationNotes: String(cells[9]?.v || ''),
-                        serviceType: String(cells[10]?.v || ''),
-                        visitDate: formatDate(cells[11]?.v) || '',
-                        visitTime: formatTime(cells[12]?.v) || '',
-                        cleaningDate: formatDate(cells[13]?.v) || '',
-                        cleaningTime: formatTime(cells[14]?.v) || '',
-                        paymentMethod: String(cells[15]?.v || ''),
-                        totalAmount: parseFloat(cells[16]?.v) || 0,
-                        paymentStatus: String(cells[17]?.v || 'غير مدفوع'),
-                        bookingStatus: String(cells[18]?.v || 'معاينة'),
-                        departureTime: formatTime(cells[19]?.v) || '',
-                        customerNotes: String(cells[20]?.v || ''),
-                        teamNotes: String(cells[21]?.v || ''),
-                        customerRating: parseInt(cells[22]?.v) || 0,
-                        ratingNotes: String(cells[23]?.v || ''),
-                        cancellationReason: String(cells[24]?.v || '')
+                        block: String(cells[5]?.v || ''),
+                        street: String(cells[6]?.v || ''),
+                        houseNumber: String(cells[7]?.v || ''),
+                        floor: String(cells[8]?.v || ''),
+                        housingType: String(cells[9]?.v || ''),
+                        locationNotes: String(cells[10]?.v || ''),
+                        serviceType: String(cells[11]?.v || ''),
+                        visitDate: formatDate(cells[12]?.v) || '',
+                        visitTime: formatTime(cells[13]?.v) || '',
+                        cleaningDate: formatDate(cells[14]?.v) || '',
+                        cleaningTime: formatTime(cells[15]?.v) || '',
+                        paymentMethod: String(cells[16]?.v || ''),
+                        totalAmount: parseFloat(cells[17]?.v) || 0,
+                        paymentStatus: String(cells[18]?.v || 'غير مدفوع'),
+                        bookingStatus: String(cells[19]?.v || 'معاينة'),
+                        departureTime: formatTime(cells[20]?.v) || '',
+                        customerNotes: String(cells[21]?.v || ''),
+                        teamNotes: String(cells[22]?.v || ''),
+                        customerRating: parseInt(cells[23]?.v) || 0,
+                        ratingNotes: String(cells[24]?.v || ''),
+                        cancellationReason: String(cells[25]?.v || '')
                     };
                 }).filter(order => order !== null);
 
@@ -1544,6 +1545,7 @@
             // Clear all form fields first
             document.getElementById('customer-name').value = '';
             document.getElementById('area').value = '';
+            document.getElementById('block').value = '';
             document.getElementById('street').value = '';
             document.getElementById('house-number').value = '';
             document.getElementById('floor').value = '';
@@ -1610,6 +1612,7 @@
                 const lastOrder = customerOrders[customerOrders.length - 1];
                 document.getElementById('customer-name').value = lastOrder.customerName || '';
                 document.getElementById('area').value = lastOrder.area || '';
+                document.getElementById('block').value = lastOrder.block || '';
                 document.getElementById('street').value = lastOrder.street || '';
                 document.getElementById('house-number').value = lastOrder.houseNumber || '';
                 document.getElementById('floor').value = lastOrder.floor || '';
@@ -1666,6 +1669,7 @@
                 customerNumber: document.getElementById('customer-number').value,
                 customerName: document.getElementById('customer-name').value,
                 area: document.getElementById('area').value,
+                block: document.getElementById('block').value,
                 street: document.getElementById('street').value,
                 houseNumber: document.getElementById('house-number').value,
                 floor: document.getElementById('floor').value,
@@ -1722,6 +1726,7 @@
                 cleanText(order.customerNumber),
                 cleanText(order.customerName),
                 cleanText(order.area) || '',
+                cleanText(order.block) || '',
                 cleanText(order.street) || '',
                 cleanText(order.houseNumber) || '',
                 cleanText(order.floor) || '',
@@ -2525,7 +2530,7 @@ ${order.cancellationReason ? `
                             <div><strong class="text-blue-400">تاريخ المعاينة:</strong> ${order.visitDate} - ${order.visitTime}</div>
                             ${order.cleaningDate ? `<div><strong class="text-blue-400">تاريخ التنظيف:</strong> ${order.cleaningDate} - ${order.cleaningTime || order.visitTime}</div>` : ''}
                             ${order.area ? `<div class="text-blue-400">المنطقة:</strong> ${order.area}</div>` : ''}
-                            ${order.block ? `<div><strong class="text-blue-400">القطعة:</strong> ${order.street}</div>` : ''}
+                            ${order.block ? `<div><strong class="text-blue-400">القطعة:</strong> ${order.block}</div>` : ''}
                             ${order.street ? `<div><strong class="text-blue-400">الشارع:</strong> ${order.street}</div>` : ''}
                             ${order.houseNumber ? `<div><strong class="text-blue-400">رقم المنزل:</strong> ${order.houseNumber}</div>` : ''}
                             ${order.floor ? `<div><strong class="text-blue-400">الدور:</strong> ${order.floor}</div>` : ''}
