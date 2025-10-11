@@ -969,6 +969,9 @@
         let isLoggedIn = false;
         let currentUser = null;
 
+// ID for the periodic fetch interval so we can clear it if needed
+        let fetchIntervalId = null;
+
         // Show notification function
         function showNotification(message, type = 'success') {
             // Remove any existing notifications
@@ -1151,6 +1154,8 @@
                 currentUser = JSON.parse(savedUser);
                 hideLoginScreen();
                 setupUserInterface();
+               initializeApp();
+
             } else {
                 showLoginScreen();
             }
