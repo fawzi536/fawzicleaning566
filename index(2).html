@@ -974,7 +974,8 @@
 
         // Google Apps Script Web App URL - ضع رابط Web App هنا بعد إعداد Apps Script
         // راجع ملف GoogleAppsScript-Setup.md للتعليمات المفصلة
-        const GOOGLE_APPS_SCRIPT_URL = '';
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfNDttFYJPaVtqaUjb7bdWVjoE2mihhbopqwmKeWKuOfpEydJHDZ3X8QgpSryYyICi/exec';
+        const SECRET_TOKEN = 'fawzi123!@#superSafeToken2025';
 
         // Show notification function
         function showNotification(message, type = 'success') {
@@ -1044,6 +1045,7 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
+                        token: SECRET_TOKEN,
                         action: action,
                         order: order
                     })
