@@ -1739,11 +1739,30 @@
                 cleanText(order.cancellationReason) || ''
             ].join('\t');
 
-            navigator.clipboard.writeText(orderData).then(() => {
-                showNotification('تم نسخ بيانات الطلب! يمكنك لصقها في Google Sheets الآن.', 'success');
-            }).catch(() => {
-                showNotification('فشل في نسخ البيانات. يرجى المحاولة مرة أخرى.', 'error');
-            });
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby8ABMC_7QH5YOQC6MGQWYk4gysW_RKWym85W6LYUwNLOdq_vMPz55j88tRa01L4LJG/exec'; // ضع رابط الـ Web App هنا
+
+function addOrder(orderData) {
+  // إرسال الطلب تلقائيًا إلى Google Sheets
+  fetch(WEB_APP_URL, {
+    method: 'POST',
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: 'create',
+      order: orderData
+    })
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.success) {
+      alert('✅ تم إرسال الطلب تلقائيًا إلى Google Sheets!');
+    } else {
+      alert('❌ فشل الإرسال: ' + result.message);
+    }
+  })
+  .catch(() => {
+    alert('❌ حدث خطأ في الاتصال!');
+  });
+}
         }
 
         // Display active orders
