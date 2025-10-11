@@ -2233,12 +2233,11 @@
                                class="dark-input w-full px-4 py-3 rounded-xl hidden">
                     </div>
                     
-<!-- بعد: داخل manageOrder - إضافة user-only -->
-            ${order.cancellationReason ? `
-                        <div class="user-only bg-red-900 bg-opacity-30 border border-red-600 rounded-xl p-4">
-                         <h5 class="font-semibold text-red-300 mb-2 flex items-center space-x-2 space-x-reverse">
-                        <i class="fas fa-times-circle text-red-400"></i>
-                        <span>سبب الإلغاء</span>
+${order.cancellationReason ? `
+    <div class="bg-red-900 bg-opacity-30 border border-red-600 rounded-xl p-4">
+        <h5 class="font-semibold text-red-300 mb-2 flex items-center space-x-2 space-x-reverse">
+            <i class="fas fa-times-circle text-red-400"></i>
+            <span>سبب الإلغاء</span>
         </h5>
         <p class="text-red-200 bg-red-800 bg-opacity-40 p-3 rounded-lg border border-red-600">${order.cancellationReason}</p>
     </div>
@@ -2543,15 +2542,15 @@
                 </div>
             ` : ''}
 
-            ${order.cancellationReason ? `
-                <div class="user-only bg-red-900 bg-opacity-30 border border-red-600 rounded-xl p-4">
-                    <h5 class="font-semibold text-red-300 mb-2 flex items-center space-x-2 space-x-reverse">
-                        <i class="fas fa-times-circle text-red-400"></i>
-                        <span>سبب الإلغاء</span>
-                    </h5>
-                    <p class="text-red-200 bg-red-800 bg-opacity-40 p-3 rounded-lg border border-red-600">${order.cancellationReason}</p>
-                </div>
-            ` : ''}
+${order.cancellationReason ? `
+    <div class="bg-red-900 bg-opacity-30 border border-red-600 rounded-xl p-4">
+        <h5 class="font-semibold text-red-300 mb-2 flex items-center space-x-2 space-x-reverse">
+            <i class="fas fa-times-circle text-red-400"></i>
+            <span>سبب الإلغاء</span>
+        </h5>
+        <p class="text-red-200 bg-red-800 bg-opacity-40 p-3 rounded-lg border border-red-600">${order.cancellationReason}</p>
+    </div>
+` : ''}
                     
                     ${order.ratingNotes ? `
                         <div class="bg-green-900 bg-opacity-20 border border-green-700 rounded-xl p-4">
