@@ -501,6 +501,11 @@
                         <input type="text" id="area" class="dark-input w-full px-4 py-3 rounded-xl">
                     </div>
                     
+                        <div>
+                        <label class="block text-gray-300 font-semibold mb-3">القطعة</label>
+                        <input type="text" id="block" class="dark-input w-full px-4 py-3 rounded-xl">
+                    </div>
+                    
                     <div>
                         <label class="block text-gray-300 font-semibold mb-3">الشارع</label>
                         <input type="text" id="street" class="dark-input w-full px-4 py-3 rounded-xl">
@@ -2146,6 +2151,7 @@
                             <div><strong class="text-blue-400">تاريخ المعاينة:</strong> ${order.visitDate} - ${order.visitTime}</div>
                             ${order.cleaningDate ? `<div><strong class="text-blue-400">تاريخ التنظيف:</strong> ${order.cleaningDate} - ${order.cleaningTime || order.visitTime}</div>` : ''}
                             ${order.area ? `<div><strong class="text-blue-400">المنطقة:</strong> ${order.area}</div>` : ''}
+                            ${order.block ? `<div><strong class="text-blue-400">القطعه:</strong> ${order.area}</div>` : ''}
                             ${order.street ? `<div><strong class="text-blue-400">الشارع:</strong> ${order.street}</div>` : ''}
                             ${order.houseNumber ? `<div><strong class="text-blue-400">رقم المنزل:</strong> ${order.houseNumber}</div>` : ''}
                             ${order.floor ? `<div><strong class="text-blue-400">الدور:</strong> ${order.floor}</div>` : ''}
@@ -2519,6 +2525,7 @@ ${order.cancellationReason ? `
                             <div><strong class="text-blue-400">تاريخ المعاينة:</strong> ${order.visitDate} - ${order.visitTime}</div>
                             ${order.cleaningDate ? `<div><strong class="text-blue-400">تاريخ التنظيف:</strong> ${order.cleaningDate} - ${order.cleaningTime || order.visitTime}</div>` : ''}
                             ${order.area ? `<div class="text-blue-400">المنطقة:</strong> ${order.area}</div>` : ''}
+                            ${order.block ? `<div><strong class="text-blue-400">القطعة:</strong> ${order.street}</div>` : ''}
                             ${order.street ? `<div><strong class="text-blue-400">الشارع:</strong> ${order.street}</div>` : ''}
                             ${order.houseNumber ? `<div><strong class="text-blue-400">رقم المنزل:</strong> ${order.houseNumber}</div>` : ''}
                             ${order.floor ? `<div><strong class="text-blue-400">الدور:</strong> ${order.floor}</div>` : ''}
