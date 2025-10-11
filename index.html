@@ -1394,6 +1394,7 @@
                             customerNumber: '99887766',
                             customerName: 'أحمد محمد',
                             area: 'السالمية',
+                            block: '5' ,
                             street: 'شارع الخليج العربي',
                             houseNumber: '123',
                             floor: 'الأول',
@@ -2156,7 +2157,7 @@
                             <div><strong class="text-blue-400">تاريخ المعاينة:</strong> ${order.visitDate} - ${order.visitTime}</div>
                             ${order.cleaningDate ? `<div><strong class="text-blue-400">تاريخ التنظيف:</strong> ${order.cleaningDate} - ${order.cleaningTime || order.visitTime}</div>` : ''}
                             ${order.area ? `<div><strong class="text-blue-400">المنطقة:</strong> ${order.area}</div>` : ''}
-                            ${order.block ? `<div><strong class="text-blue-400">القطعه:</strong> ${order.area}</div>` : ''}
+                            ${order.block ? `<div><strong class="text-blue-400">القطعه:</strong> ${order.block}</div>` : ''}
                             ${order.street ? `<div><strong class="text-blue-400">الشارع:</strong> ${order.street}</div>` : ''}
                             ${order.houseNumber ? `<div><strong class="text-blue-400">رقم المنزل:</strong> ${order.houseNumber}</div>` : ''}
                             ${order.floor ? `<div><strong class="text-blue-400">الدور:</strong> ${order.floor}</div>` : ''}
