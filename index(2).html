@@ -1739,32 +1739,11 @@
                 cleanText(order.cancellationReason) || ''
             ].join('\t');
 
-// أول سطر في ملف الجافاسكربت
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby8ABMC_7QH5YOQC6MGQWYk4gysW_RKWym85W6LYUwNLOdq_vMPz55j88tRa01L4LJG/exec';
-
-// باقي الكود والدوال
-function addOrder(orderData) {
-    // هنا تستخدم WEB_APP_URL
-    fetch(WEB_APP_URL, {
-        method: 'POST',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            action: 'create',
-            order: orderData
-        })
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            showNotification('✅ تم إرسال الطلب تلقائيًا إلى Google Sheets!', 'success');
-        } else {
-            showNotification('❌ فشل الإرسال: ' + result.message, 'error');
-        }
-    })
-    .catch(() => {
-        showNotification('❌ حدث خطأ في الاتصال!', 'error');
-    });
-}
+            navigator.clipboard.writeText(orderData).then(() => {
+                showNotification('تم نسخ بيانات الطلب! يمكنك لصقها في Google Sheets الآن.', 'success');
+            }).catch(() => {
+                showNotification('فشل في نسخ البيانات. يرجى المحاولة مرة أخرى.', 'error');
+            });
         }
 
         // Display active orders
@@ -2510,32 +2489,9 @@ ${order.cancellationReason ? `
             displayCompletedOrders();
             
             // Copy updated order to clipboard
-// أول سطر في ملف الجافاسكربت
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby8ABMC_7QH5YOQC6MGQWYk4gysW_RKWym85W6LYUwNLOdq_vMPz55j88tRa01L4LJG/exec';
-
-// باقي الكود والدوال
-function addOrder(orderData) {
-    // هنا تستخدم WEB_APP_URL
-    fetch(WEB_APP_URL, {
-        method: 'POST',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            action: 'create',
-            order: orderData
-        })
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            showNotification('✅ تم إرسال الطلب تلقائيًا إلى Google Sheets!', 'success');
-        } else {
-            showNotification('❌ فشل الإرسال: ' + result.message, 'error');
-        }
-    })
-    .catch(() => {
-        showNotification('❌ حدث خطأ في الاتصال!', 'error');
-    });
-}
+            copyOrderToClipboard(orders[orderIndex]);
+            
+            showNotification('تم تحديث الطلب بنجاح! تم نسخ البيانات المحدثة للحافظة.', 'success');
         }
 
         // Show new order form
