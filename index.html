@@ -2508,10 +2508,30 @@ ${order.cancellationReason ? `
             displayCompletedOrders();
             
             // Copy updated order to clipboard
-            copyOrderToClipboard(orders[orderIndex]);
-            
-            showNotification('تم تحديث الطلب بنجاح! تم نسخ البيانات المحدثة للحافظة.', 'success');
-        }
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby8ABMC_7QH5YOQC6MGQWYk4gysW_RKWym85W6LYUwNLOdq_vMPz55j88tRa01L4LJG/exec'; // ضع رابط الـ Web App هنا
+
+function addOrder(orderData) {
+  // إرسال الطلب تلقائيًا إلى Google Sheets
+  fetch(WEB_APP_URL, {
+    method: 'POST',
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: 'create',
+      order: orderData
+    })
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.success) {
+      alert('✅ تم إرسال الطلب تلقائيًا إلى Google Sheets!');
+    } else {
+      alert('❌ فشل الإرسال: ' + result.message);
+    }
+  })
+  .catch(() => {
+    alert('❌ حدث خطأ في الاتصال!');
+  });
+}
 
         // Show new order form
         function showNewOrderForm() {
