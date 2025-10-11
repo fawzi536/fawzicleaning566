@@ -974,7 +974,8 @@
 
         // Google Apps Script Web App URL - ضع رابط Web App هنا بعد إعداد Apps Script
         // راجع ملف GoogleAppsScript-Setup.md للتعليمات المفصلة
-        const GOOGLE_APPS_SCRIPT_URL = '';
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfNDttFYJPaVtqaUjb7bdWVjoE2mihhbopqwmKeWKuOfpEydJHDZ3X8QgpSryYyICi/exec';
+        const SECRET_TOKEN = 'fawzi123!@#superSafeToken2025';
 
         // Show notification function
         function showNotification(message, type = 'success') {
@@ -1029,34 +1030,90 @@
 
         // Sync order to Google Sheets automatically
         async function syncOrderToGoogleSheets(order, action = 'create') {
-            // إذا لم يتم إعداد رابط Apps Script، استخدم الطريقة القديمة
+            // إذا لم يتم إعداد رابط Apps Script، استخدم الطريقة القديمة (النسخ)
             if (!GOOGLE_APPS_SCRIPT_URL || GOOGLE_APPS_SCRIPT_URL === '') {
-                // النظام القديم - نسخ للحافظة
                 copyOrderToClipboard(order);
                 return;
             }
 
-            try {
-                const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors', // مهم لتجنب مشاكل CORS
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: action,
-                        order: order
-                    })
-                });
+            const payload = {
+                token: SECRET_TOKEN,
+                action: action,
+                order: order
+            };
 
-                // في وضع no-cors لا نستطيع قراءة الاستجابة، لكن الطلب سيُرسل
-                showNotification('✅ تم إرسال البيانات إلى Google Sheets تلقائياً!', 'success');
-                
-            } catch (error) {
-                console.error('خطأ في إرسال البيانات إلى Google Sheets:', error);
-                showNotification('⚠️ فشل الإرسال التلقائي - يرجى النسخ يدوياً', 'error');
-                // في حالة الفشل، استخدم الطريقة القديمة كنسخة احتياطية
-                copyOrderToClipboard(order);
+            const maxAttempts = 3;
+            const baseDelayMs = 800; // تأخير تصاعدي بين المحاولات
+            const timeoutMs = 8000; // مهلة لكل طلب
+
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                const controller = new AbortController();
+                const signal = controller.signal;
+                // مهلة
+                const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+                try {
+                    const resp = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'cors',
+                        credentials: 'omit',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(payload),
+                        signal
+                    });
+
+                    clearTimeout(timeoutId);
+
+                    // معظم WebApp من Apps Script يعيد JSON مع Access-Control-Allow-Origin: *
+                    if (resp.ok) {
+                        // حاول قراءة JSON إن أمكن
+                        let data = null;
+                        try {
+                            data = await resp.json();
+                        } catch (err) {
+                            // قد يحدث إذا كان الرد لا يمكن قراءته — اعتبره نجاحاً جزئياً
+                            showNotification('✅ تم إرسال البيانات إلى Google Sheets (لا توجد استجابة قابلة للقراءة).', 'success');
+                            return;
+                        }
+
+                        if (data && data.success) {
+                            showNotification('✅ تم إرسال البيانات إلى Google Sheets بنجاح!', 'success');
+                            return;
+                        } else {
+                            // رد من السيرفر لكن يشير لخطأ
+                            const errMsg = data && data.error ? data.error : 'Unknown server error';
+                            console.warn('GAS responded with error:', errMsg);
+                            showNotification('⚠️ خطأ من الخادم: ' + errMsg, 'error');
+                            // لا نحاول إعادة المحاولة عند خطأ منطقي من السيرفر؛ ننسخ احتياطياً
+                            copyOrderToClipboard(order);
+                            return;
+                        }
+                    } else {
+                        // استجابة غير OK؛ يمكن إعادة المحاولة
+                        const text = await resp.text().catch(() => '');
+                        console.warn(`Attempt ${attempt} failed: HTTP ${resp.status}`, text);
+                        if (attempt === maxAttempts) {
+                            showNotification('⚠️ فشل الإرسال إلى Google Sheets بعد عدة محاولات.', 'error');
+                            copyOrderToClipboard(order);
+                            return;
+                        }
+                    }
+                } catch (err) {
+                    clearTimeout(timeoutId);
+                    // خطأ الشبكة أو مهلة
+                    console.warn(`Attempt ${attempt} error:`, err && err.name ? err.name : err);
+                    if (attempt === maxAttempts) {
+                        showNotification('⚠️ فشل الإرسال التلقائي - النسخ الاحتياطي مفعل.', 'error');
+                        copyOrderToClipboard(order);
+                        return;
+                    }
+                    // تأخير تصاعدي قبل إعادة المحاولة
+                    const delay = baseDelayMs * Math.pow(2, attempt - 1);
+                    await new Promise(res => setTimeout(res, delay));
+                }
             }
         }
 
@@ -1684,61 +1741,6 @@
             let serviceType = document.getElementById('service-type').value;
             if (serviceType === 'أخرى') {
                 serviceType = document.getElementById('other-service').value;
-            }
-            
-            // Get housing type (handle "other" option)
-            let housingType = document.getElementById('housing-type').value;
-            if (housingType === 'أخرى') {
-                housingType = document.getElementById('other-housing').value;
-            }
-            
-            const newOrder = {
-                orderNumber: document.getElementById('order-number').value,
-                orderDate: document.getElementById('order-date').value,
-                customerNumber: document.getElementById('customer-number').value,
-                customerName: document.getElementById('customer-name').value,
-                area: document.getElementById('area').value,
-                street: document.getElementById('street').value,
-                houseNumber: document.getElementById('house-number').value,
-                floor: document.getElementById('floor').value,
-                housingType: housingType,
-                locationNotes: document.getElementById('location-notes').value,
-                serviceType: serviceType,
-                visitDate: document.getElementById('visit-date').value,
-                visitTime: document.getElementById('visit-time').value,
-                cleaningDate: '',
-                cleaningTime: '',
-                paymentMethod: document.getElementById('payment-method').value,
-                totalAmount: 0,
-                paymentStatus: 'غير مدفوع',
-                bookingStatus: 'معاينة',
-                departureTime: '',
-                customerNotes: '',
-                teamNotes: '',
-                customerRating: 0,
-                ratingNotes: '',
-                cancellationReason: ''
-            };
-
-            orders.push(newOrder);
-            nextOrderNumber++;
-            
-            showNotification('تم إضافة الطلب بنجاح! سيتم عرضه في قائمة الطلبات قيد التنفيذ.', 'success');
-            
-            // Reset form
-            document.getElementById('new-order-form').reset();
-            document.getElementById('add-order-form').classList.add('hidden');
-            document.getElementById('customer-history').classList.add('hidden');
-            document.getElementById('customer-search').value = '';
-            document.getElementById('other-service-div').classList.add('hidden');
-            document.getElementById('other-housing-div').classList.add('hidden');
-            
-            updateDashboard();
-            displayActiveOrders();
-            
-            // Sync order to Google Sheets automatically
-            syncOrderToGoogleSheets(newOrder, 'create');
-        });
 
         // Copy order data to clipboard - clean text for single row
         function copyOrderToClipboard(order) {
