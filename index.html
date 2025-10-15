@@ -1,1 +1,3308 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة الطلبات - Wajha</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .order-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-left: 3px solid #00BFF3;
+            background: #111111;
+            border: 1px solid #1f2937;
+        }
+        .order-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(0, 191, 243, 0.15);
+            border-left-color: #00BFF3;
+        }
+        .glass-effect {
+            backdrop-filter: blur(10px);
+            background: rgba(17, 17, 17, 0.95);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            border-bottom: 1px solid #00BFF3;
+        }
+        .card-shadow {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .nav-tab {
+            position: relative;
+            overflow: hidden;
+        }
+        .nav-tab::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #00BFF3, #00BFF3);
+            transition: width 0.3s ease;
+        }
+        .nav-tab.active::before {
+            width: 100%;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #00BFF3, #00BFF3);
+            transition: all 0.3s ease;
+            border: 1px solid #00BFF3;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(0, 191, 243, 0.3);
+            background: linear-gradient(135deg, #00A8D6, #00BFF3);
+        }
+        .stat-card {
+            background: #111111;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border: 1px solid #1f2937;
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 191, 243, 0.2);
+            border-color: #00BFF3;
+        }
+        .dark-input {
+            background: #111111;
+            border: 1px solid #374151;
+            color: #ffffff;
+        }
+        .dark-input:focus {
+            border-color: #00BFF3;
+            box-shadow: 0 0 0 3px rgba(0, 191, 243, 0.1);
+        }
+        .dark-select {
+            background: #111111;
+            border: 1px solid #374151;
+            color: #ffffff;
+        }
+        .dark-select:focus {
+            border-color: #00BFF3;
+            box-shadow: 0 0 0 3px rgba(0, 191, 243, 0.1);
+        }
+        .status-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid;
+        }
+        .status-preview { 
+            background: rgba(0, 191, 243, 0.1);
+            color: #00BFF3;
+            border-color: #00BFF3;
+        }
+        .status-approved { 
+            background: rgba(0, 191, 243, 0.2);
+            color: #00BFF3;
+            border-color: #00BFF3;
+        }
+        .status-paid { 
+            background: rgba(0, 191, 243, 0.3);
+            color: #00BFF3;
+            border-color: #00BFF3;
+        }
+        .status-partial { 
+            background: rgba(75, 85, 99, 0.2);
+            color: #d1d5db;
+            border-color: #6b7280;
+        }
+        .status-unpaid { 
+            background: rgba(17, 17, 17, 0.8);
+            color: #9ca3af;
+            border-color: #374151;
+        }
+        .status-cancelled { 
+            background: rgba(17, 17, 17, 0.5);
+            color: #6b7280;
+            border-color: #374151;
+        }
+        .status-completed { 
+            background: rgba(0, 191, 243, 0.4);
+            color: #ffffff;
+            border-color: #00BFF3;
+        }
+        .table-dark {
+            background: #111111;
+        }
+        .table-dark th {
+            background: #0a0a0a;
+            border-bottom: 1px solid #1f2937;
+            color: #d1d5db;
+        }
+        .table-dark td {
+            border-bottom: 1px solid #1f2937;
+            color: #e5e7eb;
+        }
+        .table-dark tr:hover {
+            background: rgba(0, 191, 243, 0.05);
+        }
+        .icon-blue {
+            color: #00BFF3;
+        }
+        .text-blue {
+            color: #00BFF3;
+        }
+        .bg-dark-card {
+            background: #111111;
+            border: 1px solid #1f2937;
+        }
+        .bg-dark-secondary {
+            background: #0a0a0a;
+        }
+        
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #00BFF3, #00BFF3);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 191, 243, 0.3);
+            border: 1px solid #00BFF3;
+            z-index: 9999;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 400px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .notification.success {
+            background: linear-gradient(135deg, #059669, #10b981);
+            border-color: #10b981;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+        }
+        
+        .notification.error {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            border-color: #ef4444;
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3);
+        }
+        
+        .notification-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .notification-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        
+        .notification-text {
+            flex: 1;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+        
+        /* Quick Filter Styles */
+        .quick-filter-btn {
+            color: #9ca3af;
+            background: transparent;
+        }
+        
+        .quick-filter-btn:hover {
+            color: #e5e7eb;
+            background: rgba(75, 85, 99, 0.3);
+        }
+        
+        .quick-filter-btn.active {
+            color: #ffffff;
+            background: #00BFF3;
+        }
+        
+        /* Advanced Filter Modal */
+        .filter-group {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .filter-group h4 {
+            color: #00BFF3;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .filter-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+        
+        .filter-checkbox:hover {
+            background: rgba(0, 191, 243, 0.1);
+        }
+        
+        .filter-checkbox input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #00BFF3;
+        }
+        
+        .filter-checkbox label {
+            color: #e5e7eb;
+            font-size: 14px;
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        /* Hide admin-only elements for regular users */
+        .user-role .admin-only {
+            display: none !important;
+        }
+        
+        /* Show user-only elements for regular users */
+        .user-role .user-only {
+            display: flex !important;
+        }
+        
+        /* Hide user-only elements for admins */
+        .admin-role .user-only {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="bg-dark-secondary min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg shadow-2xl">
+        <div class="container mx-auto px-6 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <div>
+                        <img src="https://l.top4top.io/p_3568d9t1y1.png" alt="الشعار" class="w-28 h-28 object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <i class="fas fa-home text-4xl text-white hidden"></i>
+                    </div>
+                    <div class="mt-1">
+                        <h1 class="text-3xl font-bold text-white">نظام إدارة الطلبات</h1>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4 space-x-reverse text-white">
+                    <div class="text-left">
+                        <p class="text-sm opacity-80">مرحباً بك</p>
+                        <p class="font-semibold" id="current-user-name">المستخدم</p>
+                        <p class="text-xs opacity-70" id="current-date"></p>
+                    </div>
+                    <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2 space-x-reverse border border-red-500">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>خروج</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
 
+    <!-- Navigation Tabs -->
+    <nav class="bg-dark-card shadow-lg border-b border-gray-700">
+        <div class="container mx-auto px-6">
+            <div class="flex space-x-8 space-x-reverse">
+                <button onclick="showTab('dashboard')" id="tab-dashboard" class="nav-tab tab-btn py-4 px-6 text-gray-400 hover:text-blue-400 font-semibold transition-all duration-200 flex items-center space-x-2 space-x-reverse">
+                    <i class="fas fa-chart-pie icon-blue"></i>
+                    <span>لوحة التحكم</span>
+                </button>
+                <button onclick="showTab('search')" id="tab-search" class="nav-tab tab-btn py-4 px-6 text-gray-400 hover:text-blue-400 font-semibold transition-all duration-200 flex items-center space-x-2 space-x-reverse admin-only">
+                    <i class="fas fa-search-plus icon-blue"></i>
+                    <span>بحث وإضافة طلب</span>
+                </button>
+                <button onclick="showTab('active')" id="tab-active" class="nav-tab tab-btn py-4 px-6 text-gray-400 hover:text-blue-400 font-semibold transition-all duration-200 flex items-center space-x-2 space-x-reverse">
+                    <i class="fas fa-clock icon-blue"></i>
+                    <span>قيد التنفيذ</span>
+                </button>
+                <button onclick="showTab('completed')" id="tab-completed" class="nav-tab tab-btn py-4 px-6 text-gray-400 hover:text-blue-400 font-semibold transition-all duration-200 flex items-center space-x-2 space-x-reverse">
+                    <i class="fas fa-check-circle icon-blue"></i>
+                    <span>المكتملة</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-6 py-8">
+        <!-- Dashboard Tab -->
+        <div id="dashboard-tab" class="tab-content fade-in">
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm font-medium mb-1">إجمالي الطلبات</p>
+                            <p id="total-orders" class="text-3xl font-bold text-white">0</p>
+                            <p class="text-xs text-gray-500 mt-1">جميع الطلبات</p>
+                        </div>
+                        <div class="bg-blue-900 bg-opacity-50 p-4 rounded-xl border border-blue-800">
+                            <i class="fas fa-clipboard-list text-2xl text-blue-400"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm font-medium mb-1">مدفوعة</p>
+                            <p id="paid-orders" class="text-3xl font-bold text-blue-400">0</p>
+                            <p class="text-xs text-gray-500 mt-1">مكتملة الدفع</p>
+                        </div>
+                        <div class="bg-blue-900 bg-opacity-50 p-4 rounded-xl border border-blue-800">
+                            <i class="fas fa-money-check-alt text-2xl text-blue-400"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm font-medium mb-1">قيد التنفيذ</p>
+                            <p id="active-orders" class="text-3xl font-bold text-gray-300">0</p>
+                            <p class="text-xs text-gray-500 mt-1">تحتاج متابعة</p>
+                        </div>
+                        <div class="bg-gray-800 bg-opacity-50 p-4 rounded-xl border border-gray-700">
+                            <i class="fas fa-hourglass-half text-2xl text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400 text-sm font-medium mb-1">مكتملة</p>
+                            <p id="completed-orders" class="text-3xl font-bold text-blue-300">0</p>
+                            <p class="text-xs text-gray-500 mt-1">تم الانتهاء</p>
+                        </div>
+                        <div class="bg-blue-900 bg-opacity-30 p-4 rounded-xl border border-blue-800">
+                            <i class="fas fa-check-double text-2xl text-blue-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Revenue Summary -->
+            <div class="bg-dark-card rounded-2xl shadow-lg p-8 card-shadow">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold text-white flex items-center space-x-3 space-x-reverse">
+                        <i class="fas fa-chart-line text-blue-400"></i>
+                        <span>ملخص الإيرادات - الشهر الحالي</span>
+                    </h3>
+                    
+                    <div class="text-sm text-gray-400" id="current-month-display">
+                        <!-- سيتم عرض الشهر الحالي هنا -->
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-gradient-to-r from-blue-900 to-blue-800 bg-opacity-30 p-6 rounded-xl border border-blue-700">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-3xl font-bold text-blue-300" id="total-revenue">0 د.ك</p>
+                                <p class="text-blue-400 font-medium">إجمالي الإيرادات</p>
+                            </div>
+                            <i class="fas fa-chart-line text-3xl text-blue-400"></i>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-r from-green-900 to-green-800 bg-opacity-30 p-6 rounded-xl border border-green-700">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-3xl font-bold text-green-300" id="partial-revenue">0 د.ك</p>
+                                <p class="text-green-400 font-medium">مدفوع جزئياً</p>
+                            </div>
+                            <i class="fas fa-coins text-3xl text-green-400"></i>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-r from-gray-800 to-gray-700 bg-opacity-50 p-6 rounded-xl border border-gray-600">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-3xl font-bold text-gray-300" id="avg-rating">0</p>
+                                <p class="text-gray-400 font-medium">متوسط التقييم</p>
+                            </div>
+                            <i class="fas fa-star text-3xl text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search & Add Order Tab -->
+        <div id="search-tab" class="tab-content hidden fade-in">
+            <div class="bg-dark-card rounded-2xl shadow-lg p-8 mb-8 card-shadow">
+                <h3 class="text-2xl font-bold text-white mb-6 flex items-center space-x-3 space-x-reverse">
+                    <i class="fas fa-user-search text-blue-400"></i>
+                    <span>البحث عن عميل</span>
+                </h3>
+                <div class="flex gap-4 mb-6">
+                    <div class="flex-1 relative">
+                        <input type="text" id="customer-search" placeholder="أدخل رقم العميل (رقم الجوال)" 
+                               class="dark-input w-full px-4 py-4 pr-12 rounded-xl">
+                        <i class="fas fa-phone absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                    <button onclick="searchCustomer()" class="btn-primary text-white px-8 py-4 rounded-xl font-semibold flex items-center space-x-2 space-x-reverse">
+                        <i class="fas fa-search"></i>
+                        <span>بحث</span>
+                    </button>
+                </div>
+                <div id="customer-history" class="hidden"></div>
+            </div>
+
+            <div id="add-order-form" class="bg-dark-card rounded-2xl shadow-lg p-8 hidden card-shadow">
+                <h3 class="text-2xl font-bold text-white mb-6 flex items-center space-x-3 space-x-reverse">
+                    <i class="fas fa-plus-circle text-blue-400"></i>
+                    <span>إضافة طلب جديد</span>
+                </h3>
+                <form id="new-order-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <input type="hidden" id="order-number">
+                    <input type="hidden" id="customer-number">
+                    
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-3">اسم العميل</label>
+                        <input type="text" id="customer-name" required class="dark-input w-full px-4 py-3 rounded-xl">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-3">تاريخ فتح الطلب</label>
+                        <input type="date" id="order-date" readonly class="dark-input w-full px-4 py-3 rounded-xl bg-gray-800 opacity-60">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-3">المنطقة</label>
+                        <input type="text" id="area" class="dark-input w-full px-4 py-3 rounded-xl">
+                    </div>
+                    
+                        <div>
+                        <label class="block text-gray-300 font-semibold mb-3">القطعة</label>
+                        <input type="text" id="block" class="dark-input w-full px-4 py-3 rounded-xl">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-3">الشارع</label>
+                        <input type="text" id="street" class="dark-input w-full px-4 py-3 rounded-xl">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-3">رقم المنزل</label>
+                        <input type="text" id="house-number" class="dark-input w-full px-4 py-3 rounded-xl">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-3">الدور</label>
+                        <input type="text" id="floor" class="dark-input w-full px-4 py-3 rounded-xl">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-3">نوع السكن</label>
+                        <select id="housing-type" required class="dark-select w-full px-4 py-3 rounded-xl" onchange="toggleOtherHousing()">
+                            <option value="">اختر نوع السكن</option>
+                            <option value="شقة">شقة</option>
+                            <option value="فيلا">فيلا</option>
+                            <option value="دوبلكس">دوبلكس</option>
+                            <option value="استوديو">استوديو</option>
+                            <option value="بيت شعبي">بيت شعبي</option>
+                            <option value="أخرى">أخرى</option>
+                        </select>
+                    </div>
+                    
+                    <div id="other-housing-div" class="hidden">
+                        <label class="block text-gray-300 font-semibold mb-3">نوع السكن الآخر</label>
+                        <input type="text" id="other-housing" class="dark-input w-full px-4 py-3 rounded-xl" placeholder="اكتب نوع السكن...">
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-gray-300 font-semibold mb-3">ملاحظات الموقع</label>
+                        <textarea id="location-notes" rows="2" class="dark-input w-full px-4 py-3 rounded-xl"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-3">نوع الخدمة</label>
+                        <select id="service-type" required class="dark-select w-full px-4 py-3 rounded-xl" onchange="toggleOtherService()">
+                            <option value="">اختر نوع الخدمة</option>
+                            <option value="تنظيف عام">تنظيف عام</option>
+                            <option value="تنظيف عميق">تنظيف عميق</option>
+                            <option value="تنظيف بعد الدهان">تنظيف بعد الدهان</option>
+                            <option value="تنظيف المطبخ">تنظيف المطبخ</option>
+                            <option value="تنظيف الحمامات">تنظيف الحمامات</option>
+                            <option value="تنظيف النوافذ">تنظيف النوافذ</option>
+                            <option value="تنظيف السجاد والموكيت">تنظيف السجاد والموكيت</option>
+                            <option value="تنظيف الأثاث">تنظيف الأثاث</option>
+                            <option value="أخرى">أخرى</option>
+                        </select>
+                    </div>
+                    
+                    <div id="other-service-div" class="hidden">
+                        <label class="block text-gray-300 font-semibold mb-3">نوع الخدمة الأخرى</label>
+                        <input type="text" id="other-service" class="dark-input w-full px-4 py-3 rounded-xl" placeholder="اكتب نوع الخدمة...">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-3">تاريخ المعاينة</label>
+                        <input type="date" id="visit-date" required class="dark-input w-full px-4 py-3 rounded-xl">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-3">وقت المعاينة</label>
+                        <input type="time" id="visit-time" required class="dark-input w-full px-4 py-3 rounded-xl">
+                    </div>
+                    
+                    <div id="payment-method-div" class="hidden">
+                        <label class="block text-gray-300 font-semibold mb-3">طريقة الدفع</label>
+                        <select id="payment-method" class="dark-select w-full px-4 py-3 rounded-xl">
+                            <option value="">اختر طريقة الدفع</option>
+                            <option value="كاش">كاش</option>
+                            <option value="رابط upay">رابط upay</option>
+                            <option value="شيك">شيك</option>
+                        </select>
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <button type="submit" class="w-full btn-primary text-white py-4 px-6 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 space-x-reverse">
+                            <i class="fas fa-plus"></i>
+                            <span>إضافة طلب (معاينة)</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Active Orders Tab -->
+        <div id="active-tab" class="tab-content hidden fade-in">
+            <div class="bg-dark-card rounded-2xl shadow-lg p-8 card-shadow">
+                <h3 class="text-2xl font-bold text-white mb-6 flex items-center space-x-3 space-x-reverse">
+                    <i class="fas fa-tasks text-blue-400"></i>
+                    <span>الطلبات قيد التنفيذ</span>
+                </h3>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full table-dark">
+                        <thead>
+                            <tr class="border-b border-gray-700">
+                                <th class="text-right py-4 px-4 font-semibold text-gray-300 cursor-pointer hover:text-blue-400 transition-colors" onclick="showOrderNumberFilter()">
+                                    <div class="flex items-center space-x-2 space-x-reverse">
+                                        <span>رقم الطلب</span>
+                                        <i class="fas fa-filter text-xs opacity-60"></i>
+                                    </div>
+                                </th>
+                                <th class="text-right py-4 px-4 font-semibold text-gray-300">العميل</th>
+                                <th class="text-right py-4 px-4 font-semibold text-gray-300">الخدمة</th>
+                                <th class="text-right py-4 px-4 font-semibold text-gray-300">التاريخ</th>
+                                <th class="text-right py-4 px-4 font-semibold text-gray-300">المبلغ</th>
+                                <th class="text-right py-4 px-4 font-semibold text-gray-300">حالة الحجز</th>
+                                <th class="text-right py-4 px-4 font-semibold text-gray-300">حالة الدفع</th>
+                                <th class="text-center py-4 px-4 font-semibold text-gray-300">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="active-orders-table">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="no-active-orders" class="text-center py-12 hidden">
+                    <i class="fas fa-clipboard-list text-6xl text-gray-600 mb-4"></i>
+                    <p class="text-gray-400 text-lg">لا توجد طلبات قيد التنفيذ</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Completed Orders Tab -->
+        <div id="completed-tab" class="tab-content hidden fade-in">
+            <div class="bg-dark-card rounded-2xl shadow-lg p-8 card-shadow">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold text-white flex items-center space-x-3 space-x-reverse">
+                        <i class="fas fa-check-circle text-blue-400"></i>
+                        <span>الطلبات المكتملة</span>
+                    </h3>
+                </div>
+                
+
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full table-dark">
+                        <thead>
+                            <tr class="border-b border-gray-700">
+                                <th class="text-right py-4 px-4 font-semibold text-gray-300 cursor-pointer hover:text-blue-400 transition-colors" onclick="showColumnFilter('orderNumber')">
+                                    <div class="flex items-center space-x-2 space-x-reverse">
+                                        <span>رقم الطلب</span>
+                                        <i class="fas fa-filter text-xs opacity-60"></i>
+                                    </div>
+                                </th>
+                                <th class="text-right py-4 px-4 font-semibold text-gray-300 cursor-pointer hover:text-blue-400 transition-colors" onclick="showColumnFilter('customer')">
+                                    <div class="flex items-center space-x-2 space-x-reverse">
+                                        <span>العميل</span>
+                                        <i class="fas fa-filter text-xs opacity-60"></i>
+                                    </div>
+                                </th>
+                                <th class="text-right py-4 px-4 font-semibold text-gray-300 cursor-pointer hover:text-blue-400 transition-colors" onclick="showColumnFilter('service')">
+                                    <div class="flex items-center space-x-2 space-x-reverse">
+                                        <span>الخدمة</span>
+                                        <i class="fas fa-filter text-xs opacity-60"></i>
+                                    </div>
+                                </th>
+                                <th class="text-right py-4 px-4 font-semibold text-gray-300 cursor-pointer hover:text-blue-400 transition-colors" onclick="showColumnFilter('date')">
+                                    <div class="flex items-center space-x-2 space-x-reverse">
+                                        <span>التاريخ</span>
+                                        <i class="fas fa-filter text-xs opacity-60"></i>
+                                    </div>
+                                </th>
+                                <th class="text-right py-4 px-4 font-semibold text-gray-300 cursor-pointer hover:text-blue-400 transition-colors" onclick="showColumnFilter('amount')">
+                                    <div class="flex items-center space-x-2 space-x-reverse">
+                                        <span>المبلغ</span>
+                                        <i class="fas fa-filter text-xs opacity-60"></i>
+                                    </div>
+                                </th>
+                                <th class="text-right py-4 px-4 font-semibold text-gray-300 cursor-pointer hover:text-blue-400 transition-colors" onclick="showColumnFilter('status')">
+                                    <div class="flex items-center space-x-2 space-x-reverse">
+                                        <span>الحالة</span>
+                                        <i class="fas fa-filter text-xs opacity-60"></i>
+                                    </div>
+                                </th>
+                                <th class="text-right py-4 px-4 font-semibold text-gray-300 cursor-pointer hover:text-blue-400 transition-colors" onclick="showColumnFilter('rating')">
+                                    <div class="flex items-center space-x-2 space-x-reverse">
+                                        <span>التقييم</span>
+                                        <i class="fas fa-filter text-xs opacity-60"></i>
+                                    </div>
+                                </th>
+                                <th class="text-center py-4 px-4 font-semibold text-gray-300">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="completed-orders-table">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="no-completed-orders" class="text-center py-12 hidden">
+                    <i class="fas fa-clipboard-list text-6xl text-gray-600 mb-4"></i>
+                    <p class="text-gray-400 text-lg">لا توجد طلبات مكتملة</p>
+                </div>
+                
+                <!-- Pagination for completed orders -->
+                <div id="completed-pagination" class="flex items-center justify-between mt-6 pt-4 border-t border-gray-700">
+                    <div class="text-sm text-gray-400">
+                        إجمالي الطلبات: <span id="completed-total-orders" class="font-semibold text-blue-400">0</span>
+                    </div>
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        <button id="completed-prev-btn" onclick="changeCompletedPage(-1)" 
+                                class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <span id="completed-page-info" class="text-sm text-gray-300 px-3">صفحة 1 من 1</span>
+                        <button id="completed-next-btn" onclick="changeCompletedPage(1)" 
+                                class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Management Modal -->
+    <div id="order-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden items-center justify-center z-50">
+        <div class="bg-dark-card rounded-2xl shadow-2xl p-8 m-4 max-w-4xl w-full max-h-screen overflow-y-auto border border-gray-700">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-white flex items-center space-x-3 space-x-reverse">
+                    <i class="fas fa-cog text-blue-400"></i>
+                    <span>إدارة الطلب</span>
+                </h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-200 text-3xl transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <!-- Advanced Filters Modal -->
+    <div id="advanced-filter-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden items-center justify-center z-50">
+        <div class="bg-dark-card rounded-2xl shadow-2xl p-6 m-4 max-w-4xl w-full max-h-screen overflow-y-auto border border-gray-700">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-white flex items-center space-x-3 space-x-reverse">
+                    <i class="fas fa-filter text-blue-400"></i>
+                    <span>الفلاتر المتقدمة</span>
+                </h3>
+                <button onclick="closeAdvancedFilters()" class="text-gray-400 hover:text-gray-200 text-2xl transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                <!-- Service Type Filter -->
+                <div class="filter-group">
+                    <h4><i class="fas fa-broom"></i> نوع الخدمة</h4>
+                    <div id="service-filter-options" class="space-y-2 max-h-40 overflow-y-auto">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+                
+                <!-- Customer Filter -->
+                <div class="filter-group">
+                    <h4><i class="fas fa-user"></i> العملاء</h4>
+                    <div id="customer-filter-options" class="space-y-2 max-h-40 overflow-y-auto">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+                
+                <!-- Amount Range Filter -->
+                <div class="filter-group">
+                    <h4><i class="fas fa-money-bill"></i> المبلغ</h4>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-gray-300 text-sm mb-1">من (د.ك)</label>
+                            <input type="number" id="amount-min" class="dark-input w-full px-3 py-2 rounded-lg text-sm" placeholder="0">
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 text-sm mb-1">إلى (د.ك)</label>
+                            <input type="number" id="amount-max" class="dark-input w-full px-3 py-2 rounded-lg text-sm" placeholder="1000">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Date Range Filter -->
+                <div class="filter-group">
+                    <h4><i class="fas fa-calendar"></i> التاريخ</h4>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-gray-300 text-sm mb-1">من تاريخ</label>
+                            <input type="date" id="date-from" class="dark-input w-full px-3 py-2 rounded-lg text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 text-sm mb-1">إلى تاريخ</label>
+                            <input type="date" id="date-to" class="dark-input w-full px-3 py-2 rounded-lg text-sm">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Rating Filter -->
+                <div class="filter-group">
+                    <h4><i class="fas fa-star"></i> التقييم</h4>
+                    <div id="rating-filter-options" class="space-y-2">
+                        <div class="filter-checkbox">
+                            <input type="checkbox" id="rating-5" value="5">
+                            <label for="rating-5">★★★★★ (5 نجوم)</label>
+                        </div>
+                        <div class="filter-checkbox">
+                            <input type="checkbox" id="rating-4" value="4">
+                            <label for="rating-4">★★★★☆ (4 نجوم)</label>
+                        </div>
+                        <div class="filter-checkbox">
+                            <input type="checkbox" id="rating-3" value="3">
+                            <label for="rating-3">★★★☆☆ (3 نجوم)</label>
+                        </div>
+                        <div class="filter-checkbox">
+                            <input type="checkbox" id="rating-2" value="2">
+                            <label for="rating-2">★★☆☆☆ (2 نجوم)</label>
+                        </div>
+                        <div class="filter-checkbox">
+                            <input type="checkbox" id="rating-1" value="1">
+                            <label for="rating-1">★☆☆☆☆ (1 نجمة)</label>
+                        </div>
+                        <div class="filter-checkbox">
+                            <input type="checkbox" id="rating-0" value="0">
+                            <label for="rating-0">بدون تقييم</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Status Filter -->
+                <div class="filter-group">
+                    <h4><i class="fas fa-check-circle"></i> الحالة</h4>
+                    <div class="space-y-2">
+                        <div class="filter-checkbox">
+                            <input type="checkbox" id="status-completed" value="مكتمل">
+                            <label for="status-completed">مكتمل</label>
+                        </div>
+                        <div class="filter-checkbox">
+                            <input type="checkbox" id="status-cancelled" value="ملغي">
+                            <label for="status-cancelled">ملغي</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex gap-4 pt-4 border-t border-gray-700">
+                <button onclick="applyAdvancedFilters()" class="flex-1 btn-primary text-white py-3 px-6 rounded-xl font-semibold flex items-center justify-center space-x-2 space-x-reverse">
+                    <i class="fas fa-check"></i>
+                    <span>تطبيق الفلاتر</span>
+                </button>
+                <button onclick="resetAdvancedFilters()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold transition-colors flex items-center justify-center space-x-2 space-x-reverse">
+                    <i class="fas fa-undo"></i>
+                    <span>إعادة تعيين</span>
+                </button>
+                <button onclick="closeAdvancedFilters()" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-3 px-6 rounded-xl font-semibold transition-colors flex items-center justify-center space-x-2 space-x-reverse">
+                    <i class="fas fa-times"></i>
+                    <span>إغلاق</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Column Filter Modal -->
+    <div id="filter-modal" class="fixed inset-0 bg-black bg-opacity-80 hidden items-center justify-center z-50">
+        <div class="bg-dark-card rounded-2xl shadow-2xl p-6 m-4 max-w-md w-full border border-gray-700">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="filter-title" class="text-xl font-bold text-white flex items-center space-x-3 space-x-reverse">
+                    <i class="fas fa-filter text-blue-400"></i>
+                    <span>فلترة البيانات</span>
+                </h3>
+                <button onclick="closeFilterModal()" class="text-gray-400 hover:text-gray-200 text-2xl transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="filter-content" class="space-y-4">
+                <!-- Content will be populated dynamically -->
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="applyColumnFilter()" class="flex-1 btn-primary text-white py-3 px-6 rounded-xl font-semibold flex items-center justify-center space-x-2 space-x-reverse">
+                    <i class="fas fa-check"></i>
+                    <span>تطبيق الفلتر</span>
+                </button>
+                <button onclick="clearColumnFilter()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold transition-colors flex items-center justify-center space-x-2 space-x-reverse">
+                    <i class="fas fa-times"></i>
+                    <span>مسح الفلتر</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="fixed inset-0 bg-dark-secondary flex items-center justify-center z-50">
+        <div class="bg-dark-card rounded-2xl shadow-2xl p-8 w-full max-w-md border border-gray-700">
+            <div class="text-center mb-8">
+                <div class="mb-2">
+                    <img src="https://l.top4top.io/p_3568d9t1y1.png" alt="الشعار" class="w-32 h-32 object-contain mx-auto" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <i class="fas fa-home text-6xl text-blue-400 hidden"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-white mb-2">نظام إدارة الطلبات</h2>
+                <p class="text-gray-400">يرجى إدخال بيانات الدخول</p>
+            </div>
+            
+            <form id="login-form" class="space-y-6">
+                <div>
+                    <label class="block text-gray-300 font-semibold mb-3">اسم المستخدم</label>
+                    <div class="relative">
+                        <input type="text" id="username" required 
+                               class="dark-input w-full px-4 py-3 pr-12 rounded-xl" 
+                               placeholder="أدخل اسم المستخدم">
+                        <i class="fas fa-user absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-gray-300 font-semibold mb-3">كلمة المرور</label>
+                    <div class="relative">
+                        <input type="password" id="password" required 
+                               class="dark-input w-full px-4 py-3 pr-12 rounded-xl" 
+                               placeholder="أدخل كلمة المرور">
+                        <i class="fas fa-lock absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <button type="button" onclick="togglePassword()" 
+                                class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200">
+                            <i id="password-toggle" class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" id="remember-me" class="w-4 h-4 accent-blue-500">
+                    <label for="remember-me" class="mr-2 text-gray-300 text-sm">تذكرني</label>
+                </div>
+                
+                <button type="submit" class="w-full btn-primary text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 space-x-reverse">
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>دخول</span>
+                </button>
+                
+                <div id="login-error" class="hidden bg-red-900 bg-opacity-30 border border-red-600 rounded-xl p-4 text-center">
+                    <i class="fas fa-exclamation-triangle text-red-400 mb-2"></i>
+                    <p class="text-red-300 text-sm">اسم المستخدم أو كلمة المرور غير صحيحة</p>
+                </div>
+            </form>
+            
+
+        </div>
+    </div>
+
+    <script>
+        // Login credentials - يمكنك تغيير هذه البيانات
+        const LOGIN_CREDENTIALS = {
+            'fawzi': { password: '123456', role: 'admin', name: 'fawzi' },
+            'admin2': { password: '789012', role: 'admin', name: 'المدير الثاني' },
+            'admin3': { password: '345678', role: 'admin', name: 'المدير الثالث' },
+            'admin4': { password: '901234', role: 'admin', name: 'المدير الرابع' },
+            'admin5': { password: '567890', role: 'admin', name: 'المدير الخامس' },
+            
+            // مستخدمين عاديين - صلاحيات محدودة
+            'user1': { password: '111111', role: 'user', name: 'مستخدم عادي 1' },
+            'user2': { password: '222222', role: 'user', name: 'مستخدم عادي 2' }
+        };
+        
+        // Global variables
+        let orders = [];
+        let nextOrderNumber = 1;
+        let currentCustomerPage = 1;
+        let currentCompletedPage = 1;
+        const ordersPerPage = 5;
+        let isLoggedIn = false;
+        let currentUser = null;
+
+        // ID for the periodic fetch interval so we can clear it if needed
+        let fetchIntervalId = null;
+
+        // Sheety API base (from user)
+        const SHEETY_BASE = 'https://api.sheety.co/984c17c54dafbc5e8fe827b90d39f223/orders/orders';
+
+        // Show notification function
+        function showNotification(message, type = 'success') {
+            // Remove any existing notifications
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(notification => {
+                notification.remove();
+            });
+            
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            
+            // Set icon based on type
+            let icon = '';
+            switch (type) {
+                case 'success':
+                    icon = 'fas fa-check-circle';
+                    break;
+                case 'error':
+                    icon = 'fas fa-exclamation-circle';
+                    break;
+                default:
+                    icon = 'fas fa-info-circle';
+            }
+            
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <i class="${icon} notification-icon"></i>
+                    <div class="notification-text">${message}</div>
+                </div>
+            `;
+            
+            // Add to body
+            document.body.appendChild(notification);
+            
+            // Show notification with animation
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+            
+            // Hide notification after 4 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 400);
+            }, 4000);
+        }
+
+        // Format time properly
+        function formatTime(timeValue) {
+            if (!timeValue) return '';
+            
+            // If it's already in HH:MM format, return as is
+            if (typeof timeValue === 'string' && timeValue.includes(':')) {
+                return timeValue;
+            }
+            
+            // Handle Google Sheets date format with time like "Date(1899,11,30,22,0,0)"
+            if (typeof timeValue === 'string' && timeValue.startsWith('Date(')) {
+                const match = timeValue.match(/Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)/);
+                if (match) {
+                    const hours = parseInt(match[4]);
+                    const minutes = parseInt(match[5]);
+                    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+                }
+            }
+            
+            // If it's a decimal from Google Sheets (0.5 = 12:00 PM)
+            if (typeof timeValue === 'number') {
+                const totalMinutes = Math.round(timeValue * 24 * 60);
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = totalMinutes % 60;
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+            }
+            
+            return timeValue;
+        }
+
+        // Format date properly from Google Sheets
+        function formatDate(dateValue) {
+            if (!dateValue) return '';
+            
+            // If it's already in DD-MM-YYYY format, return as is
+            if (typeof dateValue === 'string' && dateValue.match(/^\d{2}-\d{2}-\d{4}$/)) {
+                return dateValue;
+            }
+            
+            // If it's in YYYY-MM-DD format, convert to DD-MM-YYYY
+            if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                const [year, month, day] = dateValue.split('-');
+                return `${day}-${month}-${year}`;
+            }
+            
+            // Handle Google Sheets date format like "Date(2025,9,10)"
+            if (typeof dateValue === 'string' && dateValue.startsWith('Date(')) {
+                const match = dateValue.match(/Date\((\d+),(\d+),(\d+)(?:,\d+,\d+,\d+)?\)/);
+                if (match) {
+                    const year = parseInt(match[1]);
+                    const month = parseInt(match[2]) + 1; // Google Sheets months are 0-based
+                    const day = parseInt(match[3]);
+                    return `${day.toString().padStart(2, '0')}-${month.toString().padStart(2, '0')}-${year}`;
+                }
+            }
+            
+            // If it's a number from Google Sheets (Excel serial date)
+            if (typeof dateValue === 'number') {
+                const date = new Date((dateValue - 25569) * 86400 * 1000);
+                const day = date.getDate().toString().padStart(2, '0');
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}-${month}-${year}`;
+            }
+            
+            // If it's a Date object
+            if (dateValue instanceof Date) {
+                const day = dateValue.getDate().toString().padStart(2, '0');
+                const month = (dateValue.getMonth() + 1).toString().padStart(2, '0');
+                const year = dateValue.getFullYear();
+                return `${day}-${month}-${year}`;
+            }
+            
+            return dateValue;
+        }
+
+        // Convert DD-MM-YYYY to YYYY-MM-DD for input fields
+        function convertToInputDate(dateValue) {
+            if (!dateValue) return '';
+            
+            // If already in YYYY-MM-DD format
+            if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                return dateValue;
+            }
+            
+            // If in DD-MM-YYYY format, convert to YYYY-MM-DD
+            if (typeof dateValue === 'string' && dateValue.match(/^\d{2}-\d{2}-\d{4}$/)) {
+                const [day, month, year] = dateValue.split('-');
+                return `${year}-${month}-${day}`;
+            }
+            
+            return dateValue;
+        }
+
+        // Toggle other service input
+        function toggleOtherService() {
+            const serviceSelect = document.getElementById('service-type');
+            const otherDiv = document.getElementById('other-service-div');
+            
+            if (serviceSelect.value === 'أخرى') {
+                otherDiv.classList.remove('hidden');
+            } else {
+                otherDiv.classList.add('hidden');
+                document.getElementById('other-service').value = '';
+            }
+        }
+
+        // Toggle other housing input
+        function toggleOtherHousing() {
+            const housingSelect = document.getElementById('housing-type');
+            const otherDiv = document.getElementById('other-housing-div');
+            
+            if (housingSelect.value === 'أخرى') {
+                otherDiv.classList.remove('hidden');
+            } else {
+                otherDiv.classList.add('hidden');
+                document.getElementById('other-housing').value = '';
+            }
+        }
+
+        // Check if user is already logged in
+        function checkLoginStatus() {
+            const savedLogin = localStorage.getItem('cleanpro_login');
+            const savedUser = localStorage.getItem('cleanpro_user');
+            
+            // If user is logged in (regardless of remember me checkbox), keep them logged in
+            if (savedLogin === 'true' && savedUser) {
+                isLoggedIn = true;
+                currentUser = JSON.parse(savedUser);
+                hideLoginScreen();
+                setupUserInterface();
+               initializeApp();
+
+            } else {
+                showLoginScreen();
+            }
+        }
+
+        // Show login screen
+        function showLoginScreen() {
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Hide login screen
+        function hideLoginScreen() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Toggle password visibility
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('password-toggle');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+
+        // Handle login form submission
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('remember-me').checked;
+            const errorDiv = document.getElementById('login-error');
+            
+            // Check credentials
+            const user = LOGIN_CREDENTIALS[username];
+            if (user && user.password === password) {
+                isLoggedIn = true;
+                currentUser = {
+                    username: username,
+                    name: user.name,
+                    role: user.role
+                };
+                
+                // Save login status - always save login state
+                localStorage.setItem('cleanpro_login', 'true');
+                localStorage.setItem('cleanpro_user', JSON.stringify(currentUser));
+                // Keep remember me for future reference but don't use it for logout
+                if (rememberMe) {
+                    localStorage.setItem('cleanpro_remember', 'true');
+                } else {
+                    localStorage.removeItem('cleanpro_remember');
+                }
+                
+                hideLoginScreen();
+                setupUserInterface();
+                showNotification(`تم تسجيل الدخول بنجاح! مرحباً بك ${currentUser.name}`, 'success');
+                
+                // Initialize the application after successful login
+                initializeApp();
+            } else {
+                errorDiv.classList.remove('hidden');
+                
+                // Hide error after 3 seconds
+                setTimeout(() => {
+                    errorDiv.classList.add('hidden');
+                }, 3000);
+                
+                // Clear password field
+                document.getElementById('password').value = '';
+            }
+        });
+
+        // Setup user interface based on role
+        function setupUserInterface() {
+            if (!currentUser) return;
+            
+            // Update user name display
+            document.getElementById('current-user-name').textContent = currentUser.name;
+            
+            // Apply role-based styling
+            const body = document.body;
+            body.classList.remove('admin-role', 'user-role');
+            body.classList.add(currentUser.role + '-role');
+            
+            // For regular users, redirect to dashboard if they try to access search tab
+            if (currentUser.role === 'user') {
+                // Hide search tab and redirect to dashboard if currently on search
+                const currentTab = document.querySelector('.tab-content:not(.hidden)');
+                if (currentTab && currentTab.id === 'search-tab') {
+                    showTab('dashboard');
+                }
+            }
+        }
+
+        // Logout function
+        function logout() {
+            isLoggedIn = false;
+            currentUser = null;
+            localStorage.removeItem('cleanpro_login');
+            localStorage.removeItem('cleanpro_remember');
+            localStorage.removeItem('cleanpro_user');
+            
+            // Clear form
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('remember-me').checked = false;
+            
+            // Reset body classes
+            document.body.classList.remove('admin-role', 'user-role');
+            
+            showLoginScreen();
+            showNotification('تم تسجيل الخروج بنجاح', 'success');
+        }
+
+        // Initialize the application
+        function initializeApp() {
+            showTab('dashboard');
+            updateCurrentDate();
+            fetchOrders();
+            if (fetchIntervalId) clearInterval(fetchIntervalId);
+            fetchIntervalId = setInterval(fetchOrders, 30000); // Update every 30s
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLoginStatus();
+            
+            // Add event listener for customer search input changes
+            const customerSearchInput = document.getElementById('customer-search');
+            if (customerSearchInput) {
+                customerSearchInput.addEventListener('input', function() {
+                    const customerNumber = this.value.trim();
+                    if (!customerNumber) {
+                        // Hide both customer history and new order form when input is cleared
+                        document.getElementById('customer-history').classList.add('hidden');
+                        document.getElementById('add-order-form').classList.add('hidden');
+                        
+                        // Reset the new order form
+                        document.getElementById('new-order-form').reset();
+                        document.getElementById('other-service-div').classList.add('hidden');
+                        document.getElementById('other-housing-div').classList.add('hidden');
+                    }
+                });
+            }
+        });
+
+        // Update current date in header
+        function updateCurrentDate() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                calendar: 'gregory'
+            };
+            document.getElementById('current-date').textContent = now.toLocaleDateString('ar', options);
+        }
+
+        // Fetch orders from Google Sheets (existing) and reconcile with Sheety
+        async function fetchOrders() {
+            try {
+                const response = await fetch('https://docs.google.com/spreadsheets/d/14kbGPoC4ld3tkDAuVWGO36FjNtRvY0xKBXc_y0vUkZI/gviz/tq?tqx=out:json');
+                const text = await response.text();
+                const jsonText = text.substring(47).slice(0, -2);
+                const data = JSON.parse(jsonText);
+                
+                orders = data.table.rows.map((row, index) => {
+                    const cells = row.c || [];
+                    
+                    // Skip empty rows
+                    if (!cells[0]?.v && !cells[1]?.v && !cells[2]?.v) {
+                        return null;
+                    }
+                    
+                    return {
+                        orderNumber: cells[0]?.v || (index + 1),
+                        orderDate: formatDate(cells[1]?.v) || '',
+                        customerNumber: String(cells[2]?.v || ''),
+                        customerName: String(cells[3]?.v || ''),
+                        area: String(cells[4]?.v || ''),
+                        block: String(cells[5]?.v || ''),
+                        street: String(cells[6]?.v || ''),
+                        houseNumber: String(cells[7]?.v || ''),
+                        floor: String(cells[8]?.v || ''),
+                        housingType: String(cells[9]?.v || ''),
+                        locationNotes: String(cells[10]?.v || ''),
+                        serviceType: String(cells[11]?.v || ''),
+                        visitDate: formatDate(cells[12]?.v) || '',
+                        visitTime: formatTime(cells[13]?.v) || '',
+                        cleaningDate: formatDate(cells[14]?.v) || '',
+                        cleaningTime: formatTime(cells[15]?.v) || '',
+                        paymentMethod: String(cells[16]?.v || ''),
+                        totalAmount: parseFloat(cells[17]?.v) || 0,
+                        paymentStatus: String(cells[18]?.v || 'غير مدفوع'),
+                        bookingStatus: String(cells[19]?.v || 'معاينة'),
+                        departureTime: formatTime(cells[20]?.v) || '',
+                        customerNotes: String(cells[21]?.v || ''),
+                        teamNotes: String(cells[22]?.v || ''),
+                        customerRating: parseInt(cells[23]?.v) || 0,
+                        ratingNotes: String(cells[24]?.v || ''),
+                        cancellationReason: String(cells[25]?.v || ''),
+                        sheetId: null // will attempt reconcile
+                    };
+                }).filter(order => order !== null);
+
+                // Fix nextOrderNumber calculation
+                const orderNumbers = orders.map(o => parseInt(o.orderNumber)).filter(n => !isNaN(n));
+                nextOrderNumber = orderNumbers.length > 0 ? Math.max(...orderNumbers) + 1 : 1;
+                
+                // Attempt to reconcile existing Sheety rows (to get sheet ids so we can PUT later)
+                await reconcileSheetIds();
+
+                updateDashboard();
+                displayActiveOrders();
+                displayCompletedOrders();
+                console.log('تم تحميل', orders.length, 'طلب من Google Sheets');
+                console.log('البيانات المحملة:', orders);
+            } catch (error) {
+                console.error('خطأ في تحميل البيانات من Google Sheets:', error);
+                // إضافة بيانات تجريبية في حالة فشل التحميل
+                if (orders.length === 0) {
+                    orders = [
+                        {
+                            orderNumber: 1,
+                            orderDate: '14-01-2024',
+                            customerNumber: '99887766',
+                            customerName: 'أحمد محمد',
+                            area: 'السالمية',
+                            block: '5' ,
+                            street: 'شارع الخليج العربي',
+                            houseNumber: '123',
+                            floor: 'الأول',
+                            housingType: 'شقة',
+                            locationNotes: 'بجانب المسجد',
+                            serviceType: 'تنظيف عام',
+                            visitDate: '15-01-2024',
+                            visitTime: '10:00',
+                            cleaningDate: '15-01-2024',
+                            cleaningTime: '10:00',
+                            paymentMethod: 'كاش',
+                            totalAmount: 25,
+                            paymentStatus: 'مدفوع كامل',
+                            bookingStatus: 'مكتمل',
+                            departureTime: '12:30',
+                            customerNotes: 'تنظيف شامل للمطبخ',
+                            teamNotes: 'تم التنظيف بنجاح',
+                            customerRating: 5,
+                            ratingNotes: 'خدمة ممتازة',
+                            cancellationReason: '',
+                            sheetId: null
+                        }
+                    ];
+                    nextOrderNumber = 2;
+                    updateDashboard();
+                    displayActiveOrders();
+                    displayCompletedOrders();
+                }
+            }
+        }
+
+        // Try to fetch Sheety orders and map sheet ids into local orders (matching by orderNumber)
+        async function reconcileSheetIds() {
+            try {
+                const res = await fetch(SHEETY_BASE);
+                if (!res.ok) return;
+                const data = await res.json();
+                const sheetOrders = data.orders || [];
+                sheetOrders.forEach(s => {
+                    const local = orders.find(o => String(o.orderNumber) === String(s.orderNumber));
+                    if (local) {
+                        local.sheetId = s.id || s._id || s.rowId || null;
+                    }
+                });
+            } catch (e) {
+                console.warn('تعذر مزامنة معرفات Sheety:', e);
+            }
+        }
+
+        // Map local order object to Sheety payload structure
+        function mapOrderToSheet(order) {
+            // Ensure consistent keys - adapt if your Sheety columns use different names
+            return {
+                orderNumber: String(order.orderNumber || ''),
+                orderDate: order.orderDate || '',
+                customerNumber: order.customerNumber || '',
+                customerName: order.customerName || '',
+                area: order.area || '',
+                block: order.block || '',
+                street: order.street || '',
+                houseNumber: order.houseNumber || '',
+                floor: order.floor || '',
+                housingType: order.housingType || '',
+                locationNotes: order.locationNotes || '',
+                serviceType: order.serviceType || '',
+                visitDate: order.visitDate || '',
+                visitTime: order.visitTime || '',
+                cleaningDate: order.cleaningDate || '',
+                cleaningTime: order.cleaningTime || '',
+                paymentMethod: order.paymentMethod || '',
+                totalAmount: Number(order.totalAmount || 0),
+                paymentStatus: order.paymentStatus || '',
+                bookingStatus: order.bookingStatus || '',
+                departureTime: order.departureTime || '',
+                customerNotes: order.customerNotes || '',
+                teamNotes: order.teamNotes || '',
+                customerRating: Number(order.customerRating || 0),
+                ratingNotes: order.ratingNotes || '',
+                cancellationReason: order.cancellationReason || ''
+            };
+        }
+
+        // POST new order to Sheety
+        async function postOrderToSheet(order) {
+            try {
+                const payload = { order: mapOrderToSheet(order) };
+                const res = await fetch(SHEETY_BASE, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const errText = await res.text();
+                    console.error('POST Sheety error:', errText);
+                    showNotification('فشل في إرسال الطلب إلى Google Sheets', 'error');
+                    return null;
+                }
+                const data = await res.json();
+                // Sheety usually returns { order: { id: ..., ... } }
+                const returned = data.order || data;
+                if (returned && returned.id) {
+                    order.sheetId = returned.id;
+                } else if (returned && returned._id) {
+                    order.sheetId = returned._id;
+                }
+                showNotification('تم حفظ الطلب تلقائياً في Google Sheets', 'success');
+                return returned;
+            } catch (e) {
+                console.error('خطأ في POST Sheety:', e);
+                showNotification('خطأ في الاتصال بخدمة Google Sheets', 'error');
+                return null;
+            }
+        }
+
+        // PUT update order to Sheety (tries to resolve sheetId if missing)
+        async function putOrderToSheet(order) {
+            try {
+                let sheetId = order.sheetId;
+                if (!sheetId) {
+                    // try to find by orderNumber
+                    const listRes = await fetch(SHEETY_BASE);
+                    if (listRes.ok) {
+                        const listData = await listRes.json();
+                        const found = (listData.orders || []).find(s => String(s.orderNumber) === String(order.orderNumber));
+                        if (found) {
+                            sheetId = found.id || found._id || null;
+                            order.sheetId = sheetId;
+                        }
+                    }
+                }
+                if (!sheetId) {
+                    // If we cannot find sheet id, fallback to POST (create new row)
+                    return await postOrderToSheet(order);
+                }
+                const payload = { order: mapOrderToSheet(order) };
+                const url = `${SHEETY_BASE}/${sheetId}`;
+                const res = await fetch(url, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) {
+                    const txt = await res.text();
+                    console.error('PUT Sheety error:', txt);
+                    showNotification('فشل في تحديث السجل في Google Sheets', 'error');
+                    return null;
+                }
+                const data = await res.json();
+                showNotification('تم تحديث السجل تلقائياً في Google Sheets', 'success');
+                return data.order || data;
+            } catch (e) {
+                console.error('خطأ في PUT Sheety:', e);
+                showNotification('خطأ في الاتصال بخدمة Google Sheets', 'error');
+                return null;
+            }
+        }
+
+        // Tab management
+        function showTab(tabName) {
+            // Check if user has permission to access this tab
+            if (currentUser && currentUser.role === 'user' && tabName === 'search') {
+                showNotification('ليس لديك صلاحية للوصول إلى هذا القسم', 'error');
+                return;
+            }
+            
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('text-blue-400', 'active');
+                btn.classList.add('text-gray-400');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.remove('hidden');
+            const activeBtn = document.getElementById('tab-' + tabName);
+            if (activeBtn) {
+                activeBtn.classList.add('text-blue-400', 'active');
+                activeBtn.classList.remove('text-gray-400');
+            }
+        }
+
+        // Filter orders by current month only
+        function filterOrdersByCurrentMonth(orders) {
+            const today = new Date();
+            const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            const endDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+            
+            return orders.filter(order => {
+                // Always use order date (تاريخ فتح الطلب) for filtering - if not available, use visit date
+                let orderDateStr = order.orderDate;
+                if (!orderDateStr) {
+                    orderDateStr = order.visitDate;
+                }
+                if (!orderDateStr) return false;
+                
+                // Handle different date formats
+                let orderDate;
+                
+                // If it's in YYYY-MM-DD format (from input)
+                if (orderDateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    orderDate = new Date(orderDateStr);
+                }
+                // If it's in DD-MM-YYYY format (stored format)
+                else if (orderDateStr.match(/^\d{2}-\d{2}-\d{4}$/)) {
+                    const [day, month, year] = orderDateStr.split('-');
+                    orderDate = new Date(year, month - 1, day);
+                }
+                else {
+                    return false;
+                }
+                
+                return orderDate >= startDate && orderDate < endDate;
+            });
+        }
+
+        // Update dashboard statistics
+        function updateDashboard() {
+            // Filter orders for current month only
+            const currentMonthOrders = filterOrdersByCurrentMonth(orders);
+            
+            // Update current month display
+            const today = new Date();
+            const monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 
+                               'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+            const currentMonthName = monthNames[today.getMonth()];
+            const currentYear = today.getFullYear();
+            document.getElementById('current-month-display').textContent = `${currentMonthName} ${currentYear}`;
+            
+            const totalOrders = orders.length;
+            const paidOrders = orders.filter(o => o.paymentStatus === 'مدفوع كامل').length;
+            const activeOrders = orders.filter(o => o.bookingStatus !== 'مكتمل' && o.bookingStatus !== 'ملغي').length;
+            const completedOrders = orders.filter(o => o.bookingStatus === 'مكتمل' || o.bookingStatus === 'ملغي').length;
+            
+            // Calculate total revenue for current month only (مدفوع كامل)
+            const totalRevenue = currentMonthOrders
+                .filter(o => o.paymentStatus === 'مدفوع كامل' && parseFloat(o.totalAmount) > 0)
+                .reduce((sum, o) => sum + (parseFloat(o.totalAmount) || 0), 0);
+            
+            // Calculate partial revenue for current month only (مدفوع جزئي)
+            const partialRevenue = currentMonthOrders
+                .filter(o => o.paymentStatus === 'مدفوع جزئي' && parseFloat(o.totalAmount) > 0)
+                .reduce((sum, o) => sum + (parseFloat(o.totalAmount) || 0), 0);
+            
+            const ratings = orders.filter(o => o.customerRating > 0);
+            const avgRating = ratings.length > 0 
+                ? (ratings.reduce((sum, o) => sum + o.customerRating, 0) / ratings.length).toFixed(1)
+                : 0;
+
+            document.getElementById('total-orders').textContent = totalOrders;
+            document.getElementById('paid-orders').textContent = paidOrders;
+            document.getElementById('active-orders').textContent = activeOrders;
+            document.getElementById('completed-orders').textContent = completedOrders;
+            document.getElementById('total-revenue').textContent = totalRevenue.toFixed(1) + ' د.ك';
+            document.getElementById('partial-revenue').textContent = partialRevenue.toFixed(1) + ' د.ك';
+            document.getElementById('avg-rating').textContent = avgRating;
+        }
+
+        // Search for customer
+        function searchCustomer() {
+            const customerNumber = document.getElementById('customer-search').value.trim();
+            if (!customerNumber) {
+                showNotification('يرجى إدخال رقم العميل', 'error');
+                return;
+            }
+
+            const customerOrders = orders.filter(o => o.customerNumber === customerNumber);
+            const historyDiv = document.getElementById('customer-history');
+            
+            // Reset pagination
+            currentCustomerPage = 1;
+            
+            // Clear all form fields first
+            document.getElementById('customer-name').value = '';
+            document.getElementById('area').value = '';
+            document.getElementById('block').value = '';
+            document.getElementById('street').value = '';
+            document.getElementById('house-number').value = '';
+            document.getElementById('floor').value = '';
+            document.getElementById('housing-type').value = '';
+            document.getElementById('location-notes').value = '';
+            
+            if (customerOrders.length > 0) {
+                historyDiv.innerHTML = `
+                    <div class="bg-blue-900 bg-opacity-30 border border-blue-700 rounded-xl p-6 mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-lg font-semibold text-blue-300 flex items-center space-x-2 space-x-reverse">
+                                <i class="fas fa-history"></i>
+                                <span>طلبات العميل السابقة (${customerOrders.length})</span>
+                            </h4>
+                            <button onclick="showNewOrderForm()" class="btn-primary text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 space-x-reverse">
+                                <i class="fas fa-plus"></i>
+                                <span>إنشاء طلب جديد</span>
+                            </button>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full table-dark">
+                                <thead>
+                                    <tr class="border-b border-gray-700">
+                                        <th class="text-right py-3 px-4 font-semibold text-gray-300">رقم الطلب</th>
+                                        <th class="text-right py-3 px-4 font-semibold text-gray-300">الخدمة</th>
+                                        <th class="text-right py-3 px-4 font-semibold text-gray-300">التاريخ</th>
+                                        <th class="text-right py-3 px-4 font-semibold text-gray-300">المبلغ</th>
+                                        <th class="text-right py-3 px-4 font-semibold text-gray-300">الحالة</th>
+                                        <th class="text-right py-3 px-4 font-semibold text-gray-300">التقييم</th>
+                                        <th class="text-center py-3 px-4 font-semibold text-gray-300">الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="customer-orders-table">
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination for customer orders -->
+                        <div id="customer-pagination" class="flex items-center justify-between mt-4 pt-4 border-t border-gray-700">
+                            <div class="text-sm text-gray-400">
+                                إجمالي الطلبات: <span id="customer-total-orders" class="font-semibold text-blue-400">0</span>
+                            </div>
+                            <div class="flex items-center space-x-2 space-x-reverse">
+                                <button id="customer-prev-btn" onclick="changeCustomerPage(-1)" 
+                                        class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                                <span id="customer-page-info" class="text-sm text-gray-300 px-3">صفحة 1 من 1</span>
+                                <button id="customer-next-btn" onclick="changeCustomerPage(1)" 
+                                        class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                historyDiv.classList.remove('hidden');
+                
+                // Display customer orders with pagination
+                displayCustomerOrders(customerOrders);
+                
+                // Pre-fill customer info from last order ONLY
+                const lastOrder = customerOrders[customerOrders.length - 1];
+                document.getElementById('customer-name').value = lastOrder.customerName || '';
+                document.getElementById('area').value = lastOrder.area || '';
+                document.getElementById('block').value = lastOrder.block || '';
+                document.getElementById('street').value = lastOrder.street || '';
+                document.getElementById('house-number').value = lastOrder.houseNumber || '';
+                document.getElementById('floor').value = lastOrder.floor || '';
+                document.getElementById('housing-type').value = lastOrder.housingType || '';
+                document.getElementById('location-notes').value = lastOrder.locationNotes || '';
+            } else {
+                historyDiv.innerHTML = `
+                    <div class="bg-blue-900 bg-opacity-20 border border-blue-700 rounded-xl p-6 mb-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3 space-x-reverse">
+                                <i class="fas fa-user-plus text-blue-400 text-xl"></i>
+                                <p class="text-blue-300 font-medium">عميل جديد - لا توجد طلبات سابقة</p>
+                            </div>
+                            <button onclick="showNewOrderForm()" class="btn-primary text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center space-x-2 space-x-reverse">
+                                <i class="fas fa-plus"></i>
+                                <span>إنشاء طلب جديد</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                historyDiv.classList.remove('hidden');
+                
+                // For new customers, keep all fields empty
+            }
+
+            // Set customer number and order number for both cases
+            document.getElementById('customer-number').value = customerNumber;
+            document.getElementById('order-number').value = nextOrderNumber;
+            
+            // Set current date as order date
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('order-date').value = today;
+        }
+
+        // Handle new order form submission
+        document.getElementById('new-order-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Get service type (handle "other" option)
+            let serviceType = document.getElementById('service-type').value;
+            if (serviceType === 'أخرى') {
+                serviceType = document.getElementById('other-service').value;
+            }
+            
+            // Get housing type (handle "other" option)
+            let housingType = document.getElementById('housing-type').value;
+            if (housingType === 'أخرى') {
+                housingType = document.getElementById('other-housing').value;
+            }
+            
+            const newOrder = {
+                orderNumber: document.getElementById('order-number').value,
+                orderDate: document.getElementById('order-date').value,
+                customerNumber: document.getElementById('customer-number').value,
+                customerName: document.getElementById('customer-name').value,
+                area: document.getElementById('area').value,
+                block: document.getElementById('block').value,
+                street: document.getElementById('street').value,
+                houseNumber: document.getElementById('house-number').value,
+                floor: document.getElementById('floor').value,
+                housingType: housingType,
+                locationNotes: document.getElementById('location-notes').value,
+                serviceType: serviceType,
+                visitDate: document.getElementById('visit-date').value,
+                visitTime: document.getElementById('visit-time').value,
+                cleaningDate: '',
+                cleaningTime: '',
+                paymentMethod: document.getElementById('payment-method').value,
+                totalAmount: 0,
+                paymentStatus: 'غير مدفوع',
+                bookingStatus: 'معاينة',
+                departureTime: '',
+                customerNotes: '',
+                teamNotes: '',
+                customerRating: 0,
+                ratingNotes: '',
+                cancellationReason: '',
+                sheetId: null
+            };
+
+            // Save locally first so UI updates quickly
+            orders.push(newOrder);
+            nextOrderNumber++;
+            
+            showNotification('تم إضافة الطلب محلياً! الآن يتم حفظه تلقائياً في Google Sheets...', 'success');
+            
+            // Reset form
+            document.getElementById('new-order-form').reset();
+            document.getElementById('add-order-form').classList.add('hidden');
+            document.getElementById('customer-history').classList.add('hidden');
+            document.getElementById('customer-search').value = '';
+            document.getElementById('other-service-div').classList.add('hidden');
+            document.getElementById('other-housing-div').classList.add('hidden');
+            
+            updateDashboard();
+            displayActiveOrders();
+            
+            // POST to Sheety automatically
+            await postOrderToSheet(newOrder);
+        });
+
+        // Display active orders
+        function displayActiveOrders() {
+            // Only show orders that are NOT completed or cancelled
+            const activeOrders = orders.filter(o => {
+                const status = o.bookingStatus;
+                return status !== 'مكتمل' && status !== 'ملغي';
+            });
+            
+            const tableBody = document.getElementById('active-orders-table');
+            const noOrdersDiv = document.getElementById('no-active-orders');
+            
+            if (activeOrders.length === 0) {
+                tableBody.innerHTML = '';
+                noOrdersDiv.classList.remove('hidden');
+                return;
+            }
+
+            noOrdersDiv.classList.add('hidden');
+            tableBody.innerHTML = activeOrders.map(order => createActiveOrderRow(order)).join('');
+        }
+
+        // Display completed orders
+        function displayCompletedOrders() {
+            let completedOrders = getFilteredCompletedOrders();
+            
+            const tableBody = document.getElementById('completed-orders-table');
+            const noOrdersDiv = document.getElementById('no-completed-orders');
+            const paginationDiv = document.getElementById('completed-pagination');
+            
+            if (completedOrders.length === 0) {
+                tableBody.innerHTML = '';
+                noOrdersDiv.classList.remove('hidden');
+                paginationDiv.classList.add('hidden');
+                return;
+            }
+
+            noOrdersDiv.classList.add('hidden');
+            paginationDiv.classList.remove('hidden');
+            
+            // Reset to first page if current page is beyond available pages
+            const totalPages = Math.ceil(completedOrders.length / ordersPerPage);
+            if (currentCompletedPage > totalPages) {
+                currentCompletedPage = 1;
+            }
+            
+            // Calculate pagination
+            const startIndex = (currentCompletedPage - 1) * ordersPerPage;
+            const endIndex = startIndex + ordersPerPage;
+            const paginatedOrders = completedOrders.slice(startIndex, endIndex);
+            
+            // Update table
+            tableBody.innerHTML = paginatedOrders.map(order => createCompletedOrderRow(order)).join('');
+            
+            // Update pagination info
+            document.getElementById('completed-total-orders').textContent = completedOrders.length;
+            document.getElementById('completed-page-info').textContent = `صفحة ${currentCompletedPage} من ${totalPages}`;
+            
+            // Update pagination buttons
+            const prevBtn = document.getElementById('completed-prev-btn');
+            const nextBtn = document.getElementById('completed-next-btn');
+            
+            prevBtn.disabled = currentCompletedPage === 1;
+            nextBtn.disabled = currentCompletedPage === totalPages;
+            
+            if (prevBtn.disabled) {
+                prevBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                prevBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            
+            if (nextBtn.disabled) {
+                nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                nextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // Get filtered completed orders
+        function getFilteredCompletedOrders() {
+            let completedOrders = orders.filter(o => o.bookingStatus === 'مكتمل' || o.bookingStatus === 'ملغي');
+            
+            // Apply column filters
+            Object.keys(currentColumnFilter).forEach(column => {
+                const filterValue = currentColumnFilter[column];
+                
+                switch (column) {
+                    case 'orderNumber':
+                        // Smart search for order number - partial match
+                        completedOrders = completedOrders.filter(o => 
+                            o.orderNumber.toString().includes(filterValue.toString())
+                        );
+                        break;
+                    case 'customer':
+                        // Smart search for customer name - partial match, case insensitive
+                        completedOrders = completedOrders.filter(o => 
+                            o.customerName.toLowerCase().includes(filterValue.toLowerCase())
+                        );
+                        break;
+                    case 'service':
+                        // Smart search for service - partial match, case insensitive
+                        completedOrders = completedOrders.filter(o => 
+                            o.serviceType.toLowerCase().includes(filterValue.toLowerCase())
+                        );
+                        break;
+                    case 'date':
+                        // Exact date match
+                        completedOrders = completedOrders.filter(o => 
+                            (o.orderDate || o.visitDate) === filterValue
+                        );
+                        break;
+                    case 'amount':
+                        // Smart search for amount - partial match
+                        completedOrders = completedOrders.filter(o => 
+                            o.totalAmount.toString().includes(filterValue.toString())
+                        );
+                        break;
+                    case 'status':
+                        // Exact status match
+                        completedOrders = completedOrders.filter(o => 
+                            o.bookingStatus === filterValue
+                        );
+                        break;
+                    case 'rating':
+                        // Exact rating match
+                        completedOrders = completedOrders.filter(o => 
+                            o.customerRating.toString() === filterValue.toString()
+                        );
+                        break;
+                }
+            });
+            
+            // Apply quick filter if any
+            if (currentQuickFilter === 'مكتمل') {
+                completedOrders = completedOrders.filter(o => o.bookingStatus === 'مكتمل');
+            } else if (currentQuickFilter === 'ملغي') {
+                completedOrders = completedOrders.filter(o => o.bookingStatus === 'ملغي');
+            }
+
+            // Apply advanced filters
+            if (advancedFilters.services.length > 0) {
+                completedOrders = completedOrders.filter(o => advancedFilters.services.includes(o.serviceType));
+            }
+            if (advancedFilters.customers.length > 0) {
+                completedOrders = completedOrders.filter(o => advancedFilters.customers.includes(o.customerName));
+            }
+            if (advancedFilters.amountMin !== null) {
+                completedOrders = completedOrders.filter(o => Number(o.totalAmount || 0) >= advancedFilters.amountMin);
+            }
+            if (advancedFilters.amountMax !== null) {
+                completedOrders = completedOrders.filter(o => Number(o.totalAmount || 0) <= advancedFilters.amountMax);
+            }
+            if (advancedFilters.dateFrom) {
+                completedOrders = completedOrders.filter(o => {
+                    const d = o.orderDate || o.visitDate;
+                    if (!d) return false;
+                    const converted = convertToInputDate(d);
+                    return converted >= advancedFilters.dateFrom;
+                });
+            }
+            if (advancedFilters.dateTo) {
+                completedOrders = completedOrders.filter(o => {
+                    const d = o.orderDate || o.visitDate;
+                    if (!d) return false;
+                    const converted = convertToInputDate(d);
+                    return converted <= advancedFilters.dateTo;
+                });
+            }
+            if (advancedFilters.ratings.length > 0) {
+                completedOrders = completedOrders.filter(o => advancedFilters.ratings.includes(Number(o.customerRating || 0)));
+            }
+            if (advancedFilters.statuses.length > 0) {
+                completedOrders = completedOrders.filter(o => advancedFilters.statuses.includes(o.bookingStatus));
+            }
+            
+            // ترتيب حسب NUMORDER (orderNumber) رقمي نزولاً — الأكبر أولاً
+            completedOrders.sort((a,b)=> (parseInt(b.orderNumber,10)||0) - (parseInt(a.orderNumber,10)||0));
+            
+            return completedOrders;
+        }
+
+        // Create active order row
+        function createActiveOrderRow(order) {
+            const statusClass = getStatusClass(order.bookingStatus);
+            const paymentClass = getPaymentStatusClass(order.paymentStatus);
+            
+            return `
+                <tr class="border-b border-gray-700 hover:bg-gray-800 hover:bg-opacity-30 transition-colors">
+                    <td class="py-4 px-4">
+                        <span class="font-semibold text-blue-400">#${order.orderNumber}</span>
+                    </td>
+                    <td class="py-4 px-4">
+                        <div>
+                            <div class="font-medium text-gray-200">${order.customerName}</div>
+                            <div class="text-sm text-gray-400">${order.customerNumber}</div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4">
+                        <span class="text-gray-300">${order.serviceType}</span>
+                    </td>
+                    <td class="py-4 px-4">
+                        <div>
+                            <div class="text-gray-200">${order.orderDate || order.visitDate}</div>
+                            <div class="text-sm text-gray-400">معاينة: ${order.visitDate} ${order.visitTime}</div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4">
+                        <span class="font-semibold text-blue-400">${order.bookingStatus === 'معاينة' ? '-' : order.totalAmount + ' د.ك'}</span>
+                    </td>
+                    <td class="py-4 px-4">
+                        <span class="status-badge ${statusClass}">
+                            ${order.bookingStatus}
+                        </span>
+                    </td>
+                    <td class="py-4 px-4">
+                        ${order.bookingStatus === 'موافق' ? `
+                            <div>
+                                <span class="status-badge ${paymentClass}">
+                                    ${order.paymentStatus}
+                                </span>
+                                ${order.paymentMethod ? `<div class="text-xs text-gray-400 mt-1">طريقة: ${order.paymentMethod}</div>` : ''}
+                                <div class="text-xs text-blue-400 mt-1">تنظيف: ${order.cleaningDate || order.visitDate} ${order.cleaningTime || order.visitTime}</div>
+                            </div>
+                        ` : order.bookingStatus === 'مكتمل' ? `
+                            <div>
+                                <span class="status-badge ${paymentClass}">
+                                    ${order.paymentStatus}
+                                </span>
+                                ${order.paymentMethod ? `<div class="text-xs text-gray-400 mt-1">طريقة: ${order.paymentMethod}</div>` : ''}
+                                <div class="text-xs text-blue-400 mt-1">تنظيف: ${order.cleaningDate || order.visitDate} ${order.cleaningTime || order.visitTime}</div>
+                                ${order.ratingNotes ? `<div class="text-xs text-green-400 mt-1">تقييم: ${order.ratingNotes}</div>` : ''}
+                            </div>
+                        ` : `
+                            <span class="text-gray-500">-</span>
+                        `}
+                    </td>
+                    <td class="py-4 px-4 text-center">
+                        <button onclick="manageOrder('${order.orderNumber}')" 
+                                class="btn-primary text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1 space-x-reverse mx-auto admin-only">
+                            <i class="fas fa-cog text-xs"></i>
+                            <span>إدارة</span>
+                        </button>
+                        <button onclick="viewOrderDetails('${order.orderNumber}')" 
+                                class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1 space-x-reverse mx-auto user-only" style="display: none;">
+                            <i class="fas fa-eye text-xs"></i>
+                            <span>عرض</span>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Create completed order row
+        function createCompletedOrderRow(order) {
+            const statusClass = order.bookingStatus === 'مكتمل' ? 'status-completed' : 'status-cancelled';
+            const ratingStars = order.customerRating > 0 ? '★'.repeat(order.customerRating) + '☆'.repeat(5-order.customerRating) : 'لا يوجد';
+            
+            return `
+                <tr class="border-b border-gray-700 hover:bg-gray-800 hover:bg-opacity-30 transition-colors">
+                    <td class="py-4 px-4">
+                        <span class="font-semibold text-blue-400">#${order.orderNumber}</span>
+                    </td>
+                    <td class="py-4 px-4">
+                        <div>
+                            <div class="font-medium text-gray-200">${order.customerName}</div>
+                            <div class="text-sm text-gray-400">${order.customerNumber}</div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4">
+                        <span class="text-gray-300">${order.serviceType}</span>
+                    </td>
+                    <td class="py-4 px-4">
+                        <div>
+                            <div class="text-gray-200">${order.orderDate || order.visitDate}</div>
+                            <div class="text-sm text-gray-400">معاينة: ${order.visitDate} ${order.visitTime}</div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4">
+                        <span class="font-semibold text-blue-400">${order.totalAmount} د.ك</span>
+                    </td>
+                    <td class="py-4 px-4">
+                        <span class="status-badge ${statusClass}">
+                            ${order.bookingStatus}
+                        </span>
+                    </td>
+                    <td class="py-4 px-4">
+                        <div class="text-blue-400 text-sm">
+                            ${ratingStars}
+                        </div>
+                    </td>
+                    <td class="py-4 px-4 text-center">
+                        <button onclick="manageOrder('${order.orderNumber}')" 
+                                class="btn-primary text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1 space-x-reverse mx-auto admin-only">
+                            <i class="fas fa-cog text-xs"></i>
+                            <span>إدارة</span>
+                        </button>
+                        <button onclick="viewOrderDetails('${order.orderNumber}')" 
+                                class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1 space-x-reverse mx-auto user-only" style="display: none;">
+                            <i class="fas fa-eye text-xs"></i>
+                            <span>عرض</span>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Create order card HTML
+        function createOrderCard(order) {
+            const statusClass = getStatusClass(order.bookingStatus);
+            const paymentClass = getPaymentStatusClass(order.paymentStatus);
+            
+            return `
+                <div class="order-card rounded-xl p-6 shadow-sm hover:shadow-lg transition-all duration-300">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h4 class="text-xl font-bold text-white mb-2">طلب #${order.orderNumber}</h4>
+                            <div class="flex items-center space-x-2 space-x-reverse text-gray-300 mb-1">
+                                <i class="fas fa-user text-sm text-blue-400"></i>
+                                <span>${order.customerName} - ${order.customerNumber}</span>
+                            </div>
+                            <div class="flex items-center space-x-2 space-x-reverse text-gray-300">
+                                <i class="fas fa-broom text-sm text-blue-400"></i>
+                                <span>${order.serviceType}</span>
+                            </div>
+                        </div>
+                        <div class="text-left space-y-2">
+                            <span class="status-badge ${statusClass} block">
+                                ${order.bookingStatus}
+                            </span>
+                            <span class="status-badge ${paymentClass}">
+                                ${order.paymentStatus}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm mb-6">
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <i class="fas fa-calendar text-blue-400"></i>
+                            <div>
+                                <span class="text-gray-400 block">التاريخ</span>
+                                <span class="font-medium text-gray-200">${order.visitDate}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <i class="fas fa-clock text-blue-400"></i>
+                            <div>
+                                <span class="text-gray-400 block">الوقت</span>
+                                <span class="font-medium text-gray-200">${order.visitTime}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <i class="fas fa-map-marker-alt text-blue-400"></i>
+                            <div>
+                                <span class="text-gray-400 block">المنطقة</span>
+                                <span class="font-medium text-gray-200">${order.area}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <i class="fas fa-money-bill text-blue-400"></i>
+                            <div>
+                                <span class="text-gray-400 block">المبلغ</span>
+                                <span class="font-medium text-gray-200">${order.totalAmount} د.ك</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${order.customerRating > 0 ? `
+                        <div class="mb-4 p-3 bg-gray-800 bg-opacity-50 rounded-lg border border-gray-700">
+                            <div class="flex items-center space-x-2 space-x-reverse">
+                                <i class="fas fa-star text-blue-400"></i>
+                                <span class="text-gray-300 text-sm">التقييم:</span>
+                                <span class="text-blue-400 font-medium">${'★'.repeat(order.customerRating)}${'☆'.repeat(5-order.customerRating)}</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="flex gap-3">
+                        <button onclick="manageOrder('${order.orderNumber}')" 
+                                class="flex-1 btn-primary text-white px-4 py-3 rounded-lg text-sm font-medium flex items-center justify-center space-x-2 space-x-reverse">
+                            <i class="fas fa-cog"></i>
+                            <span>إدارة الطلب</span>
+                        </button>
+                        <button onclick="postOrderToSheet(order)" 
+                                class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center space-x-2 space-x-reverse border border-gray-600">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>حفظ إلى Google Sheets</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Get status class for styling
+        function getStatusClass(status) {
+            const classes = {
+                'معاينة': 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+                'موافق': 'bg-green-100 text-green-800 border border-green-200',
+                'غير مدفوع': 'bg-red-100 text-red-800 border border-red-200',
+                'مدفوع جزئي': 'bg-orange-100 text-orange-800 border border-orange-200',
+                'مكتمل': 'bg-purple-100 text-purple-800 border border-purple-200',
+                'ملغي': 'bg-gray-100 text-gray-800 border border-gray-200'
+            };
+            return classes[status] || 'bg-gray-100 text-gray-800 border border-gray-200';
+        }
+
+        // Get payment status class
+        function getPaymentStatusClass(status) {
+            const classes = {
+                'مدفوع كامل': 'bg-green-100 text-green-800 border border-green-200',
+                'مدفوع جزئي': 'bg-orange-100 text-orange-800 border border-orange-200',
+                'غير مدفوع': 'bg-red-100 text-red-800 border border-red-200'
+            };
+            return classes[status] || 'bg-gray-100 text-gray-800 border border-gray-200';
+        }
+
+        // Manage order (open modal)
+        function manageOrder(orderNumber) {
+            const order = orders.find(o => o.orderNumber == orderNumber);
+            if (!order) return;
+
+            const modal = document.getElementById('order-modal');
+            const content = document.getElementById('modal-content');
+            
+            const isCompleted = order.bookingStatus === 'مكتمل';
+            const isReadOnly = isCompleted ? 'disabled' : '';
+            const readOnlyClass = isCompleted ? 'opacity-60 cursor-not-allowed' : '';
+            
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-gradient-to-r from-blue-900 to-blue-800 bg-opacity-30 p-6 rounded-xl border border-blue-700">
+                        <h4 class="font-bold text-lg mb-4 text-blue-300">معلومات الطلب #${order.orderNumber}</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-gray-200">
+                            <div><strong class="text-blue-400">العميل:</strong> ${order.customerName} (${order.customerNumber})</div>
+                            <div><strong class="text-blue-400">الخدمة:</strong> ${order.serviceType}</div>
+                            ${order.orderDate ? `<div><strong class="text-blue-400">تاريخ فتح الطلب:</strong> ${order.orderDate}</div>` : ''}
+                            <div><strong class="text-blue-400">تاريخ المعاينة:</strong> ${order.visitDate} - ${order.visitTime}</div>
+                            ${order.cleaningDate ? `<div><strong class="text-blue-400">تاريخ التنظيف:</strong> ${order.cleaningDate} - ${order.cleaningTime || order.visitTime}</div>` : ''}
+                            ${order.area ? `<div><strong class="text-blue-400">المنطقة:</strong> ${order.area}</div>` : ''}
+                            ${order.block ? `<div><strong class="text-blue-400">القطعه:</strong> ${order.block}</div>` : ''}
+                            ${order.street ? `<div><strong class="text-blue-400">الشارع:</strong> ${order.street}</div>` : ''}
+                            ${order.houseNumber ? `<div><strong class="text-blue-400">رقم المنزل:</strong> ${order.houseNumber}</div>` : ''}
+                            ${order.floor ? `<div><strong class="text-blue-400">الدور:</strong> ${order.floor}</div>` : ''}
+                            ${order.housingType ? `<div><strong class="text-blue-400">نوع السكن:</strong> ${order.housingType}</div>` : ''}
+                            ${order.locationNotes ? `<div class="md:col-span-2 lg:col-span-3"><strong class="text-blue-400">ملاحظات الموقع:</strong> ${order.locationNotes}</div>` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-gray-300 font-semibold mb-3">حالة الحجز</label>
+                            <select id="modal-booking-status" class="dark-select w-full px-4 py-3 rounded-xl ${readOnlyClass}" ${isReadOnly}>
+                                <option value="معاينة" ${order.bookingStatus === 'معاينة' ? 'selected' : ''}>معاينة</option>
+                                <option value="موافق" ${order.bookingStatus === 'موافق' ? 'selected' : ''}>موافق</option>
+                                <option value="مكتمل" ${order.bookingStatus === 'مكتمل' ? 'selected' : ''}>مكتمل</option>
+                                <option value="ملغي" ${order.bookingStatus === 'ملغي' ? 'selected' : ''}>ملغي</option>
+                            </select>
+                        </div>
+                        
+                        <div id="payment-method-div" class="${order.bookingStatus === 'موافق' || order.bookingStatus === 'مكتمل' ? '' : 'hidden'}">
+                            <label class="block text-gray-300 font-semibold mb-3">طريقة الدفع</label>
+                            <select id="modal-payment-method" class="dark-select w-full px-4 py-3 rounded-xl ${readOnlyClass}" ${isReadOnly}>
+                                <option value="">اختر طريقة الدفع</option>
+                                <option value="كاش" ${order.paymentMethod === 'كاش' ? 'selected' : ''}>كاش</option>
+                                <option value="رابط upay" ${order.paymentMethod === 'رابط upay' ? 'selected' : ''}>رابط upay</option>
+                                <option value="شيك" ${order.paymentMethod === 'شيك' ? 'selected' : ''}>شيك</option>
+                            </select>
+                        </div>
+                        
+                        <div id="payment-status-div" class="${order.bookingStatus === 'ملغي' ? 'hidden' : ''}">
+                            <label class="block text-gray-300 font-semibold mb-3">حالة الدفع</label>
+                            <select id="modal-payment-status" class="dark-select w-full px-4 py-3 rounded-xl ${readOnlyClass}" ${isReadOnly}>
+                                <option value="غير مدفوع" ${order.paymentStatus === 'غير مدفوع' ? 'selected' : ''}>غير مدفوع</option>
+                                <option value="مدفوع جزئي" ${order.paymentStatus === 'مدفوع جزئي' ? 'selected' : ''}>مدفوع جزئي</option>
+                                <option value="مدفوع كامل" ${order.paymentStatus === 'مدفوع كامل' ? 'selected' : ''}>مدفوع كامل</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-300 font-semibold mb-3" id="amount-label">
+                                ${order.bookingStatus === 'ملغي' ? 'المبلغ المقترح (د.ك)' : 
+                                  order.bookingStatus === 'موافق' ? 'المبلغ المقترح (د.ك)' : 'المبلغ النهائي (د.ك)'}
+                            </label>
+                            <input type="number" id="modal-suggested-amount" step="0.1" value="${order.totalAmount}" 
+                                   class="dark-input w-full px-4 py-3 rounded-xl ${readOnlyClass}" ${isReadOnly} oninput="calculateFinalAmount()">
+                        </div>
+                        
+                        <div id="discount-div" class="${order.bookingStatus === 'موافق' ? '' : 'hidden'}">
+                            <label class="block text-gray-300 font-semibold mb-3">الخصم (د.ك)</label>
+                            <input type="number" id="modal-discount" step="0.1" value="0" 
+                                   class="dark-input w-full px-4 py-3 rounded-xl ${readOnlyClass}" ${isReadOnly}
+                                   oninput="calculateFinalAmount()">
+                        </div>
+                        
+                        <div id="final-amount-div" class="${order.bookingStatus === 'موافق' ? '' : 'hidden'}">
+                            <label class="block text-gray-300 font-semibold mb-3">المبلغ النهائي (د.ك)</label>
+                            <input type="number" id="modal-final-amount" step="0.1" value="${order.totalAmount}" 
+                                   class="dark-input w-full px-4 py-3 rounded-xl bg-gray-800 ${readOnlyClass}" readonly>
+                        </div>
+                        
+                        <div id="cleaning-date-div" class="${['موافق', 'مكتمل'].includes(order.bookingStatus) ? '' : 'hidden'}">
+                            <label class="block text-gray-300 font-semibold mb-3">تاريخ التنظيف</label>
+                            <input type="date" id="modal-cleaning-date" value="${convertToInputDate(order.cleaningDate || order.visitDate)}" 
+                                   class="dark-input w-full px-4 py-3 rounded-xl ${readOnlyClass}" ${isReadOnly}>
+                        </div>
+                        
+                        <div id="cleaning-time-div" class="${['موافق', 'مكتمل'].includes(order.bookingStatus) ? '' : 'hidden'}">
+                            <label class="block text-gray-300 font-semibold mb-3">وقت التنظيف</label>
+                            <input type="time" id="modal-cleaning-time" value="${order.cleaningTime || order.visitTime}" 
+                                   class="dark-input w-full px-4 py-3 rounded-xl ${readOnlyClass}" ${isReadOnly}>
+                        </div>
+
+                    </div>
+                    
+                    <div id="cancellation-reason-div" class="${order.bookingStatus === 'ملغي' ? '' : 'hidden'}">
+                        <label class="block text-gray-300 font-semibold mb-3">سبب الإلغاء</label>
+                        <select id="modal-cancellation-reason" class="dark-select w-full px-4 py-3 rounded-xl mb-3">
+                            <option value="">اختر سبب الإلغاء</option>
+                            <option value="عدم توفر العميل">عدم توفر العميل</option>
+                            <option value="تغيير الموعد">تغيير الموعد</option>
+                            <option value="عدم الرضا عن السعر">عدم الرضا عن السعر</option>
+                            <option value="أخرى">أخرى</option>
+                        </select>
+                        <input type="text" id="modal-other-reason" placeholder="اكتب السبب..." 
+                               class="dark-input w-full px-4 py-3 rounded-xl hidden">
+                    </div>
+                    
+${order.cancellationReason ? `
+    <div id="cancellation-reason-block" class="bg-red-900 bg-opacity-30 border border-red-600 rounded-xl p-4">
+        <h5 class="font-semibold text-red-300 mb-2 flex items-center space-x-2 space-x-reverse">
+            <i class="fas fa-times-circle text-red-400"></i>
+            <span>سبب الإلغاء</span>
+        </h5>
+        <p id="cancellation-reason-text" class="text-red-200 bg-red-800 bg-opacity-40 p-3 rounded-lg border border-red-600">${order.cancellationReason}</p>
+    </div>
+` : ''}
+                    
+                    <div id="rating-div" class="${order.bookingStatus === 'مكتمل' ? '' : 'hidden'}">
+                        <label class="block text-gray-300 font-semibold mb-3">تقييم العميل</label>
+                        <div class="flex gap-2 mb-3">
+                            ${[1,2,3,4,5].map(i => `
+                                <button type="button" onclick="setRating(${i})" 
+                                        class="rating-star text-3xl transition-colors ${order.customerRating >= i ? 'text-yellow-500' : 'text-gray-500'}" 
+                                        data-rating="${i}">★</button>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div id="rating-notes-div" class="${order.bookingStatus === 'مكتمل' ? '' : 'hidden'}">
+                        <label class="block text-gray-300 font-semibold mb-3">ملاحظات التقييم</label>
+                        <textarea id="modal-rating-notes" placeholder="ملاحظات التقييم..." 
+                                  class="dark-input w-full px-4 py-3 rounded-xl ${readOnlyClass}" rows="2" ${isReadOnly}>${order.ratingNotes || ''}</textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-3">ملاحظات الفريق</label>
+                        <textarea id="modal-team-notes" class="dark-input w-full px-4 py-3 rounded-xl ${readOnlyClass}" 
+                                  rows="3" ${isReadOnly}>${order.teamNotes}</textarea>
+                    </div>
+                    
+                    ${isCompleted && order.ratingNotes ? `
+                        <div>
+                            <label class="block text-gray-300 font-semibold mb-3">ملاحظات التقييم</label>
+                            <div class="bg-green-900 bg-opacity-20 border border-green-700 rounded-xl p-4">
+                                <div class="flex items-center space-x-2 space-x-reverse mb-2">
+                                    <i class="fas fa-star text-yellow-500"></i>
+                                    <span class="text-green-300 font-medium">تقييم العميل: ${'★'.repeat(order.customerRating)}${'☆'.repeat(5-order.customerRating)}</span>
+                                </div>
+                                <p class="text-green-200">${order.ratingNotes}</p>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="flex gap-4 pt-4">
+                        ${!isCompleted ? `
+                            <button id="modal-save-btn" onclick="updateOrder('${order.orderNumber}')" 
+                                    class="flex-1 btn-primary text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 space-x-reverse">
+                                <i class="fas fa-save"></i>
+                                <span>حفظ التغييرات</span>
+                            </button>
+                        ` : `
+                            <div class="flex-1 bg-gray-800 text-gray-400 py-3 px-6 rounded-xl font-semibold flex items-center justify-center space-x-2 space-x-reverse border border-gray-700">
+                                <i class="fas fa-lock"></i>
+                                <span>طلب مكتمل - للعرض فقط</span>
+                            </div>
+                        `}
+                        <button onclick="closeModal()" 
+                                class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold transition-colors flex items-center justify-center space-x-2 space-x-reverse border border-gray-600">
+                            <i class="fas fa-times"></i>
+                            <span>إغلاق</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // Add event listeners
+            document.getElementById('modal-booking-status').addEventListener('change', function() {
+                const status = this.value;
+                const cancellationDiv = document.getElementById('cancellation-reason-div');
+                const ratingDiv = document.getElementById('rating-div');
+                const paymentMethodDiv = document.getElementById('payment-method-div');
+                const paymentStatusDiv = document.getElementById('payment-status-div');
+                const discountDiv = document.getElementById('discount-div');
+                const finalAmountDiv = document.getElementById('final-amount-div');
+                const cleaningDateDiv = document.getElementById('cleaning-date-div');
+                const cleaningTimeDiv = document.getElementById('cleaning-time-div');
+                const amountLabel = document.getElementById('amount-label');
+                
+                const ratingNotesDiv = document.getElementById('rating-notes-div');
+                
+                if (status === 'ملغي') {
+                    cancellationDiv.classList.remove('hidden');
+                    ratingDiv.classList.add('hidden');
+                    ratingNotesDiv.classList.add('hidden');
+                    paymentStatusDiv.classList.add('hidden');
+                    paymentMethodDiv.classList.add('hidden');
+                    discountDiv.classList.add('hidden');
+                    finalAmountDiv.classList.add('hidden');
+                    cleaningDateDiv.classList.add('hidden');
+                    cleaningTimeDiv.classList.add('hidden');
+                    amountLabel.textContent = 'المبلغ المقترح (د.ك)';
+                } else if (status === 'مكتمل') {
+                    cancellationDiv.classList.add('hidden');
+                    ratingDiv.classList.remove('hidden');
+                    ratingNotesDiv.classList.remove('hidden');
+                    paymentStatusDiv.classList.remove('hidden');
+                    paymentMethodDiv.classList.remove('hidden');
+                    discountDiv.classList.remove('hidden');
+                    finalAmountDiv.classList.remove('hidden');
+                    cleaningDateDiv.classList.remove('hidden');
+                    cleaningTimeDiv.classList.remove('hidden');
+                    amountLabel.textContent = 'المبلغ المقترح (د.ك)';
+                    calculateFinalAmount();
+                } else if (status === 'موافق') {
+                    cancellationDiv.classList.add('hidden');
+                    ratingDiv.classList.add('hidden');
+                    ratingNotesDiv.classList.add('hidden');
+                    paymentStatusDiv.classList.remove('hidden');
+                    paymentMethodDiv.classList.remove('hidden');
+                    discountDiv.classList.remove('hidden');
+                    finalAmountDiv.classList.remove('hidden');
+                    cleaningDateDiv.classList.remove('hidden');
+                    cleaningTimeDiv.classList.remove('hidden');
+                    amountLabel.textContent = 'المبلغ المقترح (د.ك)';
+                    calculateFinalAmount();
+                } else { // معاينة
+                    cancellationDiv.classList.add('hidden');
+                    ratingDiv.classList.add('hidden');
+                    ratingNotesDiv.classList.add('hidden');
+                    paymentStatusDiv.classList.add('hidden');
+                    paymentMethodDiv.classList.add('hidden');
+                    discountDiv.classList.add('hidden');
+                    finalAmountDiv.classList.add('hidden');
+                    cleaningDateDiv.classList.add('hidden');
+                    cleaningTimeDiv.classList.add('hidden');
+                    amountLabel.textContent = 'المبلغ النهائي (د.ك)';
+                }
+            });
+            
+            const modalCancelReason = document.getElementById('modal-cancellation-reason');
+            if (modalCancelReason) {
+                modalCancelReason.addEventListener('change', function() {
+                    const otherInput = document.getElementById('modal-other-reason');
+                    if (this.value === 'أخرى') {
+                        otherInput.classList.remove('hidden');
+                    } else {
+                        otherInput.classList.add('hidden');
+                    }
+                });
+            }
+
+            // ربط تحديث مباشر لحقل المبلغ المقترح والخصم
+            const _suggested = document.getElementById('modal-suggested-amount');
+            const _discount = document.getElementById('modal-discount');
+            if (_suggested) _suggested.addEventListener('input', calculateFinalAmount);
+            if (_discount) _discount.addEventListener('input', calculateFinalAmount);
+
+            // احسب مرة أولى عند فتح المودال لعرض القيمة الحالية (أو لتهيئة الحقل النهائي)
+            calculateFinalAmount();
+        }
+
+        // Calculate final amount
+        function calculateFinalAmount() {
+            const suggestedEl = document.getElementById('modal-suggested-amount');
+            const discountEl = document.getElementById('modal-discount');
+            const finalEl = document.getElementById('modal-final-amount');
+
+            if (!finalEl || !suggestedEl || !discountEl) return;
+
+            const suggestedRaw = String(suggestedEl.value || '').trim();
+            // إذا مسح المستخدم قيمة المبلغ المقترح نمسح الحقل النهائي مباشرة
+            if (suggestedRaw === '') {
+                finalEl.value = '';
+                return;
+            }
+
+            const suggestedAmount = parseFloat(suggestedRaw) || 0;
+            const discountRaw = String(discountEl.value || '').trim();
+            const discount = discountRaw === '' ? 0 : (parseFloat(discountRaw) || 0);
+
+            const finalAmount = suggestedAmount - discount;
+            finalEl.value = isFinite(finalAmount) ? finalAmount.toFixed(1) : '';
+        }
+
+        // Set rating
+        function setRating(rating) {
+            document.querySelectorAll('.rating-star').forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('text-yellow-500');
+                    star.classList.remove('text-gray-300');
+                } else {
+                    star.classList.add('text-gray-300');
+                    star.classList.remove('text-yellow-500');
+                }
+            });
+        }
+
+        // Update order
+        async function updateOrder(orderNumber) {
+            const orderIndex = orders.findIndex(o => o.orderNumber == orderNumber);
+            if (orderIndex === -1) return;
+
+            const bookingStatus = document.getElementById('modal-booking-status').value;
+            const paymentMethod = document.getElementById('modal-payment-method')?.value || '';
+            const paymentStatus = document.getElementById('modal-payment-status')?.value || 'غير مدفوع';
+            const teamNotes = document.getElementById('modal-team-notes')?.value || '';
+            
+            // Get the correct amount based on status
+            let finalAmount;
+            if (bookingStatus === 'موافق') {
+                finalAmount = document.getElementById('modal-final-amount')?.value || document.getElementById('modal-suggested-amount')?.value || 0;
+            } else {
+                finalAmount = document.getElementById('modal-suggested-amount')?.value || 0;
+            }
+            
+            let cancellationReason = '';
+            if (bookingStatus === 'ملغي') {
+                const reason = document.getElementById('modal-cancellation-reason')?.value || '';
+                if (reason === 'أخرى') {
+                    cancellationReason = document.getElementById('modal-other-reason')?.value || '';
+                } else {
+                    cancellationReason = reason;
+                }
+            }
+            
+            let customerRating = 0;
+            let ratingNotes = '';
+            if (bookingStatus === 'مكتمل') {
+                // get selected rating
+                const stars = document.querySelectorAll('.rating-star');
+                let selected = 0;
+                stars.forEach((s) => {
+                    if (s.classList.contains('text-yellow-500')) {
+                        selected = Math.max(selected, parseInt(s.getAttribute('data-rating')));
+                    }
+                });
+                customerRating = selected || 0;
+                ratingNotes = document.getElementById('modal-rating-notes')?.value || '';
+                
+                // require rating before completing
+                if (!customerRating) {
+                    showNotification('الرجاء إدخال تقييم العميل قبل تحويل الطلب إلى مكتمل', 'error');
+                    return;
+                }
+            }
+
+            // Get cleaning date and time
+            const cleaningDate = document.getElementById('modal-cleaning-date')?.value || '';
+            const cleaningTime = document.getElementById('modal-cleaning-time')?.value || '';
+            
+            // Convert date format for storage
+            const formattedCleaningDate = cleaningDate ? formatDate(cleaningDate) : '';
+            
+            // If bookingStatus is 'ملغي' but no cancellation reason, block
+            if (bookingStatus === 'ملغي' && !cancellationReason) {
+                showNotification('الرجاء تحديد سبب الإلغاء وتسجيله', 'error');
+                return;
+            }
+
+            // Update local order object
+            orders[orderIndex] = {
+                ...orders[orderIndex],
+                bookingStatus,
+                paymentMethod: ['موافق', 'مكتمل'].includes(bookingStatus) ? paymentMethod : '',
+                paymentStatus,
+                totalAmount: Number(finalAmount) || 0,
+                cleaningDate: ['موافق', 'مكتمل'].includes(bookingStatus) ? (formattedCleaningDate || orders[orderIndex].visitDate) : '',
+                cleaningTime: ['موافق', 'مكتمل'].includes(bookingStatus) ? (cleaningTime || orders[orderIndex].visitTime) : '',
+                teamNotes: teamNotes,
+                customerRating,
+                ratingNotes: ratingNotes,
+                cancellationReason: cancellationReason,
+                departureTime: bookingStatus === 'مكتمل' ? new Date().toLocaleTimeString('ar-SA', {hour: '2-digit', minute: '2-digit'}) : ''
+            };
+
+            const updatedOrder = orders[orderIndex];
+
+            // Close modal
+            closeModal();
+            updateDashboard();
+            displayActiveOrders();
+            displayCompletedOrders();
+            
+            // Send update to Sheety (automatic)
+            await putOrderToSheet(updatedOrder);
+        }
+
+        // Show new order form
+        function showNewOrderForm() {
+            document.getElementById('add-order-form').classList.remove('hidden');
+            document.getElementById('customer-history').classList.add('hidden');
+        }
+
+        // View order details (read-only)
+        function viewOrderDetails(orderNumber) {
+            const order = orders.find(o => o.orderNumber == orderNumber);
+            if (!order) return;
+
+            const modal = document.getElementById('order-modal');
+            const content = document.getElementById('modal-content');
+            
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-gradient-to-r from-blue-900 to-blue-800 bg-opacity-30 p-6 rounded-xl border border-blue-700">
+                        <h4 class="font-bold text-lg mb-4 text-blue-300">تفاصيل الطلب #${order.orderNumber}</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-gray-200">
+                            <div><strong class="text-blue-400">العميل:</strong> ${order.customerName} (${order.customerNumber})</div>
+                            <div><strong class="text-blue-400">الخدمة:</strong> ${order.serviceType}</div>
+                            ${order.orderDate ? `<div><strong class="text-blue-400">تاريخ فتح الطلب:</strong> ${order.orderDate}</div>` : ''}
+                            <div><strong class="text-blue-400">تاريخ المعاينة:</strong> ${order.visitDate} - ${order.visitTime}</div>
+                            ${order.cleaningDate ? `<div><strong class="text-blue-400">تاريخ التنظيف:</strong> ${order.cleaningDate} - ${order.cleaningTime || order.visitTime}</div>` : ''}
+                            ${order.area ? `<div class="text-blue-400">المنطقة:</strong> ${order.area}</div>` : ''}
+                            ${order.block ? `<div><strong class="text-blue-400">القطعة:</strong> ${order.block}</div>` : ''}
+                            ${order.street ? `<div><strong class="text-blue-400">الشارع:</strong> ${order.street}</div>` : ''}
+                            ${order.houseNumber ? `<div><strong class="text-blue-400">رقم المنزل:</strong> ${order.houseNumber}</div>` : ''}
+                            ${order.floor ? `<div><strong class="text-blue-400">الدور:</strong> ${order.floor}</div>` : ''}
+                            ${order.housingType ? `<div><strong class="text-blue-400">نوع السكن:</strong> ${order.housingType}</div>` : ''}
+                            ${order.paymentMethod ? `<div><strong class="text-blue-400">طريقة الدفع:</strong> ${order.paymentMethod}</div>` : ''}
+                            <div><strong class="text-blue-400">حالة الحجز:</strong> <span class="status-badge ${getStatusClass(order.bookingStatus)}">${order.bookingStatus}</span></div>
+                            <div><strong class="text-blue-400">حالة الدفع:</strong> <span class="status-badge ${getPaymentStatusClass(order.paymentStatus)}">${order.paymentStatus}</span></div>
+                            <div><strong class="text-blue-400">المبلغ:</strong> ${order.totalAmount} د.ك</div>
+                            ${order.customerRating > 0 ? `<div><strong class="text-blue-400">التقييم:</strong> ${'★'.repeat(order.customerRating)}${'☆'.repeat(5-order.customerRating)}</div>` : ''}
+                            ${order.locationNotes ? `<div class="md:col-span-2 lg:col-span-3"><strong class="text-blue-400">ملاحظات الموقع:</strong> ${order.locationNotes}</div>` : ''}
+                        </div>
+                    </div>
+                    
+            ${order.teamNotes ? `
+                <div class="bg-gray-900 bg-opacity-50 border border-gray-700 rounded-xl p-4">
+                    <h5 class="font-semibold text-gray-300 mb-2 flex items-center space-x-2 space-x-reverse">
+                        <i class="fas fa-users text-blue-400"></i>
+                        <span>ملاحظات الفريق</span>
+                    </h5>
+                    <p class="text-gray-200">${order.teamNotes}</p>
+                </div>
+            ` : ''}
+
+${order.cancellationReason ? `
+    <div id="cancellation-reason-block" class="bg-red-900 bg-opacity-30 border border-red-600 rounded-xl p-4">
+        <h5 class="font-semibold text-red-300 mb-2 flex items-center space-x-2 space-x-reverse">
+            <i class="fas fa-times-circle text-red-400"></i>
+            <span>سبب الإلغاء</span>
+        </h5>
+        <p id="cancellation-reason-text" class="text-red-200 bg-red-800 bg-opacity-40 p-3 rounded-lg border border-red-600">${order.cancellationReason}</p>
+    </div>
+` : ''}
+                    
+                    ${order.ratingNotes ? `
+                        <div class="bg-green-900 bg-opacity-20 border border-green-700 rounded-xl p-4">
+                            <h5 class="font-semibold text-green-300 mb-2 flex items-center space-x-2 space-x-reverse">
+                                <i class="fas fa-star text-yellow-500"></i>
+                                <span>ملاحظات التقييم</span>
+                            </h5>
+                            <div class="flex items-center space-x-2 space-x-reverse mb-2">
+                                <span class="text-green-300">التقييم:</span>
+                                <span class="text-yellow-500">${'★'.repeat(order.customerRating)}${'☆'.repeat(5-order.customerRating)}</span>
+                            </div>
+                            <p class="text-green-200">${order.ratingNotes}</p>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="flex gap-4 pt-4">
+                        <button onclick="closeModal()" 
+                                class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 px-6 rounded-xl font-semibold transition-colors flex items-center justify-center space-x-2 space-x-reverse border border-gray-600">
+                            <i class="fas fa-times"></i>
+                            <span>إغلاق</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // Display customer orders with pagination
+        function displayCustomerOrders(customerOrders) {
+            const tableBody = document.getElementById('customer-orders-table');
+            const totalPages = Math.ceil(customerOrders.length / ordersPerPage);
+            const startIndex = (currentCustomerPage - 1) * ordersPerPage;
+            const endIndex = startIndex + ordersPerPage;
+            const paginatedOrders = customerOrders.slice(startIndex, endIndex);
+            
+            // Update table
+            tableBody.innerHTML = paginatedOrders.map(order => `
+                <tr class="border-b border-gray-700 hover:bg-gray-800 hover:bg-opacity-30 transition-colors">
+                    <td class="py-3 px-4">
+                        <span class="font-semibold text-blue-400">#${order.orderNumber}</span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="text-gray-300">${order.serviceType}</span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="text-sm">
+                            ${order.orderDate ? `<div class="text-gray-200">${order.orderDate}</div>` : ''}
+                            <div class="text-gray-400">معاينة: ${order.visitDate}</div>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="font-semibold text-blue-400">${order.totalAmount} د.ك</span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <span class="status-badge ${getStatusClass(order.bookingStatus)}">
+                            ${order.bookingStatus}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="text-blue-400 text-sm">
+                            ${order.customerRating > 0 ? '★'.repeat(order.customerRating) + '☆'.repeat(5-order.customerRating) : 'لا يوجد'}
+                        </div>
+                    </td>
+                                      <td class="py-3 px-4 text-center">
+                        <button onclick="viewOrderDetails('${order.orderNumber}')" 
+                                class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1 space-x-reverse mx-auto">
+                            <i class="fas fa-eye text-xs"></i>
+                            <span>عرض</span>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            // Update pagination info
+            document.getElementById('customer-total-orders').textContent = customerOrders.length;
+            document.getElementById('customer-page-info').textContent = `صفحة ${currentCustomerPage} من ${totalPages}`;
+            
+            // Update pagination buttons
+            const prevBtn = document.getElementById('customer-prev-btn');
+            const nextBtn = document.getElementById('customer-next-btn');
+            
+            prevBtn.disabled = currentCustomerPage === 1;
+            nextBtn.disabled = currentCustomerPage === totalPages;
+            
+            if (prevBtn.disabled) {
+                prevBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                prevBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            
+            if (nextBtn.disabled) {
+                nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                nextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            
+            // Hide pagination if only one page
+            const paginationDiv = document.getElementById('customer-pagination');
+            if (totalPages <= 1) {
+                paginationDiv.classList.add('hidden');
+            } else {
+                paginationDiv.classList.remove('hidden');
+            }
+        }
+
+        // Change customer page
+        function changeCustomerPage(direction) {
+            const customerNumber = document.getElementById('customer-search').value.trim();
+            const customerOrders = orders.filter(o => o.customerNumber === customerNumber);
+            const totalPages = Math.ceil(customerOrders.length / ordersPerPage);
+            
+            currentCustomerPage += direction;
+            
+            if (currentCustomerPage < 1) currentCustomerPage = 1;
+            if (currentCustomerPage > totalPages) currentCustomerPage = totalPages;
+            
+            displayCustomerOrders(customerOrders);
+        }
+
+        // Change completed page
+        function changeCompletedPage(direction) {
+            let completedOrders = orders.filter(o => o.bookingStatus === 'مكتمل' || o.bookingStatus === 'ملغي');
+            
+            const totalPages = Math.ceil(completedOrders.length / ordersPerPage);
+            
+            currentCompletedPage += direction;
+            
+            if (currentCompletedPage < 1) currentCompletedPage = 1;
+            if (currentCompletedPage > totalPages) currentCompletedPage = totalPages;
+            
+            displayCompletedOrders();
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('order-modal').classList.add('hidden');
+            document.getElementById('order-modal').classList.remove('flex');
+        }
+
+        // Filter variables
+        let currentFilterColumn = '';
+        let currentColumnFilter = {};
+        let currentQuickFilter = 'all';
+        let advancedFilters = {
+            services: [],
+            customers: [],
+            amountMin: null,
+            amountMax: null,
+            dateFrom: null,
+            dateTo: null,
+            ratings: [],
+            statuses: []
+        };
+
+        // Show column filter modal
+        function showColumnFilter(column) {
+            currentFilterColumn = column;
+            const modal = document.getElementById('filter-modal');
+            const title = document.getElementById('filter-title');
+            const content = document.getElementById('filter-content');
+            
+            // Set title based on column
+            const columnTitles = {
+                'orderNumber': 'فلترة رقم الطلب',
+                'customer': 'فلترة العميل',
+                'service': 'فلترة الخدمة',
+                'date': 'فلترة التاريخ',
+                'amount': 'فلترة المبلغ',
+                'status': 'فلترة الحالة',
+                'rating': 'فلترة التقييم'
+            };
+            title.innerHTML = `<i class="fas fa-filter text-blue-400"></i><span>${columnTitles[column] || 'فلترة البيانات'}</span>`;
+            
+            // Get unique values for the column
+            let completedOrders = orders.filter(o => o.bookingStatus === 'مكتمل' || o.bookingStatus === 'ملغي');
+            
+            // Create different UI based on column type
+            if (column === 'orderNumber' || column === 'customer' || column === 'amount') {
+                // Text input for search
+                content.innerHTML = `
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-3">
+                            ${column === 'orderNumber' ? 'ابحث برقم الطلب' : 
+                              column === 'customer' ? 'ابحث باسم العميل' : 'ابحث بالمبلغ'}
+                        </label>
+                        <input type="${column === 'amount' ? 'number' : 'text'}" 
+                               id="filter-input" 
+                               class="dark-input w-full px-4 py-3 rounded-xl" 
+                               placeholder="${column === 'orderNumber' ? 'أدخل رقم الطلب...' : 
+                                           column === 'customer' ? 'أدخل اسم العميل...' : 'أدخل المبلغ...'}"
+                               value="${currentColumnFilter[column] || ''}">
+                    </div>
+                `;
+            } else if (column === 'service') {
+                // Service filter with search and suggestions
+                const allServices = [...new Set(completedOrders.map(o => o.serviceType))].sort();
+                content.innerHTML = `
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-3">ابحث عن الخدمة</label>
+                        <input type="text" 
+                               id="service-search" 
+                               class="dark-input w-full px-4 py-3 rounded-xl mb-3" 
+                               placeholder="اكتب اسم الخدمة..."
+                               value="${currentColumnFilter[column] || ''}"
+                               oninput="filterServices()">
+                        <div id="service-suggestions" class="max-h-48 overflow-y-auto space-y-2">
+                            ${allServices.map(service => `
+                                <div class="service-option p-3 bg-gray-800 hover:bg-gray-700 rounded-lg cursor-pointer transition-colors border border-gray-700 hover:border-blue-500"
+                                     onclick="selectService('${service}')"
+                                     data-service="${service.toLowerCase()}">
+                                    <div class="flex items-center space-x-2 space-x-reverse">
+                                        <i class="fas fa-broom text-blue-400"></i>
+                                        <span class="text-gray-200">${service}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else if (column === 'date') {
+                // Date picker
+                content.innerHTML = `
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-3">اختر التاريخ</label>
+                        <input type="date" 
+                               id="filter-date" 
+                               class="dark-input w-full px-4 py-3 rounded-xl"
+                               value="${currentColumnFilter[column] ? convertToInputDate(currentColumnFilter[column]) : ''}">
+                    </div>
+                `;
+            } else if (column === 'status') {
+                // Status dropdown
+                content.innerHTML = `
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-3">اختر الحالة</label>
+                        <select id="filter-select" class="dark-select w-full px-4 py-3 rounded-xl">
+                            <option value="">جميع الحالات</option>
+                            <option value="مكتمل" ${currentColumnFilter[column] === 'مكتمل' ? 'selected' : ''}>مكتمل</option>
+                            <option value="ملغي" ${currentColumnFilter[column] === 'ملغي' ? 'selected' : ''}>ملغي</option>
+                        </select>
+                    </div>
+                `;
+            } else if (column === 'rating') {
+                // Rating selection
+                const ratings = [...new Set(completedOrders.filter(o => o.customerRating > 0).map(o => o.customerRating))].sort((a, b) => b - a);
+                content.innerHTML = `
+                    <div>
+                        <label class="block text-gray-300 font-semibold mb-3">اختر التقييم</label>
+                        <select id="filter-select" class="dark-select w-full px-4 py-3 rounded-xl">
+                            <option value="">جميع التقييمات</option>
+                            ${ratings.map(rating => `
+                                <option value="${rating}" ${currentColumnFilter[column] == rating ? 'selected' : ''}>
+                                    ${'★'.repeat(rating)}${'☆'.repeat(5-rating)} (${rating} نجوم)
+                                </option>
+                            `).join('')}
+                            <option value="0" ${currentColumnFilter[column] == '0' ? 'selected' : ''}>بدون تقييم</option>
+                        </select>
+                    </div>
+                `;
+            }
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // Filter services based on search input
+        function filterServices() {
+            const searchInput = document.getElementById('service-search');
+            const searchTerm = searchInput.value.toLowerCase();
+            const serviceOptions = document.querySelectorAll('.service-option');
+            
+            serviceOptions.forEach(option => {
+                const serviceName = option.dataset.service;
+                if (serviceName.includes(searchTerm)) {
+                    option.style.display = 'block';
+                    // Highlight matching text
+                    const serviceText = option.querySelector('span');
+                    const originalText = serviceText.textContent;
+                    if (searchTerm && searchTerm.length > 0) {
+                        const regex = new RegExp(`(${searchTerm})`, 'gi');
+                        serviceText.innerHTML = originalText.replace(regex, '<mark class="bg-blue-500 text-white px-1 rounded">$1</mark>');
+                    } else {
+                        serviceText.textContent = originalText;
+                    }
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+        }
+
+        // Select service from suggestions
+        function selectService(serviceName) {
+            document.getElementById('service-search').value = serviceName;
+            // Highlight selected service
+            document.querySelectorAll('.service-option').forEach(option => {
+                option.classList.remove('bg-blue-800', 'border-blue-500');
+                option.classList.add('bg-gray-800', 'border-gray-700');
+            });
+            event.target.closest('.service-option').classList.remove('bg-gray-800', 'border-gray-700');
+            event.target.closest('.service-option').classList.add('bg-blue-800', 'border-blue-500');
+        }
+
+        // Apply column filter
+        function applyColumnFilter() {
+            let filterValue = '';
+            
+            // Get filter value based on column type
+            if (currentFilterColumn === 'orderNumber' || currentFilterColumn === 'customer' || currentFilterColumn === 'amount') {
+                filterValue = document.getElementById('filter-input')?.value || '';
+            } else if (currentFilterColumn === 'service') {
+                filterValue = document.getElementById('service-search')?.value || '';
+            } else if (currentFilterColumn === 'date') {
+                const dateValue = document.getElementById('filter-date')?.value || '';
+                if (dateValue) {
+                    // Convert from YYYY-MM-DD to DD-MM-YYYY for filtering
+                    const [year, month, day] = dateValue.split('-');
+                    filterValue = `${day}-${month}-${year}`;
+                }
+            } else {
+                filterValue = document.getElementById('filter-select')?.value || '';
+            }
+            
+            if (filterValue) {
+                currentColumnFilter[currentFilterColumn] = filterValue;
+            } else {
+                delete currentColumnFilter[currentFilterColumn];
+            }
+            
+            closeFilterModal();
+            displayCompletedOrders();
+            
+            // Show notification
+            if (filterValue) {
+                showNotification(`تم تطبيق الفلتر على ${getColumnDisplayName(currentFilterColumn)}`, 'success');
+            } else {
+                showNotification(`تم إلغاء الفلتر من ${getColumnDisplayName(currentFilterColumn)}`, 'success');
+            }
+        }
+
+        // Get column display name in Arabic
+        function getColumnDisplayName(column) {
+            const names = {
+                'orderNumber': 'رقم الطلب',
+                'customer': 'العميل',
+                'service': 'الخدمة',
+                'date': 'التاريخ',
+                'amount': 'المبلغ',
+                'status': 'الحالة',
+                'rating': 'التقييم'
+            };
+            return names[column] || column;
+        }
+
+        // Clear column filter
+        function clearColumnFilter() {
+            delete currentColumnFilter[currentFilterColumn];
+            closeFilterModal();
+            displayCompletedOrders();
+            showNotification(`تم إلغاء جميع الفلاتر`, 'success');
+        }
+
+        // Close filter modal
+        function closeFilterModal() {
+            document.getElementById('filter-modal').classList.add('hidden');
+            document.getElementById('filter-modal').classList.remove('flex');
+        }
+
+        // Quick filter functions
+        function setQuickFilter(filter) {
+            currentQuickFilter = filter;
+            
+            // Update button states
+            document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            if (filter === 'all') {
+                document.getElementById('filter-all').classList.add('active');
+            } else if (filter === 'مكتمل') {
+                document.getElementById('filter-completed').classList.add('active');
+            } else if (filter === 'ملغي') {
+                document.getElementById('filter-cancelled').classList.add('active');
+            }
+            
+            // Reset to first page
+            currentCompletedPage = 1;
+            displayCompletedOrders();
+        }
+
+        // Show advanced filters modal
+        function showAdvancedFilters() {
+            const modal = document.getElementById('advanced-filter-modal');
+            
+            // Populate filter options
+            populateAdvancedFilterOptions();
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // Populate advanced filter options
+        function populateAdvancedFilterOptions() {
+            let completedOrders = orders.filter(o => o.bookingStatus === 'مكتمل' || o.bookingStatus === 'ملغي');
+            
+            // Populate service options
+            const services = [...new Set(completedOrders.map(o => o.serviceType))].sort();
+            const serviceContainer = document.getElementById('service-filter-options');
+            serviceContainer.innerHTML = services.map(service => `
+                <div class="filter-checkbox">
+                    <input type="checkbox" id="service-${service.replace(/\s+/g, '-')}" value="${service}" ${advancedFilters.services.includes(service) ? 'checked' : ''}>
+                    <label for="service-${service.replace(/\s+/g, '-')}">${service}</label>
+                </div>
+            `).join('');
+            
+            // Populate customer options
+            const customers = [...new Set(completedOrders.map(o => o.customerName))].sort();
+            const customerContainer = document.getElementById('customer-filter-options');
+            customerContainer.innerHTML = customers.map(customer => `
+                <div class="filter-checkbox">
+                    <input type="checkbox" id="customer-${customer.replace(/\s+/g, '-')}" value="${customer}" ${advancedFilters.customers.includes(customer) ? 'checked' : ''}>
+                    <label for="customer-${customer.replace(/\s+/g, '-')}">${customer}</label>
+                </div>
+            `).join('');
+            
+            // Set current values
+            document.getElementById('amount-min').value = advancedFilters.amountMin || '';
+            document.getElementById('amount-max').value = advancedFilters.amountMax || '';
+            document.getElementById('date-from').value = advancedFilters.dateFrom || '';
+            document.getElementById('date-to').value = advancedFilters.dateTo || '';
+            
+            // Set rating checkboxes
+            advancedFilters.ratings.forEach(rating => {
+                const checkbox = document.getElementById(`rating-${rating}`);
+                if (checkbox) checkbox.checked = true;
+            });
+            
+            // Set status checkboxes
+            advancedFilters.statuses.forEach(status => {
+                const checkbox = document.getElementById(`status-${status === 'مكتمل' ? 'completed' : 'cancelled'}`);
+                if (checkbox) checkbox.checked = true;
+            });
+        }
+
+        // Apply advanced filters
+        function applyAdvancedFilters() {
+            // Collect service filters
+            advancedFilters.services = [];
+            document.querySelectorAll('#service-filter-options input[type="checkbox"]:checked').forEach(cb => {
+                advancedFilters.services.push(cb.value);
+            });
+            
+            // Collect customer filters
+            advancedFilters.customers = [];
+            document.querySelectorAll('#customer-filter-options input[type="checkbox"]:checked').forEach(cb => {
+                advancedFilters.customers.push(cb.value);
+            });
+            
+            // Collect amount range
+            advancedFilters.amountMin = parseFloat(document.getElementById('amount-min').value) || null;
+            advancedFilters.amountMax = parseFloat(document.getElementById('amount-max').value) || null;
+            
+            // Collect date range
+            advancedFilters.dateFrom = document.getElementById('date-from').value || null;
+            advancedFilters.dateTo = document.getElementById('date-to').value || null;
+            
+            // Collect rating filters
+            advancedFilters.ratings = [];
+            document.querySelectorAll('#rating-filter-options input[type="checkbox"]:checked').forEach(cb => {
+                advancedFilters.ratings.push(parseInt(cb.value));
+            });
+            
+            // Collect status filters
+            advancedFilters.statuses = [];
+            if (document.getElementById('status-completed').checked) {
+                advancedFilters.statuses.push('مكتمل');
+            }
+            if (document.getElementById('status-cancelled').checked) {
+                advancedFilters.statuses.push('ملغي');
+            }
+            
+            closeAdvancedFilters();
+            updateFilterUI();
+            currentCompletedPage = 1;
+            displayCompletedOrders();
+            
+            showNotification('تم تطبيق الفلاتر المتقدمة بنجاح', 'success');
+        }
+
+        // Reset advanced filters
+        function resetAdvancedFilters() {
+            advancedFilters = {
+                services: [],
+                customers: [],
+                amountMin: null,
+                amountMax: null,
+                dateFrom: null,
+                dateTo: null,
+                ratings: [],
+                statuses: []
+            };
+            
+            // Clear all checkboxes and inputs
+            document.querySelectorAll('#advanced-filter-modal input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
+            document.querySelectorAll('#advanced-filter-modal input[type="number"], #advanced-filter-modal input[type="date"]').forEach(input => {
+                input.value = '';
+            });
+            
+            updateFilterUI();
+            currentCompletedPage = 1;
+            displayCompletedOrders();
+            
+            showNotification('تم إعادة تعيين جميع الفلاتر', 'success');
+        }
+
+        // Close advanced filters modal
+        function closeAdvancedFilters() {
+            document.getElementById('advanced-filter-modal').classList.add('hidden');
+            document.getElementById('advanced-filter-modal').classList.remove('flex');
+        }
+
+        // Clear all filters
+        function clearAllFilters() {
+            currentQuickFilter = 'all';
+            currentColumnFilter = {};
+            advancedFilters = {
+                services: [],
+                customers: [],
+                amountMin: null,
+                amountMax: null,
+                dateFrom: null,
+                dateTo: null,
+                ratings: [],
+                statuses: []
+            };
+            
+            // Reset quick filter buttons
+            document.querySelectorAll('.quick-filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById('filter-all').classList.add('active');
+            
+            updateFilterUI();
+            currentCompletedPage = 1;
+            displayCompletedOrders();
+            
+            showNotification('تم مسح جميع الفلاتر', 'success');
+        }
+
+        // Update filter UI
+        function updateFilterUI() {
+            const activeFiltersCount = getActiveFiltersCount();
+            const countBadge = document.getElementById('active-filters-count');
+            const clearBtn = document.getElementById('clear-filters-btn');
+            
+            if (activeFiltersCount > 0) {
+                countBadge.textContent = activeFiltersCount;
+                countBadge.classList.remove('hidden');
+                clearBtn.classList.remove('hidden');
+                clearBtn.classList.add('flex');
+            } else {
+                countBadge.classList.add('hidden');
+                clearBtn.classList.add('hidden');
+                clearBtn.classList.remove('flex');
+            }
+        }
+
+        // Get active filters count
+        function getActiveFiltersCount() {
+            let count = 0;
+            
+            // Count advanced filters
+            if (advancedFilters.services.length > 0) count++;
+            if (advancedFilters.customers.length > 0) count++;
+            if (advancedFilters.amountMin !== null || advancedFilters.amountMax !== null) count++;
+            if (advancedFilters.dateFrom !== null || advancedFilters.dateTo !== null) count++;
+            if (advancedFilters.ratings.length > 0) count++;
+            if (advancedFilters.statuses.length > 0) count++;
+            
+            // Count column filters
+            count += Object.keys(currentColumnFilter).length;
+            
+            return count;
+        }
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98b5ba69e55b7cde',t:'MTc1OTkyNzQ1MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
