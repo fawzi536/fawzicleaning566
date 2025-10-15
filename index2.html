@@ -976,7 +976,7 @@
       // Sheety API Configuration
 const SHEETY_API_POST = 'https://api.sheety.co/984c17c54dafbc5e8fe827b90d39f223/orders/orders';
 const SHEETY_API_PUT = 'https://api.sheety.co/984c17c54dafbc5e8fe827b90d39f223/orders/orders/';
-
+const SHEETY_API_PUT = 'https://api.sheety.co/984c17c54dafbc5e8fe827b90d39f223/orders/orders/';
 // ID for the periodic fetch interval so we can clear it if needed
         let fetchIntervalId = null;
 
@@ -1291,11 +1291,99 @@ const SHEETY_API_PUT = 'https://api.sheety.co/984c17c54dafbc5e8fe827b90d39f223/o
         function initializeApp() {
             showTab('dashboard');
             updateCurrentDate();
-            fetchOrders();
-            setInterval(fetchOrders, 30000); // Update every minute
+            fetchOrders(); // تحميل البيانات فوراً
+            setInterval(fetchOrders, 30000); // تحديث تلقائي كل 30 ثانية
+        }
+        // Initialize on page load
+        // Fetch orders from Google Sheets via Sheety API
+async function fetchOrders() {
+    try {
+        console.log('جاري تحميل الطلبات من Google Sheets...');
+        
+        const response = await fetch(SHEETY_API_GET, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        // Initialize on page load
+        const data = await response.json();
+        console.log('البيانات المستلمة:', data);
+        
+        if (!data.orders || !Array.isArray(data.orders)) {
+            console.warn('لا توجد طلبات في Google Sheets');
+            orders = [];
+            updateDashboard();
+            displayActiveOrders();
+            displayCompletedOrders();
+            return;
+        }
+        
+        orders = data.orders.map(row => ({
+            id: row.id,
+            orderNumber: String(row.ordernumber || ''),
+            orderDate: formatDate(row.orderdate) || '',
+            customerNumber: String(row.customernumber || ''),
+            customerName: String(row.customername || ''),
+            area: String(row.area || ''),
+            block: String(row.block || ''),
+            street: String(row.street || ''),
+            houseNumber: String(row.housenumber || ''),
+            floor: String(row.floor || ''),
+            housingType: String(row.housingtype || ''),
+            locationNotes: String(row.locationnotes || ''),
+            serviceType: String(row.servicetype || ''),
+            visitDate: formatDate(row.visitdate) || '',
+            visitTime: formatTime(row.visittime) || '',
+            cleaningDate: formatDate(row.cleaningdate) || '',
+            cleaningTime: formatTime(row.cleaningtime) || '',
+            paymentMethod: String(row.paymentmethod || ''),
+            totalAmount: parseFloat(row.totalamount) || 0,
+            paymentStatus: String(row.paymentstatus || 'غير مدفوع'),
+            bookingStatus: String(row.bookingstatus || 'معاينة'),
+            departureTime: String(row.departuretime || ''),
+            customerNotes: String(row.customernotes || ''),
+            teamNotes: String(row.teamnotes || ''),
+            customerRating: parseInt(row.customerrating) || 0,
+            ratingNotes: String(row.ratingnotes || ''),
+            cancellationReason: String(row.cancellationreason || '')
+        }));
+
+        orders.sort((a, b) => {
+            const numA = parseInt(a.orderNumber) || 0;
+            const numB = parseInt(b.orderNumber) || 0;
+            return numB - numA;
+        });
+
+        if (orders.length > 0) {
+            const maxOrderNumber = Math.max(...orders.map(o => parseInt(o.orderNumber) || 0));
+            nextOrderNumber = maxOrderNumber + 1;
+        } else {
+            nextOrderNumber = 1;
+        }
+
+        console.log(`✅ تم تحميل ${orders.length} طلب بنجاح`);
+        console.log('رقم الطلب التالي:', nextOrderNumber);
+
+        updateDashboard();
+        displayActiveOrders();
+        displayCompletedOrders();
+        
+    } catch (error) {
+        console.error('❌ خطأ في جلب الطلبات:', error);
+        showNotification('فشل في تحميل الطلبات من Google Sheets', 'error');
+        
+        orders = [];
+        nextOrderNumber = 1;
+        updateDashboard();
+        displayActiveOrders();
+        displayCompletedOrders();
+    }
+}
         document.addEventListener('DOMContentLoaded', function() {
             checkLoginStatus();
             
