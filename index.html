@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام إدارة الطلبات - Wajha</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com">
+        const SHEETY_POST_URL = 'https://api.sheety.co/984c17c54dafbc5e8fe827b90d39f223/orders/orders';
+    </script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         body {
@@ -1750,11 +1752,24 @@
                 cleanText(order.cancellationReason) || ''
             ].join('\t');
 
-            navigator.clipboard.writeText(orderData).then(() => {
-                showNotification('تم نسخ بيانات الطلب! يمكنك لصقها في Google Sheets الآن.', 'success');
-            }).catch(() => {
-                showNotification('فشل في نسخ البيانات. يرجى المحاولة مرة أخرى.', 'error');
-            });
+function copyOrderToClipboard(orderData) {
+    fetch(SHEETY_POST_URL, {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order: orderData })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.order) {
+            showNotification('✅ تم إرسال الطلب تلقائيًا إلى Google Sheets!', 'success');
+        } else {
+            showNotification('❌ فشل الإرسال!', 'error');
+        }
+    })
+    .catch(() => {
+        showNotification('❌ حدث خطأ في الاتصال!', 'error');
+    });
+}
         }
 
         // Display active orders
@@ -2433,6 +2448,25 @@ ${order.cancellationReason ? `
                     star.classList.remove('text-yellow-500');
                 }
             });
+            function updateOrderInSheet(orderId, orderData) {
+    const SHEETY_PUT_URL = `https://api.sheety.co/984c17c54dafbc5e8fe827b90d39f223/orders/orders/${orderId}`;
+    fetch(SHEETY_PUT_URL, {
+        method: 'PUT',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order: orderData })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.order) {
+            showNotification('✅ تم تحديث الطلب في Google Sheets!', 'success');
+        } else {
+            showNotification('❌ فشل التحديث!', 'error');
+        }
+    })
+    .catch(() => {
+        showNotification('❌ حدث خطأ في الاتصال!', 'error');
+    });
+}
         }
 
         // Update order
