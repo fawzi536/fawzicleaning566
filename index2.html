@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ar">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Auto Save / Sheety Sync (index2)</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; padding: 20px; direction: rtl; }
+    label { display:block; margin:8px 0; }
+    input, textarea { width:100%; max-width:400px; padding:6px; }
+    .status { margin-top:12px; color: #333; }
+  </style>
+</head>
+<body>
+  <h2>نموذج حفظ تلقائي (Sheety)</h2>
+  <form id="orderForm">
+    <label>الاسم:
+      <input type="text" name="name" placeholder="الاسم" />
+    </label>
+    <label>الهاتف:
+      <input type="text" name="phone" placeholder="رقم الهاتف" />
+    </label>
+    <label>العنوان:
+      <input type="text" name="address" placeholder="العنوان (اختياري)" />
+    </label>
+    <input type="hidden" name="sheety_id" value="" />
+    <p class="status" id="status">سيتم الحفظ تلقائياً عند التعديل.</p>
+  </form>
+
+  <script>
+    // ملف index2.html: Sheety auto-save integration مضمّن هنا
+    const SHEETY_BASE = 'https://api.sheety.co/984c17c54dafbc5e8fe827b90d39f223/orders/orders';
+
+    async function sheetyFetch(url, options = {}) {
+      try {
+        const res = await fetch(url, options);
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`Sheety error ${res.status}: ${text}`);
+        }
+        return await res.json();
+      } catch (err) {
+        console.error('Sheety fetch failed:', err);
+        throw err;
+      }
+    }
+
+    async function createOrder(orderData) {
+      const body = { orders: orderData };
+      return await sheetyFetch(SHEETY_BASE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+    }
+
+    async function updateOrder(id, orderData) {
+      if (!id) throw new Error('updateOrder requires id');
+      const url = `${SHEETY_BASE}/${id}`;
+      const body = { orders: orderData };
+      return await sheetyFetch(url, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+    }
+
+    async function getOrders() {
+      return await sheetyFetch(SHEETY_BASE, { method: 'GET' });
+    }
+
+    async function findOrder(predicate) {
+      const res = await getOrders();
+      const list = res && res.orders ? res.orders : [];
+      return list.find(predicate);
+    }
+
+    function debounce(fn, delay = 1000) {
+      let t;
+      return (...args) => {
+        clearTimeout(t);
+        t = setTimeout(() => fn(...args), delay);
+      };
+    }
+
+    async function performSave(formElement) {
+      const data = {};
+      const inputs = formElement.querySelectorAll('[name]');
+      inputs.forEach(input => {
+        if (input.name === 'sheety_id') return;
+        if (input.type === 'checkbox') data[input.name] = input.checked;
+        else data[input.name] = input.value;
+      });
+
+      const idInput = formElement.querySelector('input[name="sheety_id"]');
+      const id = idInput ? idInput.value : null;
+      const statusEl = document.getElementById('status');
+
+      try {
+        statusEl.textContent = 'جاري الحفظ...';
+        if (id) {
+          await updateOrder(id, data);
+          statusEl.textContent = 'تم التحديث تلقائياً (PUT)';
+          console.log('Sheety updated row', id);
+        } else {
+          const created = await createOrder(data);
+          // Sheety عادة تعيد created.orders مع id
+          const createdRow = created && created.orders ? created.orders : created;
+          if (createdRow && createdRow.id) {
+            if (idInput) idInput.value = createdRow.id;
+            statusEl.textContent = 'تم الإنشاء وحفظ الـ id';
+            console.log('Sheety created row', createdRow.id);
+          } else {
+            statusEl.textContent = 'تم الإنشاء (لم يُعاد id)';
+            console.log('Created but no id returned', created);
+          }
+        }
+      } catch (err) {
+        statusEl.textContent = 'خطأ أثناء الحفظ (راجع الكونسول)';
+      }
+    }
+
+    function autoSaveInit(formElement, options = {}) {
+      const delay = options.debounceMs || 1500;
+      const onChange = debounce(() => performSave(formElement), delay);
+      formElement.addEventListener('input', onChange);
+      formElement.addEventListener('change', onChange);
+    }
+
+    // تهيئة النموذج
+    (function init() {
+      const form = document.getElementById('orderForm');
+      autoSaveInit(form, { debounceMs: 1500 });
+
+      // مثال: يمكنك تحميل سجل موجود وملء النموذج إن وُجد
+      // (إزالة أو تعديل حسب الحاجة)
+      (async () => {
+        try {
+          // مثال: البحث عن طلب برقم هاتف معين (يمكن تغييره أو حذفه)
+          // const found = await findOrder(o => o.phone === '012345');
+          // if (found) {
+          //   form.querySelector('[name="name"]').value = found.name || '';
+          //   form.querySelector('[name="phone"]').value = found.phone || '';
+          //   form.querySelector('[name="address"]').value = found.address || '';
+          //   form.querySelector('input[name="sheety_id"]').value = found.id;
+          // }
+        } catch (err) {
+          console.log('Init load error (ignore if not used):', err);
+        }
+      })();
+    })();
+  </script>
+</body>
+</html>
