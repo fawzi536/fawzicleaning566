@@ -987,7 +987,10 @@
            orders = data.orders || [];
 
            console.log('تم جلب الطلبات بنجاح:', orders.length);
-           updateDashboard(); // لتحديث لوحة التحكم
+           updateDashboard();
+           updateDashboard();
+           displayActiveOrders();
+           displayCompletedOrders();     
   } catch (error) {
     console.error('خطأ أثناء جلب الطلبات:', error);
     showNotification('فشل في تحميل الطلبات من Google Sheets', 'error');
