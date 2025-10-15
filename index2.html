@@ -1458,7 +1458,66 @@ async function updateOrderInSheets(order) {
         throw error;
     }
 }
-
+// Fetch orders from Google Sheets via Sheety API
+async function fetchOrders() {
+    try {
+        const response = await fetch('https://api.sheety.co/984c17c54dafbc5e8fe827b90d39f223/orders/orders');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Map the data from Sheety format to our internal format
+        orders = data.orders.map(order => ({
+            id: order.id,
+            orderNumber: order.ordernumber || '',
+            orderDate: formatDate(order.orderdate) || '',
+            customerNumber: order.customernumber || '',
+            customerName: order.customername || '',
+            area: order.area || '',
+            block: order.block || '',
+            street: order.street || '',
+            houseNumber: order.housenumber || '',
+            floor: order.floor || '',
+            housingType: order.housingtype || '',
+            locationNotes: order.locationnotes || '',
+            serviceType: order.servicetype || '',
+            visitDate: formatDate(order.visitdate) || '',
+            visitTime: formatTime(order.visittime) || '',
+            cleaningDate: formatDate(order.cleaningdate) || '',
+            cleaningTime: formatTime(order.cleaningtime) || '',
+            paymentMethod: order.paymentmethod || '',
+            totalAmount: parseFloat(order.totalamount) || 0,
+            paymentStatus: order.paymentstatus || 'غير مدفوع',
+            bookingStatus: order.bookingstatus || 'معاينة',
+            departureTime: order.departuretime || '',
+            customerNotes: order.customernotes || '',
+            teamNotes: order.teamnotes || '',
+            customerRating: parseInt(order.customerrating) || 0,
+            ratingNotes: order.ratingnotes || '',
+            cancellationReason: order.cancellationreason || ''
+        }));
+        
+        // Update nextOrderNumber to be one more than the highest order number
+        if (orders.length > 0) {
+            const maxOrderNumber = Math.max(...orders.map(o => parseInt(o.orderNumber) || 0));
+            nextOrderNumber = maxOrderNumber + 1;
+        } else {
+            nextOrderNumber = 1;
+        }
+        
+        // Update the UI
+        updateDashboard();
+        displayActiveOrders();
+        displayCompletedOrders();
+        
+    } catch (error) {
+        console.error('خطأ في جلب الطلبات:', error);
+        showNotification('فشل في تحميل الطلبات. يرجى التحقق من الاتصال بالإنترنت.', 'error');
+    }
+}
         // Tab management
         function showTab(tabName) {
             // Check if user has permission to access this tab
