@@ -1333,57 +1333,78 @@ const SHEETY_API_PUT = 'https://api.sheety.co/984c17c54dafbc5e8fe827b90d39f223/o
 
         // Fetch orders from Google Sheets
 // Add new order to Google Sheets via Sheety API
-async function addOrderToSheets(order) {
+async function fetchOrders() {
     try {
-        const orderData = {
-            order: {
-                ordernumber: order.orderNumber,
-                orderdate: order.orderDate || '',
-                customernumber: order.customerNumber,
-                customername: order.customerName,
-                area: order.area || '',
-                block: order.block || '',
-                street: order.street || '',
-                housenumber: order.houseNumber || '',
-                floor: order.floor || '',
-                housingtype: order.housingType || '',
-                locationnotes: order.locationNotes || '',
-                servicetype: order.serviceType,
-                visitdate: order.visitDate,
-                visittime: order.visitTime,
-                cleaningdate: order.cleaningDate || '',
-                cleaningtime: order.cleaningTime || '',
-                paymentmethod: order.paymentMethod || '',
-                totalamount: order.totalAmount,
-                paymentstatus: order.paymentStatus,
-                bookingstatus: order.bookingStatus,
-                departuretime: order.departureTime || '',
-                customernotes: order.customerNotes || '',
-                teamnotes: order.teamNotes || '',
-                customerrating: order.customerRating || 0,
-                ratingnotes: order.ratingNotes || '',
-                cancellationreason: order.cancellationReason || ''
-            }
-        };
-
-        const response = await fetch(SHEETY_API_POST, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(orderData)
-        });
-
+        console.log('جاري تحميل البيانات من Sheety...');
+        const response = await fetch(SHEETY_API_POST);
+        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-
+        
         const data = await response.json();
-        return data.order;
+        console.log('البيانات المستلمة:', data);
+        
+        // تحقق من وجود البيانات
+        if (!data.orders || data.orders.length === 0) {
+            console.log('لا توجد طلبات في Google Sheets');
+            orders = [];
+            nextOrderNumber = 1;
+            updateDashboard();
+            displayActiveOrders();
+            displayCompletedOrders();
+            return;
+        }
+        
+        orders = data.orders.map(order => ({
+            id: order.id,
+            orderNumber: order.ordernumber,
+            orderDate: formatDate(order.orderdate) || '',
+            customerNumber: String(order.customernumber || ''),
+            customerName: String(order.customername || ''),
+            area: String(order.area || ''),
+            block: String(order.block || ''),
+            street: String(order.street || ''),
+            houseNumber: String(order.housenumber || ''),
+            floor: String(order.floor || ''),
+            housingType: String(order.housingtype || ''),
+            locationNotes: String(order.locationnotes || ''),
+            serviceType: String(order.servicetype || ''),
+            visitDate: formatDate(order.visitdate) || '',
+            visitTime: formatTime(order.visittime) || '',
+            cleaningDate: formatDate(order.cleaningdate) || '',
+            cleaningTime: formatTime(order.cleaningtime) || '',
+            paymentMethod: String(order.paymentmethod || ''),
+            totalAmount: parseFloat(order.totalamount) || 0,
+            paymentStatus: String(order.paymentstatus || 'غير مدفوع'),
+            bookingStatus: String(order.bookingstatus || 'معاينة'),
+            departureTime: formatTime(order.departuretime) || '',
+            customerNotes: String(order.customernotes || ''),
+            teamNotes: String(order.teamnotes || ''),
+            customerRating: parseInt(order.customerrating) || 0,
+            ratingNotes: String(order.ratingnotes || ''),
+            cancellationReason: String(order.cancellationreason || '')
+        }));
+
+        const orderNumbers = orders.map(o => parseInt(o.orderNumber)).filter(n => !isNaN(n));
+        nextOrderNumber = orderNumbers.length > 0 ? Math.max(...orderNumbers) + 1 : 1;
+        
+        console.log('تم تحميل', orders.length, 'طلب من Sheety API');
+        console.log('الطلبات:', orders);
+        
+        updateDashboard();
+        displayActiveOrders();
+        displayCompletedOrders();
     } catch (error) {
-        console.error('خطأ في إضافة الطلب:', error);
-        showNotification('فشل في حفظ الطلب. يرجى المحاولة مرة أخرى.', 'error');
-        throw error;
+        console.error('خطأ في تحميل البيانات من Sheety API:', error);
+        console.error('تفاصيل الخطأ:', error.message);
+        showNotification('فشل في تحميل البيانات من الخادم', 'error');
+        
+        orders = [];
+        nextOrderNumber = 1;
+        updateDashboard();
+        displayActiveOrders();
+        displayCompletedOrders();
     }
 }
       // Update existing order in Google Sheets via Sheety API
