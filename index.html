@@ -978,6 +978,21 @@
       const SHEETY_API_POST = 'https://api.sheety.co/984c17c54dafbc5e8fe827b90d39f223/orders/orders';
       const SHEETY_API_PUT = 'https://api.sheety.co/984c17c54dafbc5e8fe827b90d39f223/orders/orders/';
 
+        
+// Fetch orders from Google Sheets
+        async function fetchOrders() {
+            try {
+        const response = await fetch(SHEETY_API_GET);
+           const data = await response.json();
+           orders = data.orders || [];
+
+           console.log('تم جلب الطلبات بنجاح:', orders.length);
+           updateDashboard(); // لتحديث لوحة التحكم
+  } catch (error) {
+    console.error('خطأ أثناء جلب الطلبات:', error);
+    showNotification('فشل في تحميل الطلبات من Google Sheets', 'error');
+  }
+}
 // ID for the periodic fetch interval so we can clear it if needed
         let fetchIntervalId = null;
 
