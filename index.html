@@ -1336,74 +1336,72 @@ const SHEETY_API_PUT = 'https://api.sheety.co/984c17c54dafbc5e8fe827b90d39f223/o
 // Fetch orders from Google Sheets via Sheety API
 async function fetchOrders() {
     try {
-        const response = await fetch(SHEETY_API_POST, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
+        const response = await fetch(SHEETY_API_GET);
+        
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-
+        
         const data = await response.json();
         
+        // Clear current orders array
+        orders = [];
+        
+        // Process each order from the response
         if (data.orders && Array.isArray(data.orders)) {
-            // Clear existing orders
-            orders = [];
-            
-            // Process each order from Sheety
-            data.orders.forEach(sheetOrder => {
+            data.orders.forEach(orderData => {
+                // Convert the order data from Sheety format to our format
                 const order = {
-                    id: sheetOrder.id,
-                    orderNumber: sheetOrder.ordernumber || '',
-                    orderDate: formatDate(sheetOrder.orderdate) || '',
-                    customerNumber: sheetOrder.customernumber || '',
-                    customerName: sheetOrder.customername || '',
-                    area: sheetOrder.area || '',
-                    block: sheetOrder.block || '',
-                    street: sheetOrder.street || '',
-                    houseNumber: sheetOrder.housenumber || '',
-                    floor: sheetOrder.floor || '',
-                    housingType: sheetOrder.housingtype || '',
-                    locationNotes: sheetOrder.locationnotes || '',
-                    serviceType: sheetOrder.servicetype || '',
-                    visitDate: formatDate(sheetOrder.visitdate) || '',
-                    visitTime: formatTime(sheetOrder.visittime) || '',
-                    cleaningDate: formatDate(sheetOrder.cleaningdate) || '',
-                    cleaningTime: formatTime(sheetOrder.cleaningtime) || '',
-                    paymentMethod: sheetOrder.paymentmethod || '',
-                    totalAmount: parseFloat(sheetOrder.totalamount) || 0,
-                    paymentStatus: sheetOrder.paymentstatus || 'غير مدفوع',
-                    bookingStatus: sheetOrder.bookingstatus || 'معاينة',
-                    departureTime: sheetOrder.departuretime || '',
-                    customerNotes: sheetOrder.customernotes || '',
-                    teamNotes: sheetOrder.teamnotes || '',
-                    customerRating: parseInt(sheetOrder.customerrating) || 0,
-                    ratingNotes: sheetOrder.ratingnotes || '',
-                    cancellationReason: sheetOrder.cancellationreason || ''
+                    id: orderData.id,
+                    orderNumber: orderData.ordernumber || '',
+                    orderDate: formatDate(orderData.orderdate) || '',
+                    customerNumber: orderData.customernumber || '',
+                    customerName: orderData.customername || '',
+                    area: orderData.area || '',
+                    block: orderData.block || '',
+                    street: orderData.street || '',
+                    houseNumber: orderData.housenumber || '',
+                    floor: orderData.floor || '',
+                    housingType: orderData.housingtype || '',
+                    locationNotes: orderData.locationnotes || '',
+                    serviceType: orderData.servicetype || '',
+                    visitDate: formatDate(orderData.visitdate) || '',
+                    visitTime: formatTime(orderData.visittime) || '',
+                    cleaningDate: formatDate(orderData.cleaningdate) || '',
+                    cleaningTime: formatTime(orderData.cleaningtime) || '',
+                    paymentMethod: orderData.paymentmethod || '',
+                    totalAmount: parseFloat(orderData.totalamount) || 0,
+                    paymentStatus: orderData.paymentstatus || 'غير مدفوع',
+                    bookingStatus: orderData.bookingstatus || 'معاينة',
+                    departureTime: orderData.departuretime || '',
+                    customerNotes: orderData.customernotes || '',
+                    teamNotes: orderData.teamnotes || '',
+                    customerRating: parseInt(orderData.customerrating) || 0,
+                    ratingNotes: orderData.ratingnotes || '',
+                    cancellationReason: orderData.cancellationreason || ''
                 };
                 
                 orders.push(order);
             });
             
-            // Update nextOrderNumber based on highest order number
+            // Update nextOrderNumber to be one more than the highest order number
             if (orders.length > 0) {
                 const maxOrderNumber = Math.max(...orders.map(o => parseInt(o.orderNumber) || 0));
                 nextOrderNumber = maxOrderNumber + 1;
             }
-            
-            // Update UI
-            updateDashboard();
-            displayActiveOrders();
-            displayCompletedOrders();
-            
-            console.log(`تم جلب ${orders.length} طلب من Google Sheets بنجاح`);
         }
+        
+        // Update the UI with the fetched data
+        updateDashboard();
+        displayActiveOrders();
+        displayCompletedOrders();
+        
+        console.log(`تم تحميل ${orders.length} طلب من Google Sheets`);
+        
     } catch (error) {
-        console.error('خطأ في جلب الطلبات:', error);
-        showNotification('فشل في جلب الطلبات من Google Sheets', 'error');
+        console.error('خطأ في تحميل الطلبات من Google Sheets:', error);
+        // Don't show error notification on every fetch to avoid annoying users
+        // Only log to console
     }
 }
       // Update existing order in Google Sheets via Sheety API
