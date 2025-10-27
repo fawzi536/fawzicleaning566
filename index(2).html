@@ -10,7 +10,7 @@
         body {
             box-sizing: border-box;
             font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-            background: #0a0a0a;
+            background: linear-gradient(180deg, #000000 0%, #0a0a0a 50%, #000000 100%);
             color: #ffffff;
         }
         .fade-in {
@@ -22,25 +22,28 @@
         }
         .order-card {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border-left: 3px solid #00BFF3;
-            background: #111111;
-            border: 1px solid #1f2937;
+            border-left: 4px solid #00BFF3;
+            background: linear-gradient(145deg, #151515, #0d0d0d);
+            border: 2px solid #1f2937;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
         }
         .order-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 20px 40px rgba(0, 191, 243, 0.15);
-            border-left-color: #00BFF3;
+            transform: translateY(-4px);
+            box-shadow: 0 24px 48px rgba(0, 191, 243, 0.25), 0 0 20px rgba(0, 191, 243, 0.15);
+            border-left-color: #00d4ff;
+            border-color: #00BFF3;
         }
         .glass-effect {
             backdrop-filter: blur(10px);
             background: rgba(17, 17, 17, 0.95);
         }
         .gradient-bg {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-            border-bottom: 1px solid #00BFF3;
+            background: linear-gradient(135deg, #0a1628 0%, #1e3a5f 50%, #0a1628 100%);
+            border-bottom: 3px solid #00BFF3;
+            box-shadow: 0 10px 40px rgba(0, 191, 243, 0.3);
         }
         .card-shadow {
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 24px rgba(0, 191, 243, 0.1);
         }
         .nav-tab {
             position: relative;
@@ -52,120 +55,153 @@
             bottom: 0;
             left: 0;
             width: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #00BFF3, #00BFF3);
+            height: 4px;
+            background: linear-gradient(90deg, #00d4ff, #00BFF3, #0099cc);
             transition: width 0.3s ease;
+            box-shadow: 0 0 12px rgba(0, 191, 243, 0.6);
         }
         .nav-tab.active::before {
             width: 100%;
         }
         .btn-primary {
-            background: linear-gradient(135deg, #00BFF3, #00BFF3);
+            background: linear-gradient(135deg, #00d4ff, #00BFF3, #0099cc);
             transition: all 0.3s ease;
-            border: 1px solid #00BFF3;
+            border: 2px solid #00BFF3;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            box-shadow: 0 8px 24px rgba(0, 191, 243, 0.4);
         }
         .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 10px 20px rgba(0, 191, 243, 0.3);
-            background: linear-gradient(135deg, #00A8D6, #00BFF3);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 16px 40px rgba(0, 191, 243, 0.5), 0 0 30px rgba(0, 191, 243, 0.3);
+            background: linear-gradient(135deg, #00e5ff, #00d4ff, #00BFF3);
+            border-color: #00d4ff;
         }
         .stat-card {
-            background: #111111;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            border: 1px solid #1f2937;
-            transition: all 0.3s ease;
+            background: linear-gradient(145deg, #1a1a1a, #0f0f0f);
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 16px rgba(0, 191, 243, 0.1);
+            border: 2px solid #1f2937;
+            transition: all 0.4s ease;
         }
         .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(0, 191, 243, 0.2);
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 16px 48px rgba(0, 191, 243, 0.3), 0 0 32px rgba(0, 191, 243, 0.2);
             border-color: #00BFF3;
+            background: linear-gradient(145deg, #1f1f1f, #121212);
         }
         .dark-input {
-            background: #111111;
-            border: 1px solid #374151;
+            background: #0d0d0d;
+            border: 2px solid #374151;
             color: #ffffff;
+            transition: all 0.3s ease;
         }
         .dark-input:focus {
             border-color: #00BFF3;
-            box-shadow: 0 0 0 3px rgba(0, 191, 243, 0.1);
+            box-shadow: 0 0 0 4px rgba(0, 191, 243, 0.15), 0 0 20px rgba(0, 191, 243, 0.2);
+            background: #111111;
         }
         .dark-select {
-            background: #111111;
-            border: 1px solid #374151;
+            background: #0d0d0d;
+            border: 2px solid #374151;
             color: #ffffff;
+            transition: all 0.3s ease;
         }
         .dark-select:focus {
             border-color: #00BFF3;
-            box-shadow: 0 0 0 3px rgba(0, 191, 243, 0.1);
+            box-shadow: 0 0 0 4px rgba(0, 191, 243, 0.15), 0 0 20px rgba(0, 191, 243, 0.2);
+            background: #111111;
         }
         .status-badge {
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 0.6rem 1.2rem;
             border-radius: 9999px;
-            border: 1px solid;
+            border: 2px solid;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
         }
         .status-preview { 
-            background: rgba(0, 191, 243, 0.1);
-            color: #00BFF3;
+            background: linear-gradient(135deg, rgba(0, 191, 243, 0.2), rgba(0, 191, 243, 0.1));
+            color: #00d4ff;
             border-color: #00BFF3;
+        }
+        .status-preview:hover {
+            box-shadow: 0 6px 20px rgba(0, 191, 243, 0.4);
         }
         .status-approved { 
-            background: rgba(0, 191, 243, 0.2);
-            color: #00BFF3;
+            background: linear-gradient(135deg, rgba(0, 191, 243, 0.3), rgba(0, 191, 243, 0.15));
+            color: #00d4ff;
             border-color: #00BFF3;
+        }
+        .status-approved:hover {
+            box-shadow: 0 6px 20px rgba(0, 191, 243, 0.4);
         }
         .status-paid { 
-            background: rgba(0, 191, 243, 0.3);
-            color: #00BFF3;
+            background: linear-gradient(135deg, rgba(0, 191, 243, 0.4), rgba(0, 191, 243, 0.2));
+            color: #ffffff;
             border-color: #00BFF3;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        .status-paid:hover {
+            box-shadow: 0 6px 20px rgba(0, 191, 243, 0.5);
         }
         .status-partial { 
-            background: rgba(75, 85, 99, 0.2);
-            color: #d1d5db;
+            background: linear-gradient(135deg, rgba(75, 85, 99, 0.3), rgba(75, 85, 99, 0.15));
+            color: #e5e7eb;
             border-color: #6b7280;
         }
         .status-unpaid { 
-            background: rgba(17, 17, 17, 0.8);
+            background: linear-gradient(135deg, rgba(17, 17, 17, 0.9), rgba(17, 17, 17, 0.7));
             color: #9ca3af;
             border-color: #374151;
         }
         .status-cancelled { 
-            background: rgba(17, 17, 17, 0.5);
+            background: linear-gradient(135deg, rgba(17, 17, 17, 0.6), rgba(17, 17, 17, 0.4));
             color: #6b7280;
             border-color: #374151;
         }
         .status-completed { 
-            background: rgba(0, 191, 243, 0.4);
+            background: linear-gradient(135deg, rgba(0, 191, 243, 0.5), rgba(0, 191, 243, 0.3));
             color: #ffffff;
-            border-color: #00BFF3;
+            border-color: #00d4ff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 6px 20px rgba(0, 191, 243, 0.4);
         }
         .table-dark {
-            background: #111111;
+            background: linear-gradient(145deg, #0f0f0f, #080808);
+            border: 2px solid #1f2937;
         }
         .table-dark th {
-            background: #0a0a0a;
-            border-bottom: 1px solid #1f2937;
-            color: #d1d5db;
+            background: linear-gradient(180deg, #0d0d0d, #050505);
+            border-bottom: 2px solid #1f2937;
+            color: #e5e7eb;
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
         .table-dark td {
             border-bottom: 1px solid #1f2937;
             color: #e5e7eb;
         }
         .table-dark tr:hover {
-            background: rgba(0, 191, 243, 0.05);
+            background: rgba(0, 191, 243, 0.08);
+            box-shadow: inset 0 0 20px rgba(0, 191, 243, 0.1);
         }
         .icon-blue {
-            color: #00BFF3;
+            color: #00d4ff;
+            filter: drop-shadow(0 0 8px rgba(0, 191, 243, 0.5));
         }
         .text-blue {
-            color: #00BFF3;
+            color: #00d4ff;
+            text-shadow: 0 0 12px rgba(0, 191, 243, 0.4);
         }
         .bg-dark-card {
-            background: #111111;
-            border: 1px solid #1f2937;
+            background: linear-gradient(145deg, #151515, #0d0d0d);
+            border: 2px solid #1f2937;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
         }
         .bg-dark-secondary {
             background: #0a0a0a;
@@ -896,54 +932,54 @@
 
     <!-- Login Screen -->
     <div id="login-screen" class="fixed inset-0 bg-dark-secondary flex items-center justify-center z-50">
-        <div class="bg-dark-card rounded-2xl shadow-2xl p-8 w-full max-w-md border border-gray-700">
-            <div class="text-center mb-8">
-                <div class="mb-2">
-                    <img src="https://l.top4top.io/p_3568d9t1y1.png" alt="الشعار" class="w-32 h-32 object-contain mx-auto" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                    <i class="fas fa-home text-6xl text-blue-400 hidden"></i>
+        <div class="bg-dark-card rounded-2xl shadow-2xl p-10 w-full max-w-md border-2 border-gray-700" style="box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 191, 243, 0.2);">
+            <div class="text-center mb-10">
+                <div class="mb-4">
+                    <img src="https://l.top4top.io/p_3568d9t1y1.png" alt="الشعار" class="w-36 h-36 object-contain mx-auto" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <i class="fas fa-home text-7xl text-blue-400 hidden"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-white mb-2">نظام إدارة الطلبات</h2>
-                <p class="text-gray-400">يرجى إدخال بيانات الدخول</p>
+                <h2 class="text-3xl font-bold text-white mb-3" style="text-shadow: 0 4px 12px rgba(0, 191, 243, 0.3);">نظام إدارة الطلبات</h2>
+                <p class="text-gray-400 text-lg">يرجى إدخال بيانات الدخول</p>
             </div>
             
             <form id="login-form" class="space-y-6">
                 <div>
-                    <label class="block text-gray-300 font-semibold mb-3">اسم المستخدم</label>
+                    <label class="block text-gray-300 font-bold mb-3 text-base">اسم المستخدم</label>
                     <div class="relative">
                         <input type="text" id="username" required 
-                               class="dark-input w-full px-4 py-3 pr-12 rounded-xl" 
+                               class="dark-input w-full px-4 py-4 pr-12 rounded-xl text-base" 
                                placeholder="أدخل اسم المستخدم">
-                        <i class="fas fa-user absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <i class="fas fa-user absolute right-4 top-1/2 transform -translate-y-1/2 text-blue-400 text-lg"></i>
                     </div>
                 </div>
                 
                 <div>
-                    <label class="block text-gray-300 font-semibold mb-3">كلمة المرور</label>
+                    <label class="block text-gray-300 font-bold mb-3 text-base">كلمة المرور</label>
                     <div class="relative">
                         <input type="password" id="password" required 
-                               class="dark-input w-full px-4 py-3 pr-12 rounded-xl" 
+                               class="dark-input w-full px-4 py-4 pr-12 rounded-xl text-base" 
                                placeholder="أدخل كلمة المرور">
-                        <i class="fas fa-lock absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <i class="fas fa-lock absolute right-4 top-1/2 transform -translate-y-1/2 text-blue-400 text-lg"></i>
                         <button type="button" onclick="togglePassword()" 
-                                class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200">
-                            <i id="password-toggle" class="fas fa-eye"></i>
+                                class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-400 transition-colors duration-200">
+                            <i id="password-toggle" class="fas fa-eye text-lg"></i>
                         </button>
                     </div>
                 </div>
                 
                 <div class="flex items-center">
-                    <input type="checkbox" id="remember-me" class="w-4 h-4 accent-blue-500">
-                    <label for="remember-me" class="mr-2 text-gray-300 text-sm">تذكرني</label>
+                    <input type="checkbox" id="remember-me" class="w-5 h-5 accent-blue-500">
+                    <label for="remember-me" class="mr-3 text-gray-300 text-base">تذكرني</label>
                 </div>
                 
-                <button type="submit" class="w-full btn-primary text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center space-x-2 space-x-reverse">
+                <button type="submit" class="w-full btn-primary text-white py-4 px-6 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center space-x-2 space-x-reverse">
                     <i class="fas fa-sign-in-alt"></i>
                     <span>دخول</span>
                 </button>
                 
-                <div id="login-error" class="hidden bg-red-900 bg-opacity-30 border border-red-600 rounded-xl p-4 text-center">
-                    <i class="fas fa-exclamation-triangle text-red-400 mb-2"></i>
-                    <p class="text-red-300 text-sm">اسم المستخدم أو كلمة المرور غير صحيحة</p>
+                <div id="login-error" class="hidden bg-red-900 bg-opacity-40 border-2 border-red-600 rounded-xl p-4 text-center" style="box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3);">
+                    <i class="fas fa-exclamation-triangle text-red-400 mb-2 text-2xl"></i>
+                    <p class="text-red-300 text-base font-semibold">اسم المستخدم أو كلمة المرور غير صحيحة</p>
                 </div>
             </form>
             
